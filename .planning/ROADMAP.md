@@ -59,8 +59,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 03-01: Backend state machine engine, transition validation guards, and audit event logger.
-- [ ] 03-02: Backend API endpoints for state advancement, reopening, and audit history retrieval with comprehensive tests.
+- [x] 03-01: Backend state machine engine, transition validation guards, and audit event logger.
+- [x] 03-02: Backend API endpoints for state advancement, reopening, and audit history retrieval with comprehensive tests.
 
 ### Phase 4: Searchable Case Register & Interactive Case Detail Timeline
 **Goal**: Deliver high-performance, filterable case register and an in-depth case inspection workspace with a chronological activity stream.

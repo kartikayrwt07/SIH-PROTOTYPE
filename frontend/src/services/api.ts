@@ -1,4 +1,4 @@
-import { StandardResponse, ComplaintCase, DashboardMetrics, UserRole, UserSummary } from "../types";
+import { StandardResponse, ComplaintCase, DashboardMetrics, UserRole, UserSummary, CaseStatus, TimelineEvent } from "../types";
 
 const API_BASE = "/api/v1";
 
@@ -81,6 +81,27 @@ class ApiService {
 
   async getCaseDetail(caseRef: string): Promise<StandardResponse<ComplaintCase>> {
     return this.request(`/cases/${caseRef}`);
+  }
+
+  async transitionCase(
+    caseRef: string,
+    toStatus: CaseStatus,
+    remarks: string
+  ): Promise<StandardResponse<ComplaintCase>> {
+    return this.request(`/cases/${caseRef}/transition`, {
+      method: "POST",
+      body: JSON.stringify({ to_status: toStatus, remarks }),
+    });
+  }
+
+  async reopenCase(caseRef: string, reason: string): Promise<StandardResponse<ComplaintCase>> {
+    return this.request(`/cases/${caseRef}/reopen?reason=${encodeURIComponent(reason)}`, {
+      method: "POST",
+    });
+  }
+
+  async getCaseTimeline(caseRef: string): Promise<StandardResponse<TimelineEvent[]>> {
+    return this.request(`/cases/${caseRef}/timeline`);
   }
 
   async getDashboardMetrics(): Promise<StandardResponse<DashboardMetrics>> {

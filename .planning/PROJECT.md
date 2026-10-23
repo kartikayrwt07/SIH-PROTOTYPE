@@ -26,13 +26,18 @@ Provide dependable, auditable cross-bureau case tracking and transparent SLA ris
 - ✓ **SEC-02**: Server-side permission enforcement on all API routes, preventing IDOR — Phase 2
 - ✓ **SEC-03**: Separation of confidential complainant descriptions from general/auditor views — Phase 2
 - ✓ **SEC-04**: Interactive demo role-switcher widget prominently flagged as demo-only — Phase 2
+- ✓ **MVP-04**: Explicit validated state machine for case lifecycle (9 distinct states with guard transitions) — Phase 3
+- ✓ **DIFF-04**: Tamper-evident chronological audit trail for all status, ownership, and note mutations — Phase 3
+- ✓ **LIFE-01**: Deterministic 9-state state machine engine with invalid transition rejection — Phase 3
+- ✓ **LIFE-02**: Append-only tamper-evident audit logging with actor attribution and mandatory remarks — Phase 3
+- ✓ **LIFE-03**: REST endpoints for case status transitions, reopening, and audit timeline — Phase 3
+- ✓ **LIFE-04**: Interactive chronological activity timeline UI component with actor and role attribution — Phase 3
 
 ### Active
 
 - [ ] **MVP-01**: Central Dashboard with filterable aggregate overview metrics derived dynamically from case records.
 - [ ] **MVP-02**: Paginated, searchable Case Register with stable identifiers, multi-criteria filtering, and export.
 - [ ] **MVP-03**: Comprehensive Case Detail view with timeline audit trail, internal notes vs. public summaries, and linked cases.
-- [ ] **MVP-04**: Explicit validated state machine for case lifecycle (Received -> Registered -> Under Triage -> Assigned -> In Progress -> Awaiting Information -> Under Review -> Resolved -> Closed).
 - [ ] **MVP-05**: Bureau/cell case assignment and reassignment tracking with mandatory reason capture and escalation flags.
 - [ ] **MVP-06**: Configurable SLA policy engine calculating due dates, business days, and transparent aging risk indicators.
 - [ ] **MVP-07**: Validated CSV import pipeline with pre-validation preview, batch reporting, and synthetic dataset seeder.
@@ -41,7 +46,6 @@ Provide dependable, auditable cross-bureau case tracking and transparent SLA ris
 - [ ] **DIFF-01**: Cross-Bureau Case Visibility & comparative throughput analytics (without toxic public ranking).
 - [ ] **DIFF-02**: Explainable Complaint Intelligence (deterministic TF-IDF duplicate detection and rule-based category/bureau routing with clear evidence rationale).
 - [ ] **DIFF-03**: Visual SLA & Aging Risk Radar explaining drivers behind impending breach warnings.
-- [ ] **DIFF-04**: Tamper-evident chronological audit trail for all status, ownership, and note mutations.
 
 ### Out of Scope
 

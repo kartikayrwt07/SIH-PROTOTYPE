@@ -2,7 +2,9 @@ import React, { useState, useEffect } from "react";
 import { Layout } from "./components/common/Layout";
 import { useAuth } from "./context/AuthContext";
 import { api } from "./services/api";
-import { Database, ShieldAlert, Clock, CheckCircle2, AlertTriangle, Layers, ArrowUpRight, Key, UserCheck } from "lucide-react";
+import { ComplaintCase, TimelineEvent, CaseStatus } from "./types";
+import { TimelineView } from "./components/timeline/TimelineView";
+import { Database, ShieldAlert, Clock, CheckCircle2, AlertTriangle, Layers, ArrowUpRight, Key, UserCheck, Play, RotateCcw, AlertOctagon } from "lucide-react";
 
 export const AppContent: React.FC = () => {
   const [activeTab, setActiveTab] = useState("dashboard");
@@ -10,8 +12,18 @@ export const AppContent: React.FC = () => {
   const [healthStatus, setHealthStatus] = useState<string>("Connecting...");
   const [databaseStatus, setDatabaseStatus] = useState<string>("Verifying...");
 
+  // Case Lifecycle Interactive Simulator State
+  const [sampleCases, setSampleCases] = useState<ComplaintCase[]>([]);
+  const [selectedCaseRef, setSelectedCaseRef] = useState<string>("");
+  const [activeCase, setActiveCase] = useState<ComplaintCase | null>(null);
+  const [timelineEvents, setTimelineEvents] = useState<TimelineEvent[]>([]);
+  const [targetStatus, setTargetStatus] = useState<CaseStatus>("Registered");
+  const [transitionRemarks, setTransitionRemarks] = useState<string>("State updated during grievance review meeting");
+  const [actionMessage, setActionMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   useEffect(() => {
-    const fetchHealth = async () => {
+    const fetchHealthAndCases = async () => {
       const res = await api.checkHealth();
       if (res.success && res.data) {
         setHealthStatus(res.data.status === "operational" ? "Operational" : "Degraded");
@@ -20,9 +32,94 @@ export const AppContent: React.FC = () => {
         setHealthStatus("Offline / Demo Mode");
         setDatabaseStatus("SQLite Local");
       }
+
+      // Fetch sample cases for lifecycle test
+      const casesRes = await api.getCases({ page: 1, page_size: 10 });
+      if (casesRes.success && casesRes.data && casesRes.data.length > 0) {
+        setSampleCases(casesRes.data);
+        const first = casesRes.data[0];
+        setSelectedCaseRef(first.case_reference_id);
+      }
     };
-    fetchHealth();
-  }, []);
+    fetchHealthAndCases();
+  }, [currentRole]);
+
+  // Load selected case detail & timeline
+  useEffect(() => {
+    if (!selectedCaseRef) return;
+    const loadDetail = async () => {
+      const detailRes = await api.getCaseDetail(selectedCaseRef);
+      if (detailRes.success && detailRes.data) {
+        setActiveCase(detailRes.data);
+      }
+      const timelineRes = await api.getCaseTimeline(selectedCaseRef);
+      if (timelineRes.success && timelineRes.data) {
+        setTimelineEvents(timelineRes.data);
+      }
+    };
+    loadDetail();
+  }, [selectedCaseRef]);
+
+  const handleExecuteTransition = async () => {
+    if (!activeCase) return;
+    setIsSubmitting(true);
+    setActionMessage(null);
+
+    const res = await api.transitionCase(activeCase.case_reference_id, targetStatus, transitionRemarks);
+    setIsSubmitting(false);
+
+    if (res.success && res.data) {
+      setActiveCase(res.data);
+      setActionMessage({ type: "success", text: `Status successfully updated to '${res.data.status}'` });
+      // Refresh timeline
+      const tRes = await api.getCaseTimeline(activeCase.case_reference_id);
+      if (tRes.success && tRes.data) {
+        setTimelineEvents(tRes.data);
+      }
+    } else {
+      const errorMsg = res.error?.message || "Failed to execute state transition";
+      setActionMessage({ type: "error", text: errorMsg });
+    }
+  };
+
+  const handleAttemptInvalidJump = async () => {
+    if (!activeCase) return;
+    setIsSubmitting(true);
+    setActionMessage(null);
+
+    // Attempt illegal transition directly to Resolved
+    const res = await api.transitionCase(activeCase.case_reference_id, "Resolved", "Attempting illegal state bypass");
+    setIsSubmitting(false);
+
+    if (!res.success) {
+      setActionMessage({
+        type: "error",
+        text: `[REJECTED HTTP 422]: ${res.error?.message || "Invalid state transition blocked by lifecycle guard"}`
+      });
+    } else {
+      setActionMessage({ type: "success", text: "Transition completed" });
+    }
+  };
+
+  const handleReopen = async () => {
+    if (!activeCase) return;
+    setIsSubmitting(true);
+    setActionMessage(null);
+
+    const res = await api.reopenCase(activeCase.case_reference_id, "Complainant reported grievance reoccurred");
+    setIsSubmitting(false);
+
+    if (res.success && res.data) {
+      setActiveCase(res.data);
+      setActionMessage({ type: "success", text: "Case reopened successfully (In Progress)" });
+      const tRes = await api.getCaseTimeline(activeCase.case_reference_id);
+      if (tRes.success && tRes.data) {
+        setTimelineEvents(tRes.data);
+      }
+    } else {
+      setActionMessage({ type: "error", text: res.error?.message || "Reopen rejected" });
+    }
+  };
 
   return (
     <Layout
@@ -75,6 +172,163 @@ export const AppContent: React.FC = () => {
           </div>
           <div className="metric-value" style={{ color: "var(--risk-normal)" }}>14</div>
           <div className="metric-footer">Compliance reports verified</div>
+        </div>
+      </div>
+
+      {/* Interactive Case Lifecycle & Audit Timeline Panel (Phase 3 Deliverable) */}
+      <div className="glass-panel" style={{ borderLeft: "4px solid var(--accent-saffron)" }}>
+        <div className="panel-header">
+          <div>
+            <div className="panel-title" style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+              <Play size={18} color="var(--accent-saffron)" />
+              <span>Interactive Case Lifecycle State Machine & Audit Trail (Phase 3)</span>
+            </div>
+            <div style={{ color: "var(--text-muted)", fontSize: "0.8rem", marginTop: "0.2rem" }}>
+              Deterministic 9-Stage Lifecycle &bull; Transition Guard Enforcement &bull; Append-Only Audit Trail
+            </div>
+          </div>
+          <span className="badge badge-ontrack">Phase 3 Active</span>
+        </div>
+
+        {/* Case Selector and Status Card */}
+        <div style={{ display: "grid", gridTemplateColumns: "1.2fr 1fr", gap: "1.5rem" }}>
+          <div>
+            <div style={{ marginBottom: "1rem", display: "flex", alignItems: "center", gap: "0.75rem" }}>
+              <label htmlFor="case-select" style={{ fontSize: "0.85rem", color: "var(--text-secondary)", fontWeight: 600 }}>
+                Select Case Record:
+              </label>
+              <select
+                id="case-select"
+                className="role-select"
+                value={selectedCaseRef}
+                onChange={(e) => setSelectedCaseRef(e.target.value)}
+                style={{ padding: "0.4rem 0.8rem", flex: 1 }}
+              >
+                {sampleCases.map((c) => (
+                  <option key={c.case_reference_id} value={c.case_reference_id}>
+                    {c.case_reference_id} — {c.subject.substring(0, 45)}... ({c.status})
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {activeCase && (
+              <div style={{ background: "var(--bg-surface)", padding: "1.25rem", borderRadius: "8px", border: "1px solid var(--border-subtle)" }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "0.5rem" }}>
+                  <strong style={{ fontSize: "1.05rem", color: "#FFFFFF" }}>{activeCase.case_reference_id}</strong>
+                  <span className={`badge badge-${activeCase.priority.toLowerCase()}`}>{activeCase.priority}</span>
+                </div>
+                <div style={{ fontSize: "0.9rem", color: "var(--text-primary)", marginBottom: "0.5rem", fontWeight: 500 }}>
+                  {activeCase.subject}
+                </div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.5rem", fontSize: "0.8rem", color: "var(--text-secondary)" }}>
+                  <div>Category: <strong style={{ color: "var(--text-primary)" }}>{activeCase.category}</strong></div>
+                  <div>Current Status: <strong style={{ color: "var(--accent-saffron-light)" }}>{activeCase.status}</strong></div>
+                  <div>Bureau: <strong style={{ color: "var(--text-primary)" }}>{activeCase.bureau?.name || "Approval Bureau"}</strong></div>
+                  <div>Institution: <strong style={{ color: "var(--text-primary)" }}>{activeCase.institution?.name}</strong></div>
+                </div>
+
+                {/* State Machine Transition Actions */}
+                <div style={{ marginTop: "1.25rem", paddingTop: "1rem", borderTop: "1px solid var(--border-subtle)" }}>
+                  <div style={{ fontSize: "0.85rem", fontWeight: 600, color: "var(--text-primary)", marginBottom: "0.5rem" }}>
+                    Execute Lifecycle Transition:
+                  </div>
+
+                  <div style={{ display: "flex", gap: "0.5rem", marginBottom: "0.75rem" }}>
+                    <select
+                      className="role-select"
+                      value={targetStatus}
+                      onChange={(e) => setTargetStatus(e.target.value as CaseStatus)}
+                      style={{ padding: "0.4rem 0.8rem" }}
+                    >
+                      <option value="Registered">Registered</option>
+                      <option value="Under Triage">Under Triage</option>
+                      <option value="Assigned">Assigned</option>
+                      <option value="In Progress">In Progress</option>
+                      <option value="Awaiting Information">Awaiting Information</option>
+                      <option value="Under Review">Under Review</option>
+                      <option value="Resolved">Resolved</option>
+                      <option value="Closed">Closed</option>
+                    </select>
+
+                    <input
+                      type="text"
+                      className="role-select"
+                      value={transitionRemarks}
+                      onChange={(e) => setTransitionRemarks(e.target.value)}
+                      placeholder="Mandatory transition remarks..."
+                      style={{ flex: 1, padding: "0.4rem 0.8rem" }}
+                    />
+
+                    <button
+                      type="button"
+                      className="btn btn-primary"
+                      onClick={handleExecuteTransition}
+                      disabled={isSubmitting}
+                      style={{ fontSize: "0.8rem", padding: "0.4rem 0.9rem" }}
+                    >
+                      <span>Advance</span>
+                    </button>
+                  </div>
+
+                  {/* Negative Test & Reopen Triggers */}
+                  <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap" }}>
+                    <button
+                      type="button"
+                      className="btn btn-secondary"
+                      onClick={handleAttemptInvalidJump}
+                      disabled={isSubmitting}
+                      style={{ fontSize: "0.75rem", color: "var(--risk-overdue)", borderColor: "rgba(239, 68, 68, 0.4)" }}
+                    >
+                      <AlertOctagon size={14} />
+                      <span>Test Illegal Jump &rarr; Resolved (Expect HTTP 422)</span>
+                    </button>
+
+                    {activeCase.status === "Resolved" && (
+                      <button
+                        type="button"
+                        className="btn btn-secondary"
+                        onClick={handleReopen}
+                        disabled={isSubmitting}
+                        style={{ fontSize: "0.75rem", color: "var(--accent-saffron)" }}
+                      >
+                        <RotateCcw size={14} />
+                        <span>Reopen Case (Formal Appeal)</span>
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Feedback Message */}
+                  {actionMessage && (
+                    <div
+                      style={{
+                        marginTop: "0.75rem",
+                        padding: "0.6rem 0.8rem",
+                        borderRadius: "6px",
+                        fontSize: "0.8rem",
+                        background: actionMessage.type === "success" ? "rgba(16, 185, 129, 0.15)" : "rgba(239, 68, 68, 0.15)",
+                        color: actionMessage.type === "success" ? "#34D399" : "#FCA5A5",
+                        border: `1px solid ${actionMessage.type === "success" ? "rgba(16, 185, 129, 0.3)" : "rgba(239, 68, 68, 0.3)"}`,
+                      }}
+                    >
+                      {actionMessage.text}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Chronological Audit Trail View */}
+          <div style={{ background: "var(--bg-surface)", padding: "1.25rem", borderRadius: "8px", border: "1px solid var(--border-subtle)", maxHeight: "460px", overflowY: "auto" }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "1rem" }}>
+              <div style={{ fontSize: "0.9rem", fontWeight: 700, color: "#FFFFFF" }}>
+                Immutable Case Activity Audit Trail
+              </div>
+              <span className="badge badge-low">{timelineEvents.length} Events Logged</span>
+            </div>
+            <TimelineView events={timelineEvents} />
+          </div>
         </div>
       </div>
 
