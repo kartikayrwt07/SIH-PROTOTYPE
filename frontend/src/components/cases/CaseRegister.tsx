@@ -16,9 +16,10 @@ import { SlaBadge } from "../common/SlaBadge";
 
 interface CaseRegisterProps {
   onSelectCase: (caseRef: string) => void;
+  initialBureauFilter?: string;
 }
 
-export const CaseRegister: React.FC<CaseRegisterProps> = ({ onSelectCase }) => {
+export const CaseRegister: React.FC<CaseRegisterProps> = ({ onSelectCase, initialBureauFilter }) => {
   const [cases, setCases] = useState<ComplaintCase[]>([]);
   const [bureaus, setBureaus] = useState<Bureau[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -28,7 +29,13 @@ export const CaseRegister: React.FC<CaseRegisterProps> = ({ onSelectCase }) => {
   const [search, setSearch] = useState<string>("");
   const [statusFilter, setStatusFilter] = useState<string>("");
   const [priorityFilter, setPriorityFilter] = useState<string>("");
-  const [bureauFilter, setBureauFilter] = useState<string>("");
+  const [bureauFilter, setBureauFilter] = useState<string>(initialBureauFilter || "");
+
+  useEffect(() => {
+    if (initialBureauFilter !== undefined) {
+      setBureauFilter(initialBureauFilter);
+    }
+  }, [initialBureauFilter]);
   const [sortBy, setSortBy] = useState<"created_at" | "due_date" | "priority" | "status" | "subject">("created_at");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
 

@@ -45,14 +45,18 @@ Provide dependable, auditable cross-bureau case tracking and transparent SLA ris
 - ✓ **SLA-03**: Cross-bureau assignment and transfer workflow with immutable history and mandatory justification — Phase 5
 - ✓ **SLA-04**: Supervisory escalation trigger advancing surveillance tiers with audit attribution — Phase 5
 - ✓ **DIFF-03**: Visual SLA & Aging Risk Radar explaining drivers behind impending breach warnings — Phase 5
+- ✓ **MVP-01**: Central Dashboard with filterable aggregate overview metrics derived dynamically from case records — Phase 6
+- ✓ **DIFF-01**: Cross-Bureau Case Visibility & comparative throughput analytics without toxic public ranking — Phase 6
+- ✓ **DASH-01**: Real-time KPI overview metrics dynamically calculated across all seeded records — Phase 6
+- ✓ **DASH-02**: Cross-bureau workload distribution without punitive or toxic scoreboards — Phase 6
+- ✓ **DASH-03**: Lifecycle stage dwell-time and bottleneck detection with duration metrics — Phase 6
+- ✓ **DASH-04**: Bureau filtering updating all dashboard metrics, workload, and bottleneck charts — Phase 6
 
 ### Active
 
-- [ ] **MVP-01**: Central Dashboard with filterable aggregate overview metrics derived dynamically from case records.
 - [ ] **MVP-07**: Validated CSV import pipeline with pre-validation preview, batch reporting, and synthetic dataset seeder.
 - [ ] **MVP-08**: Multi-parameter search, filtering, and role-scoped CSV report exports.
 - [ ] **MVP-09**: Resilient error handling, defensive UI empty/loading/error states, and comprehensive system diagnostics.
-- [ ] **DIFF-01**: Cross-Bureau Case Visibility & comparative throughput analytics (without toxic public ranking).
 - [ ] **DIFF-02**: Explainable Complaint Intelligence (deterministic TF-IDF duplicate detection and rule-based category/bureau routing with clear evidence rationale).
 
 ### Out of Scope

@@ -104,8 +104,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 06-01: Backend analytics aggregation services and query optimization with indexing.
-- [ ] 06-02: Executive Dashboard page with KPI widgets, SVG/canvas chart components, and period filters.
+- [x] 06-01: Backend analytics aggregation services and query optimization with indexing.
+- [x] 06-02: Executive Dashboard page with KPI widgets, SVG/canvas chart components, and period filters.
 
 ### Phase 7: Validated CSV Ingestion Pipeline & Role-Scoped Export Engine
 **Goal**: Build a resilient, transaction-safe data import engine with dry-run preview and permission-aware CSV reporting.
@@ -146,9 +146,9 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8
 |-------|----------------|--------|-----------|
 | 1. Scaffolding & Data Models | 2/2 | Complete | 2026-10-24 |
 | 2. RBAC & Security Gates | 2/2 | Complete | 2026-10-24 |
-| 3. Case State Machine & Audit | 0/2 | Not started | - |
-| 4. Case Register & Detail | 0/2 | Not started | - |
-| 5. Assignment & SLA Engine | 0/2 | Not started | - |
-| 6. Dashboard & Analytics | 0/2 | Not started | - |
+| 3. Case State Machine & Audit | 2/2 | Complete | 2026-10-24 |
+| 4. Case Register & Detail | 2/2 | Complete | 2026-10-24 |
+| 5. Assignment & SLA Engine | 2/2 | Complete | 2026-10-24 |
+| 6. Dashboard & Analytics | 2/2 | Complete | 2026-10-24 |
 | 7. CSV Ingestion & Export | 0/2 | Not started | - |
 | 8. Explainable AI Intelligence | 0/2 | Not started | - |

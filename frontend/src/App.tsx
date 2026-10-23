@@ -7,29 +7,29 @@ import { TimelineView } from "./components/timeline/TimelineView";
 import { CaseRegister } from "./components/cases/CaseRegister";
 import { CaseDetailView } from "./components/cases/CaseDetailView";
 import { SlaRiskRadar } from "./components/sla/SlaRiskRadar";
+import { ExecutiveDashboard } from "./components/dashboard/ExecutiveDashboard";
 import {
   Database,
   ShieldAlert,
-  Clock,
-  CheckCircle2,
-  AlertTriangle,
-  Layers,
   ArrowUpRight,
   Key,
   UserCheck,
   Play,
   RotateCcw,
   AlertOctagon,
-  FileSpreadsheet,
   ExternalLink,
   UploadCloud,
 } from "lucide-react";
 
 export const AppContent: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<string>("cases");
+  const [activeTab, setActiveTab] = useState<string>("dashboard");
   const { currentRole, currentUser, permissions } = useAuth();
   const [healthStatus, setHealthStatus] = useState<string>("Connecting...");
   const [databaseStatus, setDatabaseStatus] = useState<string>("Verifying...");
+
+  // Filter state passed from dashboard to register
+  const [filterBureauId, setFilterBureauId] = useState<string>("");
+  const [showLifecycleSimulator, setShowLifecycleSimulator] = useState<boolean>(false);
 
   // Selected case for Dossier Detail View (Phase 4)
   const [selectedCaseDetailRef, setSelectedCaseDetailRef] = useState<string | null>(null);
@@ -172,92 +172,66 @@ export const AppContent: React.FC = () => {
                 </p>
               </div>
             </div>
-            <CaseRegister onSelectCase={(ref) => setSelectedCaseDetailRef(ref)} />
+            <CaseRegister
+              initialBureauFilter={filterBureauId}
+              onSelectCase={(ref) => setSelectedCaseDetailRef(ref)}
+            />
           </div>
         )
       )}
 
-      {/* 2. Executive Dashboard Tab */}
+      {/* 2. Executive Dashboard Tab (Phase 6 Deliverable) */}
       {activeTab === "dashboard" && (
-        <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", flexWrap: "wrap", gap: "1rem" }}>
-            <div>
-              <h2 style={{ fontSize: "1.75rem", fontWeight: 800, color: "#FFFFFF", letterSpacing: "-0.03em" }}>
-                AICTE Grievance Command Center
-              </h2>
-              <p style={{ color: "var(--text-secondary)", fontSize: "0.9rem", marginTop: "0.25rem" }}>
-                Consolidated cross-bureau monitoring, real-time SLA risk radar, and auditable case lifecycle tracking.
-              </p>
-            </div>
-            <button
-              className="btn btn-primary"
-              onClick={() => {
-                setSelectedCaseDetailRef(null);
-                setActiveTab("cases");
+        <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+          <ExecutiveDashboard
+            onNavigateToRegister={(bureauId) => {
+              setFilterBureauId(bureauId || "");
+              setSelectedCaseDetailRef(null);
+              setActiveTab("cases");
+            }}
+            onNavigateToSlaRadar={() => {
+              setActiveTab("sla_radar");
+            }}
+          />
+
+          {/* Interactive Case Lifecycle & Audit Timeline Panel (Phase 3 Simulator) */}
+          <div className="glass-panel" style={{ borderLeft: "4px solid var(--accent-saffron)", marginTop: "0.5rem" }}>
+            <div
+              className="panel-header"
+              style={{
+                cursor: "pointer",
+                marginBottom: showLifecycleSimulator ? "1.25rem" : 0,
               }}
-              style={{ display: "inline-flex", alignItems: "center", gap: "0.4rem" }}
+              onClick={() => setShowLifecycleSimulator(!showLifecycleSimulator)}
             >
-              <FileSpreadsheet size={16} /> Open Case Register
-            </button>
-          </div>
-
-          {/* Top Operational Metrics */}
-          <div className="metrics-grid">
-            <div className="metric-card">
-              <div className="metric-header">
-                <span>Total Registered Cases</span>
-                <Layers size={18} color="var(--accent-aicte-blue)" />
-              </div>
-              <div className="metric-value">58</div>
-              <div className="metric-footer">Across 4 AICTE Bureaus/Cells</div>
-            </div>
-
-            <div className="metric-card" style={{ borderLeft: "4px solid var(--risk-overdue)" }}>
-              <div className="metric-header">
-                <span style={{ color: "var(--risk-overdue)" }}>SLA Overdue Cases</span>
-                <AlertTriangle size={18} color="var(--risk-overdue)" />
-              </div>
-              <div className="metric-value" style={{ color: "var(--risk-overdue)" }}>4</div>
-              <div className="metric-footer">Immediate escalation required</div>
-            </div>
-
-            <div className="metric-card" style={{ borderLeft: "4px solid var(--risk-approaching)" }}>
-              <div className="metric-header">
-                <span style={{ color: "var(--risk-approaching)" }}>Approaching Deadline</span>
-                <Clock size={18} color="var(--risk-approaching)" />
-              </div>
-              <div className="metric-value" style={{ color: "var(--risk-approaching)" }}>6</div>
-              <div className="metric-footer">Turnaround window &lt; 48 hours</div>
-            </div>
-
-            <div className="metric-card" style={{ borderLeft: "4px solid var(--risk-normal)" }}>
-              <div className="metric-header">
-                <span style={{ color: "var(--risk-normal)" }}>Resolved & Closed</span>
-                <CheckCircle2 size={18} color="var(--risk-normal)" />
-              </div>
-              <div className="metric-value" style={{ color: "var(--risk-normal)" }}>14</div>
-              <div className="metric-footer">Compliance reports verified</div>
-            </div>
-          </div>
-
-          {/* Interactive Case Lifecycle & Audit Timeline Panel (Phase 3 Deliverable) */}
-          <div className="glass-panel" style={{ borderLeft: "4px solid var(--accent-saffron)" }}>
-            <div className="panel-header">
               <div>
                 <div className="panel-title" style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
                   <Play size={18} color="var(--accent-saffron)" />
-                  <span>Interactive Case Lifecycle State Machine & Audit Trail (Phase 3)</span>
+                  <span>Interactive Case Lifecycle State Machine & Audit Trail (Phase 3 Simulator)</span>
                 </div>
                 <div style={{ color: "var(--text-muted)", fontSize: "0.8rem", marginTop: "0.2rem" }}>
                   Deterministic 9-Stage Lifecycle &bull; Transition Guard Enforcement &bull; Append-Only Audit Trail
                 </div>
               </div>
-              <span className="badge badge-ontrack">Phase 3 Active</span>
+              <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+                <span className="badge badge-ontrack">Phase 3 Active</span>
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  style={{ fontSize: "0.75rem", padding: "0.25rem 0.6rem" }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowLifecycleSimulator(!showLifecycleSimulator);
+                  }}
+                >
+                  {showLifecycleSimulator ? "Hide Simulator ▲" : "Expand Simulator ▼"}
+                </button>
+              </div>
             </div>
 
-            {/* Case Selector and Status Card */}
-            <div style={{ display: "grid", gridTemplateColumns: "1.2fr 1fr", gap: "1.5rem" }}>
-              <div>
+            {showLifecycleSimulator && (
+              <div style={{ display: "grid", gridTemplateColumns: "1.2fr 1fr", gap: "1.5rem" }}>
+                <div>
                 <div style={{ marginBottom: "1rem", display: "flex", alignItems: "center", gap: "0.75rem" }}>
                   <label htmlFor="case-select" style={{ fontSize: "0.85rem", color: "var(--text-secondary)", fontWeight: 600 }}>
                     Select Case Record:
@@ -406,64 +380,9 @@ export const AppContent: React.FC = () => {
                   <span className="badge badge-low">{timelineEvents.length} Events Logged</span>
                 </div>
                 <TimelineView events={timelineEvents} />
+                </div>
               </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* 3. SLA Risk Radar Tab (Phase 5 Preview) */}
-      {activeTab === "sla_radar" && (
-        <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
-          <div>
-            <h2 style={{ fontSize: "1.75rem", fontWeight: 800, color: "#FFFFFF", letterSpacing: "-0.03em" }}>
-              SLA & Aging Risk Radar
-            </h2>
-            <p style={{ color: "var(--text-secondary)", fontSize: "0.9rem", marginTop: "0.25rem" }}>
-              Dynamic deadline surveillance distinguishing On Track, Approaching, and Overdue institution cases.
-            </p>
-          </div>
-
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "1rem" }}>
-            <div className="card-base" style={{ borderLeft: "4px solid var(--risk-overdue)", padding: "1.25rem" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", color: "var(--risk-overdue)", fontWeight: 700 }}>
-                <AlertTriangle size={18} />
-                <span>4 Cases Overdue / Breached</span>
-              </div>
-              <p style={{ color: "var(--text-secondary)", fontSize: "0.85rem", marginTop: "0.5rem" }}>
-                These cases have exceeded their target SLA turnaround deadlines. Supervisory intervention recommended.
-              </p>
-              <button
-                className="btn btn-secondary"
-                style={{ marginTop: "0.75rem", fontSize: "0.8rem" }}
-                onClick={() => {
-                  setSelectedCaseDetailRef(null);
-                  setActiveTab("cases");
-                }}
-              >
-                Filter Overdue Cases in Register &rarr;
-              </button>
-            </div>
-
-            <div className="card-base" style={{ borderLeft: "4px solid var(--risk-approaching)", padding: "1.25rem" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", color: "var(--risk-approaching)", fontWeight: 700 }}>
-                <Clock size={18} />
-                <span>6 Cases Approaching Deadline</span>
-              </div>
-              <p style={{ color: "var(--text-secondary)", fontSize: "0.85rem", marginTop: "0.5rem" }}>
-                Less than 48 hours remaining before SLA breach. Active bureau officers should expedite review.
-              </p>
-              <button
-                className="btn btn-secondary"
-                style={{ marginTop: "0.75rem", fontSize: "0.8rem" }}
-                onClick={() => {
-                  setSelectedCaseDetailRef(null);
-                  setActiveTab("cases");
-                }}
-              >
-                Inspect in Case Register &rarr;
-              </button>
-            </div>
+            )}
           </div>
         </div>
       )}

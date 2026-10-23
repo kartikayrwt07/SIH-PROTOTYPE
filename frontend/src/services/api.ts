@@ -12,6 +12,9 @@ import {
   CaseNote,
   CaseAssignmentHistory,
   SlaRadarSummary,
+  BureauWorkloadStat,
+  DashboardOverview,
+  BottleneckAnalysis,
 } from "../types";
 
 const API_BASE = "/api/v1";
@@ -132,6 +135,20 @@ class ApiService {
 
   async getDashboardMetrics(): Promise<StandardResponse<DashboardMetrics>> {
     return this.request("/dashboard/metrics");
+  }
+
+  async getDashboardOverview(bureauId?: string): Promise<StandardResponse<DashboardOverview>> {
+    const qs = bureauId ? `?bureau_id=${encodeURIComponent(bureauId)}` : "";
+    return this.request(`/dashboard/metrics${qs}`);
+  }
+
+  async getBottleneckAnalysis(bureauId?: string): Promise<StandardResponse<BottleneckAnalysis>> {
+    const qs = bureauId ? `?bureau_id=${encodeURIComponent(bureauId)}` : "";
+    return this.request(`/dashboard/bottlenecks${qs}`);
+  }
+
+  async getBureauWorkload(): Promise<StandardResponse<BureauWorkloadStat[]>> {
+    return this.request("/dashboard/workload");
   }
 
   async getBureauOfficers(bureauId: string): Promise<StandardResponse<UserSummary[]>> {

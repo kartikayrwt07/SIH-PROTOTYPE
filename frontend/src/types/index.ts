@@ -118,6 +118,52 @@ export interface DashboardMetrics {
   by_status: Record<string, number>;
 }
 
+export interface BureauWorkloadStat {
+  bureau_id: string;
+  bureau_code: string;
+  bureau_name: string;
+  total_cases: number;
+  open_cases: number;
+  overdue_cases: number;
+  approaching_cases: number;
+  resolved_cases: number;
+  resolution_rate_pct: number;
+}
+
+export interface StageDwellTimeStat {
+  stage: string;
+  count: number;
+  avg_hours: number;
+  avg_days: number;
+  min_hours: number;
+  max_hours: number;
+  is_bottleneck: boolean;
+}
+
+export interface ExecutiveKPIs {
+  total_cases: number;
+  open_cases: number;
+  pending_action: number;
+  approaching_deadline: number;
+  overdue_cases: number;
+  resolved_closed: number;
+  resolution_rate_pct: number;
+}
+
+export interface DashboardOverview {
+  kpis: ExecutiveKPIs;
+  by_bureau: BureauWorkloadStat[];
+  by_status: Record<string, number>;
+  by_priority: Record<string, number>;
+  by_category: Record<string, number>;
+}
+
+export interface BottleneckAnalysis {
+  stages: StageDwellTimeStat[];
+  primary_bottleneck_stage?: string | null;
+  system_health_status: string;
+}
+
 export type SlaRiskLevel = "ON_TRACK" | "APPROACHING" | "OVERDUE" | "COMPLETED";
 
 export interface CaseFilterParams {
