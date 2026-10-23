@@ -74,8 +74,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 04-01: Case Register table component with server-side pagination, sorting, search, and badge indicators.
-- [ ] 04-02: Case Detail view with tabbed timeline, case metadata card, and internal notes composer.
+- [x] 04-01: Case Register table component with server-side pagination, sorting, search, and badge indicators.
+- [x] 04-02: Case Detail view with tabbed timeline, case metadata card, and internal notes composer.
 
 ### Phase 5: Bureau Assignment Workflow & SLA Aging Risk Radar
 **Goal**: Enable seamless case delegation across bureaus and officers, backed by a dynamic SLA policy engine and aging risk alerts.

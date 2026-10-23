@@ -32,12 +32,16 @@ Provide dependable, auditable cross-bureau case tracking and transparent SLA ris
 - ✓ **LIFE-02**: Append-only tamper-evident audit logging with actor attribution and mandatory remarks — Phase 3
 - ✓ **LIFE-03**: REST endpoints for case status transitions, reopening, and audit timeline — Phase 3
 - ✓ **LIFE-04**: Interactive chronological activity timeline UI component with actor and role attribution — Phase 3
+- ✓ **MVP-02**: Paginated, searchable Case Register with stable identifiers, multi-criteria filtering, and sorting — Phase 4
+- ✓ **MVP-03**: Comprehensive Case Detail view with timeline audit trail, internal notes vs. public summaries, and institution profile — Phase 4
+- ✓ **CASE-01**: Paginated, server-side sorted and filtered case register with stable case reference IDs — Phase 4
+- ✓ **CASE-02**: Multi-parameter search across institution name, complaint subject, category, bureau, and status — Phase 4
+- ✓ **CASE-03**: Comprehensive Case Detail view displaying complete metadata, institution profile, SLA deadline status, and assigned officer — Phase 4
+- ✓ **CASE-04**: Chronological, append-oriented activity audit timeline reflecting status transitions and internal notes — Phase 4
 
 ### Active
 
 - [ ] **MVP-01**: Central Dashboard with filterable aggregate overview metrics derived dynamically from case records.
-- [ ] **MVP-02**: Paginated, searchable Case Register with stable identifiers, multi-criteria filtering, and export.
-- [ ] **MVP-03**: Comprehensive Case Detail view with timeline audit trail, internal notes vs. public summaries, and linked cases.
 - [ ] **MVP-05**: Bureau/cell case assignment and reassignment tracking with mandatory reason capture and escalation flags.
 - [ ] **MVP-06**: Configurable SLA policy engine calculating due dates, business days, and transparent aging risk indicators.
 - [ ] **MVP-07**: Validated CSV import pipeline with pre-validation preview, batch reporting, and synthetic dataset seeder.

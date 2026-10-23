@@ -92,7 +92,12 @@ export interface StandardResponse<T> {
 export interface PaginatedResponse<T> {
   success: boolean;
   data: T[];
-  metadata: {
+  error?: {
+    code: string;
+    message: string;
+    details?: Array<{ field?: string; message: string }>;
+  };
+  metadata?: {
     page: number;
     page_size: number;
     total_records: number;
@@ -111,4 +116,28 @@ export interface DashboardMetrics {
   resolved_closed: number;
   by_bureau: Record<string, number>;
   by_status: Record<string, number>;
+}
+
+export type SlaRiskLevel = "ON_TRACK" | "APPROACHING" | "OVERDUE" | "COMPLETED";
+
+export interface CaseFilterParams {
+  page?: number;
+  page_size?: number;
+  bureau_id?: string;
+  institution_id?: string;
+  status?: string;
+  priority?: string;
+  search?: string;
+  sort_by?: "created_at" | "due_date" | "priority" | "status" | "subject";
+  sort_dir?: "asc" | "desc";
+}
+
+export interface CaseNote {
+  id: string;
+  case_id: string;
+  author_id: string;
+  content: string;
+  is_confidential: boolean;
+  created_at: string;
+  author?: UserSummary;
 }

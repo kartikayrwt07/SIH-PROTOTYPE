@@ -1,4 +1,16 @@
-import { StandardResponse, ComplaintCase, DashboardMetrics, UserRole, UserSummary, CaseStatus, TimelineEvent } from "../types";
+import {
+  StandardResponse,
+  PaginatedResponse,
+  ComplaintCase,
+  DashboardMetrics,
+  UserRole,
+  UserSummary,
+  CaseStatus,
+  TimelineEvent,
+  Bureau,
+  CaseFilterParams,
+  CaseNote,
+} from "../types";
 
 const API_BASE = "/api/v1";
 
@@ -9,7 +21,7 @@ export interface UserProfileResponse extends UserSummary {
 }
 
 class ApiService {
-  private async request<T>(endpoint: string, options?: RequestInit): Promise<StandardResponse<T>> {
+  private async request<T>(endpoint: string, options?: RequestInit): Promise<T> {
     try {
       const activeRole = localStorage.getItem("aicte_demo_role") || "SUPERVISOR";
       const headers: Record<string, string> = {
@@ -39,7 +51,7 @@ class ApiService {
           code: "NETWORK_ERROR",
           message: err instanceof Error ? err.message : "Unable to connect to backend service",
         },
-      };
+      } as unknown as T;
     }
   }
 
@@ -59,14 +71,11 @@ class ApiService {
     return this.request(`/auth/switch-demo-role/${role}`);
   }
 
-  async getCases(params?: {
-    bureau_id?: string;
-    status?: string;
-    priority?: string;
-    search?: string;
-    page?: number;
-    page_size?: number;
-  }): Promise<StandardResponse<ComplaintCase[]>> {
+  async getBureaus(): Promise<StandardResponse<Bureau[]>> {
+    return this.request("/bureaus");
+  }
+
+  async getCases(params?: CaseFilterParams): Promise<PaginatedResponse<ComplaintCase>> {
     const query = new URLSearchParams();
     if (params) {
       Object.entries(params).forEach(([key, val]) => {
@@ -102,6 +111,21 @@ class ApiService {
 
   async getCaseTimeline(caseRef: string): Promise<StandardResponse<TimelineEvent[]>> {
     return this.request(`/cases/${caseRef}/timeline`);
+  }
+
+  async getCaseNotes(caseRef: string): Promise<StandardResponse<CaseNote[]>> {
+    return this.request(`/cases/${caseRef}/notes`);
+  }
+
+  async addCaseNote(
+    caseRef: string,
+    content: string,
+    is_confidential: boolean = false
+  ): Promise<StandardResponse<CaseNote>> {
+    return this.request(`/cases/${caseRef}/notes`, {
+      method: "POST",
+      body: JSON.stringify({ content, is_confidential }),
+    });
   }
 
   async getDashboardMetrics(): Promise<StandardResponse<DashboardMetrics>> {

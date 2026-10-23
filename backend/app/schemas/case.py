@@ -90,3 +90,21 @@ class TimelineEventRead(BaseModel):
     timestamp: datetime
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class CaseNoteCreate(BaseModel):
+    content: str = Field(..., min_length=2, max_length=5000, description="Case note body content")
+    is_confidential: bool = Field(False, description="Whether this note is hidden from read-only auditors")
+
+
+class CaseNoteRead(BaseModel):
+    id: str
+    case_id: str
+    author_id: str
+    content: str
+    is_confidential: bool
+    created_at: datetime
+    author: Optional[UserSummary] = None
+
+    model_config = ConfigDict(from_attributes=True)
+
