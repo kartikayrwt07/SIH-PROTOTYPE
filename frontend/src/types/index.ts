@@ -226,3 +226,41 @@ export interface SlaRadarSummary {
   overdue_cases: SlaRadarItem[];
   approaching_cases: SlaRadarItem[];
 }
+
+export interface CsvRowError {
+  row_number: number;
+  field: string;
+  message: string;
+}
+
+export interface CsvRowPreview {
+  row_number: number;
+  is_valid: boolean;
+  institution_aicte_id: string;
+  institution_name?: string | null;
+  bureau_code: string;
+  bureau_name?: string | null;
+  subject: string;
+  category: string;
+  priority: string;
+  is_confidential: boolean;
+  description: string;
+  errors: CsvRowError[];
+  warnings: string[];
+  duplicate_case_ref?: string | null;
+}
+
+export interface CsvPreviewResponse {
+  total_rows: number;
+  valid_rows: number;
+  invalid_rows: number;
+  can_commit: boolean;
+  rows: CsvRowPreview[];
+}
+
+export interface CsvCommitResponse {
+  imported_count: number;
+  skipped_count: number;
+  failed_count: number;
+  created_case_references: string[];
+}

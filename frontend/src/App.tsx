@@ -8,6 +8,7 @@ import { CaseRegister } from "./components/cases/CaseRegister";
 import { CaseDetailView } from "./components/cases/CaseDetailView";
 import { SlaRiskRadar } from "./components/sla/SlaRiskRadar";
 import { ExecutiveDashboard } from "./components/dashboard/ExecutiveDashboard";
+import { CsvIngestionModal } from "./components/ingest/CsvIngestionModal";
 import {
   Database,
   ShieldAlert,
@@ -18,7 +19,6 @@ import {
   RotateCcw,
   AlertOctagon,
   ExternalLink,
-  UploadCloud,
 } from "lucide-react";
 
 export const AppContent: React.FC = () => {
@@ -397,32 +397,14 @@ export const AppContent: React.FC = () => {
         />
       )}
 
-      {/* 4. CSV Ingestion Tab (Phase 7 Preview) */}
+      {/* 4. CSV Ingestion Workspace (Phase 7 Deliverable) */}
       {activeTab === "ingest" && (
-        <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
-          <div>
-            <h2 style={{ fontSize: "1.75rem", fontWeight: 800, color: "#FFFFFF", letterSpacing: "-0.03em" }}>
-              Batch CSV Ingestion Engine
-            </h2>
-            <p style={{ color: "var(--text-secondary)", fontSize: "0.9rem", marginTop: "0.25rem" }}>
-              Pre-validation dry-run preview, batch transaction safety, and duplicate collision warnings.
-            </p>
-          </div>
-
-          <div className="card-base" style={{ padding: "2.5rem", textAlign: "center" }}>
-            <UploadCloud size={40} color="var(--accent-aicte-blue)" style={{ margin: "0 auto 1rem auto" }} />
-            <h3 style={{ color: "var(--text-primary)", margin: "0 0 0.5rem 0" }}>Upload Batch Complaint CSV</h3>
-            <p style={{ color: "var(--text-muted)", fontSize: "0.9rem", maxWidth: "480px", margin: "0 auto 1.5rem auto" }}>
-              Upload historical or batch institutional complaints for schema validation, automated field mapping, and preview prior to commit.
-            </p>
-            <button
-              className="btn btn-secondary"
-              onClick={() => setActiveTab("cases")}
-            >
-              Browse Active Seeded Cases (58 Loaded)
-            </button>
-          </div>
-        </div>
+        <CsvIngestionModal
+          isOpen={true}
+          isEmbedded={true}
+          onClose={() => {}}
+          onSuccess={() => setActiveTab("cases")}
+        />
       )}
 
       {/* 5. Role & Server-Side Security Panel (Phase 2 Deliverable) */}

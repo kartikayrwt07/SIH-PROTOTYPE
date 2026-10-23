@@ -42,10 +42,10 @@
 
 ### Dashboard & Analytics (DASH)
 
-- [ ] **DASH-01**: Executive and Bureau-specific overview metric cards (Total, Open, Pending Action, Overdue, Approaching Deadline, Resolved).
-- [ ] **DASH-02**: Visual breakdown of case distribution by bureau/cell, status pipeline, and category.
-- [ ] **DASH-03**: SLA / Aging Risk Radar panel highlighting cases requiring urgent intervention with clear explainability of warning drivers.
-- [ ] **DASH-04**: Bottleneck & cycle time analytics showing average dwell time per lifecycle stage without punitive institution rankings.
+- [x] **DASH-01**: Executive and Bureau-specific overview metric cards (Total, Open, Pending Action, Overdue, Approaching Deadline, Resolved).
+- [x] **DASH-02**: Visual breakdown of case distribution by bureau/cell, status pipeline, and category.
+- [x] **DASH-03**: SLA / Aging Risk Radar panel highlighting cases requiring urgent intervention with clear explainability of warning drivers.
+- [x] **DASH-04**: Bottleneck & cycle time analytics showing average dwell time per lifecycle stage without punitive institution rankings.
 
 ### Data Import & Export (DATA)
 
@@ -101,10 +101,10 @@
 | SLA-02 | Phase 5 | Satisfied |
 | SLA-03 | Phase 5 | Satisfied |
 | SLA-04 | Phase 5 | Satisfied |
-| DASH-01 | Phase 6 | Pending |
-| DASH-02 | Phase 6 | Pending |
-| DASH-03 | Phase 6 | Pending |
-| DASH-04 | Phase 6 | Pending |
+| DASH-01 | Phase 6 | Satisfied |
+| DASH-02 | Phase 6 | Satisfied |
+| DASH-03 | Phase 6 | Satisfied |
+| DASH-04 | Phase 6 | Satisfied |
 | DATA-01 | Phase 7 | Pending |
 | DATA-02 | Phase 7 | Pending |
 | DATA-03 | Phase 7 | Pending |
@@ -116,10 +116,10 @@
 **Coverage:**
 - v1 requirements: 32 total
 - Mapped to phases: 32
-- Satisfied: 20 (62.5%)
-- Pending: 12 (37.5%)
+- Satisfied: 24 (75.0%)
+- Pending: 8 (25.0%)
 - Unmapped: 0 ✓
 
 ---
 *Requirements defined: 2026-10-24*
-*Last updated: 2026-10-24 after Phase 5 completion*
+*Last updated: 2026-10-24 after Phase 6 completion*

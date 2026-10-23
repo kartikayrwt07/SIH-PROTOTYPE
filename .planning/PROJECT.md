@@ -88,6 +88,8 @@ Provide dependable, auditable cross-bureau case tracking and transparent SLA ris
 | Deterministic Baseline for Intelligence | TF-IDF and keyword matching ensure 100% testable, zero-cost, reproducible duplicate detection and categorization during judging | ✓ Architecture Locked (Phase 8 Plan) |
 | Configurable Org & SLA Schema | Prevents inventing official AICTE procedures while allowing judges to adapt bureaus and deadlines on the fly | ✓ Adopted & Verified (Phase 5) |
 | Append-Only Audit Event Model | Ensures full traceability for all lifecycle transitions, reassignments, notes, and escalations | ✓ Adopted & Verified (Phases 3–5) |
+| Two-Stage Dry-Run Batch CSV Ingestion | Pre-validates incoming rows with line-by-line foreign key checking before transactional commit | ✓ Adopted & Verified (Phase 7) |
+| Role-Scoped CSV Export Engine | Enforces privacy & whistleblower protections by streaming redacted complaint text to unauthorized tiers | ✓ Adopted & Verified (Phase 7) |
 
 ## Evolution
 

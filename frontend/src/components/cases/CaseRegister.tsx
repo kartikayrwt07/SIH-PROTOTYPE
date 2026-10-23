@@ -9,10 +9,14 @@ import {
   AlertCircle,
   Clock,
   Layers,
+  Download,
+  FileUp,
+  Loader2,
 } from "lucide-react";
 import { ComplaintCase, Bureau, CaseStatus, CasePriority } from "../../types";
 import { api } from "../../services/api";
 import { SlaBadge } from "../common/SlaBadge";
+import { CsvIngestionModal } from "../ingest/CsvIngestionModal";
 
 interface CaseRegisterProps {
   onSelectCase: (caseRef: string) => void;
@@ -24,6 +28,11 @@ export const CaseRegister: React.FC<CaseRegisterProps> = ({ onSelectCase, initia
   const [bureaus, setBureaus] = useState<Bureau[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Ingestion & Export states (Phase 7)
+  const [isImportModalOpen, setIsImportModalOpen] = useState<boolean>(false);
+  const [isExporting, setIsExporting] = useState<boolean>(false);
+  const [exportError, setExportError] = useState<string | null>(null);
 
   // Filter & Search states
   const [search, setSearch] = useState<string>("");
@@ -97,11 +106,28 @@ export const CaseRegister: React.FC<CaseRegisterProps> = ({ onSelectCase, initia
   const handleResetFilters = () => {
     setSearch("");
     setStatusFilter("");
-    setPriorityFilter("");
+    priorityFilter && setPriorityFilter("");
     setBureauFilter("");
     setSortBy("created_at");
     setSortDir("desc");
     setPage(1);
+  };
+
+  const handleExportCsv = async () => {
+    setIsExporting(true);
+    setExportError(null);
+    try {
+      await api.exportCasesCsv({
+        search: search.trim() || undefined,
+        status: statusFilter || undefined,
+        priority: priorityFilter || undefined,
+        bureau_id: bureauFilter || undefined,
+      });
+    } catch (err) {
+      setExportError(err instanceof Error ? err.message : "Failed to export CSV");
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   const getPriorityBadge = (priority: CasePriority) => {
@@ -284,8 +310,65 @@ export const CaseRegister: React.FC<CaseRegisterProps> = ({ onSelectCase, initia
           >
             <RotateCcw size={16} />
           </button>
+
+          {/* Import CSV Batch (Phase 7) */}
+          <button
+            className="btn btn-secondary"
+            onClick={() => setIsImportModalOpen(true)}
+            title="Import batch cases from CSV file"
+            style={{
+              padding: "0.5rem 0.85rem",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "0.45rem",
+              borderColor: "rgba(59, 130, 246, 0.35)",
+            }}
+          >
+            <FileUp size={16} color="var(--accent-aicte-blue)" />
+            <span>Import CSV</span>
+          </button>
+
+          {/* Export Filtered CSV (Phase 7) */}
+          <button
+            className="btn btn-secondary"
+            onClick={handleExportCsv}
+            disabled={isExporting}
+            title="Export currently filtered complaint cases to CSV"
+            style={{
+              padding: "0.5rem 0.85rem",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "0.45rem",
+            }}
+          >
+            {isExporting ? (
+              <Loader2 size={16} className="animate-spin" />
+            ) : (
+              <Download size={16} color="var(--accent-saffron)" />
+            )}
+            <span>{isExporting ? "Exporting..." : "Export CSV"}</span>
+          </button>
         </div>
       </div>
+
+      {exportError && (
+        <div
+          style={{
+            padding: "0.75rem 1rem",
+            background: "rgba(239, 68, 68, 0.15)",
+            color: "var(--risk-overdue)",
+            borderRadius: "6px",
+            border: "1px solid rgba(239, 68, 68, 0.3)",
+            display: "flex",
+            alignItems: "center",
+            gap: "0.5rem",
+            fontSize: "0.85rem",
+          }}
+        >
+          <AlertCircle size={16} />
+          <span>{exportError}</span>
+        </div>
+      )}
 
       {/* Main Table Container */}
       <div className="card-base" style={{ padding: "0", overflow: "hidden" }}>
@@ -603,6 +686,16 @@ export const CaseRegister: React.FC<CaseRegisterProps> = ({ onSelectCase, initia
           </div>
         </div>
       </div>
+
+      {/* CSV Ingestion Modal (Phase 7) */}
+      <CsvIngestionModal
+        isOpen={isImportModalOpen}
+        onClose={() => setIsImportModalOpen(false)}
+        onSuccess={() => {
+          setIsImportModalOpen(false);
+          loadCases();
+        }}
+      />
     </div>
   );
 };

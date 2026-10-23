@@ -57,7 +57,7 @@ npm run dev
 ### 3. Automated Test Suite
 
 ```bash
-# Run all backend tests (28 tests covering auth, state machine, search, assignment, SLA radar)
+# Run all backend tests (37 tests covering auth, state machine, search, assignment, SLA radar, analytics, CSV I/O)
 python -m pytest backend/tests -v
 
 # Run frontend production build & TypeScript validation
@@ -75,11 +75,11 @@ npm --prefix frontend run build
 | **Phase 3** | Deterministic 9-State Lifecycle State Machine & Tamper-Evident Audit Trail | 2/2 | ✅ Completed |
 | **Phase 4** | Searchable Multi-Criteria Case Register & Interactive Case Detail Dossier Workspace | 2/2 | ✅ Completed |
 | **Phase 5** | Bureau Assignment/Delegation Workflow & Real-Time SLA Aging Risk Radar | 2/2 | ✅ Completed |
-| **Phase 6** | Executive Cross-Bureau Monitoring Dashboard & Bottleneck Analytics | 0/2 | ⏳ Next |
-| **Phase 7** | Validated CSV Batch Ingestion Pipeline & Role-Scoped Export Engine | 0/2 | 📋 Planned |
-| **Phase 8** | Explainable AI Intelligence (TF-IDF Duplicate Detection & Smart Routing Heuristics) | 0/2 | 📋 Planned |
+| **Phase 6** | Executive Cross-Bureau Monitoring Dashboard & Bottleneck Analytics | 2/2 | ✅ Completed |
+| **Phase 7** | Validated CSV Batch Ingestion Pipeline & Role-Scoped Export Engine | 2/2 | ✅ Completed |
+| **Phase 8** | Explainable AI Intelligence (TF-IDF Duplicate Detection & Smart Routing Heuristics) | 0/2 | ⏳ Next |
 
-**Overall Progress**: **10 of 16 Plans Completed (62.5%)**
+**Overall Progress**: **14 of 16 Plans Completed (87.5%)**
 
 ---
 

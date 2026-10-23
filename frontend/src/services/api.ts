@@ -15,6 +15,8 @@ import {
   BureauWorkloadStat,
   DashboardOverview,
   BottleneckAnalysis,
+  CsvPreviewResponse,
+  CsvCommitResponse,
 } from "../types";
 
 const API_BASE = "/api/v1";
@@ -185,6 +187,54 @@ class ApiService {
       method: "POST",
       body: JSON.stringify({ reason }),
     });
+  }
+
+  async previewCsv(csvContent: string): Promise<StandardResponse<CsvPreviewResponse>> {
+    return this.request("/cases/import/preview", {
+      method: "POST",
+      body: JSON.stringify({ csv_content: csvContent }),
+    });
+  }
+
+  async commitCsvBatch(rows: any[], skipInvalid: boolean = true): Promise<StandardResponse<CsvCommitResponse>> {
+    return this.request("/cases/import/commit", {
+      method: "POST",
+      body: JSON.stringify({ rows, skip_invalid: skipInvalid }),
+    });
+  }
+
+  async exportCasesCsv(params?: CaseFilterParams): Promise<Blob | null> {
+    try {
+      const activeRole = localStorage.getItem("aicte_demo_role") || "SUPERVISOR";
+      const headers: Record<string, string> = {
+        "X-Demo-Role": activeRole,
+      };
+      const token = localStorage.getItem("aicte_token");
+      if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
+      }
+
+      const query = new URLSearchParams();
+      if (params) {
+        Object.entries(params).forEach(([key, val]) => {
+          if (val !== undefined && val !== null && val !== "" && key !== "page" && key !== "page_size") {
+            query.append(key, String(val));
+          }
+        });
+      }
+      const qs = query.toString() ? `?${query.toString()}` : "";
+
+      const response = await fetch(`${API_BASE}/cases/export/csv${qs}`, {
+        headers,
+      });
+
+      if (!response.ok) {
+        return null;
+      }
+      return await response.blob();
+    } catch {
+      return null;
+    }
   }
 }
 

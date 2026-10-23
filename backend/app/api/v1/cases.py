@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 from typing import List, Optional
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status, Request, Response
 from sqlalchemy.orm import Session
 from sqlalchemy import or_
 from backend.app.core.database import get_db
@@ -22,10 +22,20 @@ from backend.app.schemas.case import (
     SlaRadarSummary,
 )
 from backend.app.schemas.common import StandardResponse, PaginatedResponse, PaginationMetadata
+from backend.app.schemas.csv_io import (
+    CsvPreviewResponse,
+    CsvCommitRequest,
+    CsvCommitResponse,
+)
 from backend.app.services.lifecycle import execute_transition, reopen_case
 from backend.app.services.audit import get_case_audit_trail, log_case_event
 from backend.app.services.assignment import assign_case
 from backend.app.services.sla import compute_case_sla_risk, escalate_case
+from backend.app.services.csv_io import (
+    parse_and_validate_csv,
+    commit_csv_batch,
+    export_cases_to_csv,
+)
 
 router = APIRouter(prefix="/cases")
 
@@ -211,6 +221,95 @@ def get_sla_radar(
     )
 
     return StandardResponse(data=summary)
+
+
+@router.get("/export/csv")
+def export_cases_csv(
+    bureau_id: Optional[str] = Query(None, description="Filter by Bureau ID"),
+    institution_id: Optional[str] = Query(None, description="Filter by Institution ID"),
+    status_filter: Optional[str] = Query(None, alias="status", description="Filter by CaseStatus"),
+    priority_filter: Optional[str] = Query(None, alias="priority", description="Filter by CasePriority"),
+    search: Optional[str] = Query(None, description="Search keyword"),
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Export filtered complaint records as an RFC 4180 CSV file with role-based redaction."""
+    query = db.query(ComplaintCase).join(Institution, ComplaintCase.institution_id == Institution.id, isouter=True)
+
+    if current_user.role == UserRole.OFFICER and current_user.bureau_id:
+        query = query.filter(ComplaintCase.bureau_id == current_user.bureau_id)
+    elif bureau_id:
+        query = query.filter(ComplaintCase.bureau_id == bureau_id)
+
+    if institution_id:
+        query = query.filter(ComplaintCase.institution_id == institution_id)
+
+    if status_filter:
+        query = query.filter(ComplaintCase.status == status_filter)
+
+    if priority_filter:
+        query = query.filter(ComplaintCase.priority == priority_filter)
+
+    if search:
+        s = f"%{search}%"
+        query = query.filter(
+            or_(
+                ComplaintCase.subject.ilike(s),
+                ComplaintCase.case_reference_id.ilike(s),
+                ComplaintCase.category.ilike(s),
+                Institution.name.ilike(s),
+            )
+        )
+
+    cases = query.order_by(ComplaintCase.created_at.desc()).all()
+    csv_text = export_cases_to_csv(cases, current_user)
+
+    filename = f"aicte_complaints_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}.csv"
+    return Response(
+        content=csv_text,
+        media_type="text/csv",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
+
+
+@router.post("/import/preview", response_model=StandardResponse[CsvPreviewResponse])
+async def preview_csv_import(
+    request: Request,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Pre-validate CSV grievance data with granular field errors, institution validation, and duplicate detection."""
+    content_type = request.headers.get("content-type", "")
+    if "multipart/form-data" in content_type:
+        form = await request.form()
+        file = form.get("file")
+        if file and hasattr(file, "read"):
+            csv_bytes = await file.read()
+            csv_content = csv_bytes.decode("utf-8", errors="replace")
+        else:
+            csv_content = str(form.get("csv_content", ""))
+    else:
+        body = await request.json()
+        csv_content = body.get("csv_content", "")
+
+    preview = parse_and_validate_csv(db, csv_content)
+    return StandardResponse(data=preview)
+
+
+@router.post("/import/commit", response_model=StandardResponse[CsvCommitResponse])
+def commit_csv_import(
+    commit_req: CsvCommitRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Atomically commit pre-validated CSV rows inside a transactional boundary."""
+    result = commit_csv_batch(
+        db=db,
+        rows=commit_req.rows,
+        current_user=current_user,
+        skip_invalid=commit_req.skip_invalid,
+    )
+    return StandardResponse(data=result)
 
 
 @router.get("/{case_ref}", response_model=StandardResponse[ComplaintCaseRead])

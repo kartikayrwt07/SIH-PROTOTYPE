@@ -119,8 +119,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 07-01: Backend CSV parsing, validation schema, batch transactional ingestion, and export endpoint.
-- [ ] 07-02: Frontend CSV Import modal with drag-and-drop, preview table, error badge summary, and export button.
+- [x] 07-01: Backend CSV parsing, validation schema, batch transactional ingestion, and export endpoint.
+- [x] 07-02: Frontend CSV Import modal with drag-and-drop, preview table, error badge summary, and export button.
 
 ### Phase 8: Explainable AI Intelligence & Duplicate Detection Layer
 **Goal**: Introduce deterministic, explainable AI assistance for duplicate complaint detection and smart bureau triage suggestions.
@@ -150,5 +150,5 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8
 | 4. Case Register & Detail | 2/2 | Complete | 2026-10-24 |
 | 5. Assignment & SLA Engine | 2/2 | Complete | 2026-10-24 |
 | 6. Dashboard & Analytics | 2/2 | Complete | 2026-10-24 |
-| 7. CSV Ingestion & Export | 0/2 | Not started | - |
+| 7. CSV Ingestion & Export | 2/2 | Complete | 2026-10-24 |
 | 8. Explainable AI Intelligence | 0/2 | Not started | - |
