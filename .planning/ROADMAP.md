@@ -6,7 +6,7 @@ A phased journey delivering a production-grade, hackathon-ready institutional co
 
 ## Phases
 
-- [ ] **Phase 1: Project Scaffolding, Data Models & Synthetic Seeder** - Setup FastAPI, React/Vite, SQLite/Postgres ORM schemas, and realistic synthetic complaint dataset generator.
+- [x] **Phase 1: Project Scaffolding, Data Models & Synthetic Seeder** - Setup FastAPI, React/Vite, SQLite/Postgres ORM schemas, and realistic synthetic complaint dataset generator.
 - [ ] **Phase 2: Authentication, RBAC & Server-Side Authorization Gates** - Implement token/session handling, 4 distinct roles, least-privilege route dependencies, and demo role-switcher.
 - [ ] **Phase 3: Case Lifecycle State Machine & Tamper-Evident Audit Trail** - Deterministic status transitions, transition guards, mandatory closure data, and immutable event logging.
 - [ ] **Phase 4: Searchable Case Register & Interactive Case Detail Timeline** - High-density paginated case catalog, multi-criteria filtering, comprehensive case inspection, and chronological timeline.
@@ -29,8 +29,8 @@ A phased journey delivering a production-grade, hackathon-ready institutional co
 **Plans**: 2 plans
 
 Plans:
-- [ ] 01-01: Backend scaffolding, SQLAlchemy ORM models (Bureau, User, Institution, Case, Assignment, AuditLog), and database connection.
-- [ ] 01-02: Frontend scaffolding (React, TypeScript, Vite, CSS design tokens, layout shell) and synthetic data seeder script.
+- [x] 01-01: Backend scaffolding, SQLAlchemy ORM models (Bureau, User, Institution, Case, Assignment, AuditLog), and database connection.
+- [x] 01-02: Frontend scaffolding (React, TypeScript, Vite, CSS design tokens, layout shell) and synthetic data seeder script.
 
 ### Phase 2: Authentication, RBAC & Server-Side Authorization Gates
 **Goal**: Enforce strict server-side access control across Platform Admin, Supervisor, Bureau Case Officer, and Auditor roles.
@@ -144,7 +144,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Scaffolding & Data Models | 0/2 | Not started | - |
+| 1. Scaffolding & Data Models | 2/2 | Complete | 2026-10-24 |
 | 2. RBAC & Security Gates | 0/2 | Not started | - |
 | 3. Case State Machine & Audit | 0/2 | Not started | - |
 | 4. Case Register & Detail | 0/2 | Not started | - |

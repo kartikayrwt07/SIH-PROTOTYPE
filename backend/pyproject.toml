@@ -1,0 +1,19 @@
+[project]
+name = "aicte-complaint-backend"
+version = "0.1.0"
+description = "AICTE Integrated Complaint Case Monitoring Dashboard Backend"
+authors = [{ name = "AICTE SIH Team" }]
+dependencies = [
+    "fastapi>=0.110.0",
+    "uvicorn>=0.28.0",
+    "sqlalchemy>=2.0.28",
+    "pydantic>=2.6.4",
+    "pydantic-settings>=2.2.1",
+    "httpx>=0.27.0",
+    "pytest>=8.1.1",
+]
+requires-python = ">=3.11"
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"

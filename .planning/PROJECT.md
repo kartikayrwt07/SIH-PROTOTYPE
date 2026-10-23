@@ -18,7 +18,10 @@ Provide dependable, auditable cross-bureau case tracking and transparent SLA ris
 
 ### Validated
 
-(None yet — ship phases to validate)
+- ✓ **ARCH-01**: Modular backend architecture with FastAPI, SQLAlchemy 2.0 ORM, and Pydantic v2 schemas — Phase 1
+- ✓ **ARCH-02**: Accessible React 18 + TypeScript + Vite frontend with design tokens and responsive layout — Phase 1
+- ✓ **ARCH-03**: Dual-database compatibility (SQLite for local dev, PostgreSQL for production) — Phase 1
+- ✓ **ARCH-04**: Database seeding command generating 50+ realistic synthetic cases across 9 states with zero PII — Phase 1
 
 ### Active
 
