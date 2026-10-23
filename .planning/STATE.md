@@ -62,21 +62,26 @@ Recent decisions affecting current work:
 - [Phase 2]: Enforced server-side IDOR protection in `assert_bureau_access` — Bureau Officers are restricted to their assigned bureau, while Supervisors/Admins retain cross-bureau visibility.
 - [Phase 2]: Implemented field sanitization in `sanitize_case_for_role` — confidential complainant statements and identities are server-redacted for Read-Only Auditors.
 - [Phase 2]: Interactive demo role switcher passes `X-Demo-Role` headers and is clearly demarcated with a persistent demonstration governance banner.
+- [Phase 3]: Enforced 9-state validated state machine in `backend/app/services/lifecycle.py` with transition guards, mandatory closure remarks, and append-only audit logging in `case_audit_events`.
+- [Phase 4]: Implemented joined multi-parameter SQL search, live countdown `SlaBadge`, interactive `CaseRegister` table, `CaseDetailView` dossier, and internal notes API with auditor confidentiality filtering.
+- [Phase 5]: Built `backend/app/services/assignment.py` validating destination bureau and personnel, recording delegation in `case_assignment_history` with mandatory rationale, and emitting `REASSIGNED` audit event.
+- [Phase 5]: Created `backend/app/services/sla.py` with SLA deadline calculation, real-time risk tiers (Overdue, Approaching, On Track, Completed), and supervisory escalation engine (Tiers 0–3).
+- [Phase 5]: Delivered `SlaRiskRadar.tsx` panel with critical overdue cards, approaching breach watchlist, and interactive escalation modal.
 
 ### Pending Todos
 
-None yet.
+None for completed phases. Phase 6 plans to be created next.
 
 ### Blockers/Concerns
 
-None. Phase 3 unblocked and ready for execution.
+None. Phase 6 (Executive Dashboard & Bottleneck Analytics) unblocked and ready for execution.
 
 ## Deferred Items
 
-None yet.
+None.
 
 ## Session Continuity
 
-Last session: 2026-10-24 01:08
-Stopped at: Phase 2 completed and verified.
-Resume file: None
+Last session: 2026-10-24 01:52
+Stopped at: Phase 5 completed and committed (5b744fc).
+Resume file: None (all Phase 5 plans finished; next is Phase 6 planning)

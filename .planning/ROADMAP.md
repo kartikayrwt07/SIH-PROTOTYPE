@@ -8,9 +8,9 @@ A phased journey delivering a production-grade, hackathon-ready institutional co
 
 - [x] **Phase 1: Project Scaffolding, Data Models & Synthetic Seeder** - Setup FastAPI, React/Vite, SQLite/Postgres ORM schemas, and realistic synthetic complaint dataset generator.
 - [x] **Phase 2: Authentication, RBAC & Server-Side Authorization Gates** - Implement token/session handling, 4 distinct roles, least-privilege route dependencies, and demo role-switcher.
-- [ ] **Phase 3: Case Lifecycle State Machine & Tamper-Evident Audit Trail** - Deterministic status transitions, transition guards, mandatory closure data, and immutable event logging.
-- [ ] **Phase 4: Searchable Case Register & Interactive Case Detail Timeline** - High-density paginated case catalog, multi-criteria filtering, comprehensive case inspection, and chronological timeline.
-- [ ] **Phase 5: Bureau Assignment Workflow & SLA Aging Risk Radar** - Assignment/transfer logging, dynamic SLA deadline calculations, working-day logic, and risk radar warnings.
+- [x] **Phase 3: Case Lifecycle State Machine & Tamper-Evident Audit Trail** - Deterministic status transitions, transition guards, mandatory closure data, and immutable event logging.
+- [x] **Phase 4: Searchable Case Register & Interactive Case Detail Timeline** - High-density paginated case catalog, multi-criteria filtering, comprehensive case inspection, and chronological timeline.
+- [x] **Phase 5: Bureau Assignment Workflow & SLA Aging Risk Radar** - Assignment/transfer logging, dynamic SLA deadline calculations, working-day logic, and risk radar warnings.
 - [ ] **Phase 6: Executive Cross-Bureau Monitoring Dashboard & Bottleneck Analytics** - Real-time aggregate KPIs, bureau workload comparisons, lifecycle dwell-time analytics, and visual charts.
 - [ ] **Phase 7: Validated CSV Ingestion Pipeline & Role-Scoped Export Engine** - Dry-run preview, field-level validation, atomic batch ingestion, and permission-aware CSV reports.
 - [ ] **Phase 8: Explainable AI Intelligence & Duplicate Detection Layer** - Deterministic TF-IDF duplicate matcher, rule-based triage classifier, transparent evidence cards, and human review gates.

@@ -7,38 +7,38 @@
 
 ### Core Architecture & Foundation (ARCH)
 
-- [ ] **ARCH-01**: Modular backend architecture with FastAPI, SQLAlchemy 2.0 async/sync ORM, Pydantic v2 schemas, and Alembic migrations.
-- [ ] **ARCH-02**: Modern, accessible React + TypeScript + Vite frontend with curated design tokens, clear visual hierarchy, and responsive layout.
-- [ ] **ARCH-03**: Dual-database compatibility (SQLite for fast local development and unit tests; PostgreSQL ready for deployment).
-- [ ] **ARCH-04**: Database seeding command generating realistic synthetic institutions, complaint cases, assignments, and audit records with zero real personal data.
+- [x] **ARCH-01**: Modular backend architecture with FastAPI, SQLAlchemy 2.0 async/sync ORM, Pydantic v2 schemas, and Alembic migrations.
+- [x] **ARCH-02**: Modern, accessible React + TypeScript + Vite frontend with curated design tokens, clear visual hierarchy, and responsive layout.
+- [x] **ARCH-03**: Dual-database compatibility (SQLite for fast local development and unit tests; PostgreSQL ready for deployment).
+- [x] **ARCH-04**: Database seeding command generating realistic synthetic institutions, complaint cases, assignments, and audit records with zero real personal data.
 
 ### RBAC & Security (SEC)
 
-- [ ] **SEC-01**: Role-Based Access Control enforcing least privilege across 4 roles: Platform Administrator, Central Dashboard Viewer / Supervisor, Bureau/Cell Case Officer, and Read-Only Auditor.
-- [ ] **SEC-02**: Server-side permission enforcement on all API routes, preventing Insecure Direct Object References (IDOR) and unauthorized bureau cross-access.
-- [ ] **SEC-03**: Separation of internal sensitive case notes and confidential complainant descriptions from general public/audit summaries.
-- [ ] **SEC-04**: Interactive demo role-switcher widget prominently flagged as development/demo-only, completely bypassed or deactivated in production mode.
+- [x] **SEC-01**: Role-Based Access Control enforcing least privilege across 4 roles: Platform Administrator, Central Dashboard Viewer / Supervisor, Bureau/Cell Case Officer, and Read-Only Auditor.
+- [x] **SEC-02**: Server-side permission enforcement on all API routes, preventing Insecure Direct Object References (IDOR) and unauthorized bureau cross-access.
+- [x] **SEC-03**: Separation of internal sensitive case notes and confidential complainant descriptions from general public/audit summaries.
+- [x] **SEC-04**: Interactive demo role-switcher widget prominently flagged as development/demo-only, completely bypassed or deactivated in production mode.
 
 ### Case Lifecycle & State Machine (LIFE)
 
-- [ ] **LIFE-01**: Validated state machine enforcing permitted transitions: `Received -> Registered -> Under Triage -> Assigned -> In Progress -> Awaiting Information -> Under Review -> Resolved -> Closed`.
-- [ ] **LIFE-02**: Rejection of invalid status transitions with structured error responses and explanation of required pre-conditions.
-- [ ] **LIFE-03**: Mandatory capture of transition metadata (acting user, timestamp, previous status, new status, and reason/resolution remarks).
-- [ ] **LIFE-04**: Support for authorized case reopening and closure workflows requiring formal closure rationale.
+- [x] **LIFE-01**: Validated state machine enforcing permitted transitions: `Received -> Registered -> Under Triage -> Assigned -> In Progress -> Awaiting Information -> Under Review -> Resolved -> Closed`.
+- [x] **LIFE-02**: Rejection of invalid status transitions with structured error responses and explanation of required pre-conditions.
+- [x] **LIFE-03**: Mandatory capture of transition metadata (acting user, timestamp, previous status, new status, and reason/resolution remarks).
+- [x] **LIFE-04**: Support for authorized case reopening and closure workflows requiring formal closure rationale.
 
 ### Case Register & Detail (CASE)
 
-- [ ] **CASE-01**: Paginated, server-side sorted and filtered case register with stable, collision-free case reference IDs (e.g. `AICTE-2026-XXXX`).
-- [ ] **CASE-02**: Multi-parameter search across institution name, complaint subject, category, bureau/cell, and current status.
-- [ ] **CASE-03**: Comprehensive Case Detail view displaying complete metadata, institution profile, SLA deadline status, and assigned officer.
-- [ ] **CASE-04**: Chronological, append-oriented activity audit timeline reflecting every assignment, status change, escalation, and note.
+- [x] **CASE-01**: Paginated, server-side sorted and filtered case register with stable, collision-free case reference IDs (e.g. `AICTE-2026-XXXX`).
+- [x] **CASE-02**: Multi-parameter search across institution name, complaint subject, category, bureau/cell, and current status.
+- [x] **CASE-03**: Comprehensive Case Detail view displaying complete metadata, institution profile, SLA deadline status, and assigned officer.
+- [x] **CASE-04**: Chronological, append-oriented activity audit timeline reflecting every assignment, status change, escalation, and note.
 
 ### Assignment, Escalation & SLA Engine (SLA)
 
-- [ ] **SLA-01**: Configurable SLA policy rules calculating case deadlines and risk thresholds based on case priority, category, and bureau.
-- [ ] **SLA-02**: Real-time SLA aging computation distinguishing "On Track", "Approaching Deadline (< 48h)", and "Breached / Overdue".
-- [ ] **SLA-03**: Bureau and officer assignment/reassignment workflow with audit history capturing reason for transfer.
-- [ ] **SLA-04**: Supervisory escalation mechanism flagging cases exceeding risk thresholds or stalled in queues.
+- [x] **SLA-01**: Configurable SLA policy rules calculating case deadlines and risk thresholds based on case priority, category, and bureau.
+- [x] **SLA-02**: Real-time SLA aging computation distinguishing "On Track", "Approaching Deadline (< 48h)", and "Breached / Overdue".
+- [x] **SLA-03**: Bureau and officer assignment/reassignment workflow with audit history capturing reason for transfer.
+- [x] **SLA-04**: Supervisory escalation mechanism flagging cases exceeding risk thresholds or stalled in queues.
 
 ### Dashboard & Analytics (DASH)
 
@@ -81,26 +81,26 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| ARCH-01 | Phase 1 | Pending |
-| ARCH-02 | Phase 1 | Pending |
-| ARCH-03 | Phase 1 | Pending |
-| ARCH-04 | Phase 1 | Pending |
-| SEC-01 | Phase 2 | Pending |
-| SEC-02 | Phase 2 | Pending |
-| SEC-03 | Phase 2 | Pending |
-| SEC-04 | Phase 2 | Pending |
-| LIFE-01 | Phase 3 | Pending |
-| LIFE-02 | Phase 3 | Pending |
-| LIFE-03 | Phase 3 | Pending |
-| LIFE-04 | Phase 3 | Pending |
-| CASE-01 | Phase 4 | Pending |
-| CASE-02 | Phase 4 | Pending |
-| CASE-03 | Phase 4 | Pending |
-| CASE-04 | Phase 4 | Pending |
-| SLA-01 | Phase 5 | Pending |
-| SLA-02 | Phase 5 | Pending |
-| SLA-03 | Phase 5 | Pending |
-| SLA-04 | Phase 5 | Pending |
+| ARCH-01 | Phase 1 | Satisfied |
+| ARCH-02 | Phase 1 | Satisfied |
+| ARCH-03 | Phase 1 | Satisfied |
+| ARCH-04 | Phase 1 | Satisfied |
+| SEC-01 | Phase 2 | Satisfied |
+| SEC-02 | Phase 2 | Satisfied |
+| SEC-03 | Phase 2 | Satisfied |
+| SEC-04 | Phase 2 | Satisfied |
+| LIFE-01 | Phase 3 | Satisfied |
+| LIFE-02 | Phase 3 | Satisfied |
+| LIFE-03 | Phase 3 | Satisfied |
+| LIFE-04 | Phase 3 | Satisfied |
+| CASE-01 | Phase 4 | Satisfied |
+| CASE-02 | Phase 4 | Satisfied |
+| CASE-03 | Phase 4 | Satisfied |
+| CASE-04 | Phase 4 | Satisfied |
+| SLA-01 | Phase 5 | Satisfied |
+| SLA-02 | Phase 5 | Satisfied |
+| SLA-03 | Phase 5 | Satisfied |
+| SLA-04 | Phase 5 | Satisfied |
 | DASH-01 | Phase 6 | Pending |
 | DASH-02 | Phase 6 | Pending |
 | DASH-03 | Phase 6 | Pending |
@@ -116,8 +116,10 @@
 **Coverage:**
 - v1 requirements: 32 total
 - Mapped to phases: 32
+- Satisfied: 20 (62.5%)
+- Pending: 12 (37.5%)
 - Unmapped: 0 ✓
 
 ---
 *Requirements defined: 2026-10-24*
-*Last updated: 2026-10-24 after initial definition*
+*Last updated: 2026-10-24 after Phase 5 completion*

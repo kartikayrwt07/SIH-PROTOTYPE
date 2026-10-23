@@ -38,18 +38,22 @@ Provide dependable, auditable cross-bureau case tracking and transparent SLA ris
 - ✓ **CASE-02**: Multi-parameter search across institution name, complaint subject, category, bureau, and status — Phase 4
 - ✓ **CASE-03**: Comprehensive Case Detail view displaying complete metadata, institution profile, SLA deadline status, and assigned officer — Phase 4
 - ✓ **CASE-04**: Chronological, append-oriented activity audit timeline reflecting status transitions and internal notes — Phase 4
+- ✓ **MVP-05**: Bureau/cell case assignment and reassignment tracking with mandatory reason capture and escalation flags — Phase 5
+- ✓ **MVP-06**: Configurable SLA policy engine calculating due dates, remaining hours, and transparent aging risk indicators — Phase 5
+- ✓ **SLA-01**: Configurable SLA policy engine calculating target resolution deadlines based on category and priority — Phase 5
+- ✓ **SLA-02**: Real-time SLA aging surveillance categorizing cases into Overdue, Approaching, On Track, and Completed — Phase 5
+- ✓ **SLA-03**: Cross-bureau assignment and transfer workflow with immutable history and mandatory justification — Phase 5
+- ✓ **SLA-04**: Supervisory escalation trigger advancing surveillance tiers with audit attribution — Phase 5
+- ✓ **DIFF-03**: Visual SLA & Aging Risk Radar explaining drivers behind impending breach warnings — Phase 5
 
 ### Active
 
 - [ ] **MVP-01**: Central Dashboard with filterable aggregate overview metrics derived dynamically from case records.
-- [ ] **MVP-05**: Bureau/cell case assignment and reassignment tracking with mandatory reason capture and escalation flags.
-- [ ] **MVP-06**: Configurable SLA policy engine calculating due dates, business days, and transparent aging risk indicators.
 - [ ] **MVP-07**: Validated CSV import pipeline with pre-validation preview, batch reporting, and synthetic dataset seeder.
 - [ ] **MVP-08**: Multi-parameter search, filtering, and role-scoped CSV report exports.
 - [ ] **MVP-09**: Resilient error handling, defensive UI empty/loading/error states, and comprehensive system diagnostics.
 - [ ] **DIFF-01**: Cross-Bureau Case Visibility & comparative throughput analytics (without toxic public ranking).
 - [ ] **DIFF-02**: Explainable Complaint Intelligence (deterministic TF-IDF duplicate detection and rule-based category/bureau routing with clear evidence rationale).
-- [ ] **DIFF-03**: Visual SLA & Aging Risk Radar explaining drivers behind impending breach warnings.
 
 ### Out of Scope
 
@@ -76,10 +80,10 @@ Provide dependable, auditable cross-bureau case tracking and transparent SLA ris
 
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
-| Modular Monolith (FastAPI + React) | Eliminates distributed systems overhead while providing clean separation of UI, API, domain, and data layers | — Pending |
-| Deterministic Baseline for Intelligence | TF-IDF and keyword matching ensure 100% testable, zero-cost, reproducible duplicate detection and categorization during judging | — Pending |
-| Configurable Org & SLA Schema | Prevents inventing official AICTE procedures while allowing judges to adapt bureaus and deadlines on the fly | — Pending |
-| Append-Only Audit Event Model | Ensures full traceability for all lifecycle transitions, reassignments, and notes | — Pending |
+| Modular Monolith (FastAPI + React) | Eliminates distributed systems overhead while providing clean separation of UI, API, domain, and data layers | ✓ Adopted & Verified (Phases 1–5) |
+| Deterministic Baseline for Intelligence | TF-IDF and keyword matching ensure 100% testable, zero-cost, reproducible duplicate detection and categorization during judging | ✓ Architecture Locked (Phase 8 Plan) |
+| Configurable Org & SLA Schema | Prevents inventing official AICTE procedures while allowing judges to adapt bureaus and deadlines on the fly | ✓ Adopted & Verified (Phase 5) |
+| Append-Only Audit Event Model | Ensures full traceability for all lifecycle transitions, reassignments, notes, and escalations | ✓ Adopted & Verified (Phases 3–5) |
 
 ## Evolution
 
