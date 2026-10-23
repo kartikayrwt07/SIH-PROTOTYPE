@@ -22,6 +22,10 @@ Provide dependable, auditable cross-bureau case tracking and transparent SLA ris
 - ✓ **ARCH-02**: Accessible React 18 + TypeScript + Vite frontend with design tokens and responsive layout — Phase 1
 - ✓ **ARCH-03**: Dual-database compatibility (SQLite for local dev, PostgreSQL for production) — Phase 1
 - ✓ **ARCH-04**: Database seeding command generating 50+ realistic synthetic cases across 9 states with zero PII — Phase 1
+- ✓ **SEC-01**: Role-Based Access Control enforcing least privilege across 4 roles — Phase 2
+- ✓ **SEC-02**: Server-side permission enforcement on all API routes, preventing IDOR — Phase 2
+- ✓ **SEC-03**: Separation of confidential complainant descriptions from general/auditor views — Phase 2
+- ✓ **SEC-04**: Interactive demo role-switcher widget prominently flagged as demo-only — Phase 2
 
 ### Active
 

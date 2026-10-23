@@ -1,14 +1,15 @@
 import React from "react";
 import { ShieldCheck, UserCheck } from "lucide-react";
 import { UserRole } from "../../types";
+import { useAuth } from "../../context/AuthContext";
 
 interface HeaderProps {
-  currentRole: UserRole;
-  onRoleChange: (role: UserRole) => void;
   serviceStatus: string;
 }
 
-export const Header: React.FC<HeaderProps> = ({ currentRole, onRoleChange, serviceStatus }) => {
+export const Header: React.FC<HeaderProps> = ({ serviceStatus }) => {
+  const { currentRole, switchRole } = useAuth();
+
   return (
     <header className="top-header">
       <div className="header-title-section">
@@ -28,7 +29,7 @@ export const Header: React.FC<HeaderProps> = ({ currentRole, onRoleChange, servi
             id="role-select"
             className="role-select"
             value={currentRole}
-            onChange={(e) => onRoleChange(e.target.value as UserRole)}
+            onChange={(e) => switchRole(e.target.value as UserRole)}
           >
             <option value="ADMIN">Platform Administrator</option>
             <option value="SUPERVISOR">Central Supervisor</option>

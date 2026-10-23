@@ -1,13 +1,11 @@
 import React from "react";
 import { Sidebar } from "./Sidebar";
 import { Header } from "./Header";
-import { UserRole } from "../../types";
+import { RoleBanner } from "./RoleBanner";
 
 interface LayoutProps {
   activeTab: string;
   onTabChange: (tab: string) => void;
-  currentRole: UserRole;
-  onRoleChange: (role: UserRole) => void;
   serviceStatus: string;
   children: React.ReactNode;
 }
@@ -15,8 +13,6 @@ interface LayoutProps {
 export const Layout: React.FC<LayoutProps> = ({
   activeTab,
   onTabChange,
-  currentRole,
-  onRoleChange,
   serviceStatus,
   children,
 }) => {
@@ -24,11 +20,8 @@ export const Layout: React.FC<LayoutProps> = ({
     <div className="app-layout">
       <Sidebar activeTab={activeTab} onTabChange={onTabChange} />
       <div className="main-wrapper">
-        <Header
-          currentRole={currentRole}
-          onRoleChange={onRoleChange}
-          serviceStatus={serviceStatus}
-        />
+        <Header serviceStatus={serviceStatus} />
+        <RoleBanner />
         <main className="page-content">{children}</main>
       </div>
     </div>

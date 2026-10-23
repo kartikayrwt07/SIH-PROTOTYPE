@@ -3,10 +3,10 @@ gsd_state_version: '1.0'
 status: ready_to_plan
 progress:
   total_phases: 8
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 16
-  completed_plans: 2
-  percent: 12
+  completed_plans: 4
+  percent: 25
 ---
 
 # Project State
@@ -16,30 +16,30 @@ progress:
 See: [.planning/PROJECT.md](file:///c:/Users/karti/OneDrive/Desktop/SIH/.planning/PROJECT.md) (updated 2026-10-24)
 
 **Core value:** Provide dependable, auditable cross-bureau case tracking and transparent SLA risk monitoring across institutional complaints with strict data integrity, explainable intelligence, and zero fabricated official assertions.
-**Current focus:** Phase 2: Authentication, RBAC & Server-Side Authorization Gates
+**Current focus:** Phase 3: Case Lifecycle State Machine & Tamper-Evident Audit Trail
 
 ## Current Position
 
-Phase: 2 of 8 (Authentication, RBAC & Server-Side Authorization Gates)
+Phase: 3 of 8 (Case Lifecycle State Machine & Tamper-Evident Audit Trail)
 Plan: 0 of 2 in current phase
-Status: Phase 1 complete (verified); Ready to plan/execute Phase 2
-Last activity: 2026-10-24 — Phase 1 completed (Backend scaffold, SQLAlchemy 2.0 ORM, 58 seeded cases, React 18 frontend shell, 9 pytest cases passed)
+Status: Phase 2 complete (verified); Ready to plan/execute Phase 3
+Last activity: 2026-10-24 — Phase 2 completed (Server-side RBAC, IDOR jurisdiction protection, field sanitization, AuthContext, demo role-switcher, 15 pytest cases passed)
 
-Progress: [█░░░░░░░░░] 12%
+Progress: [███░░░░░░░] 25%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 2
+- Total plans completed: 4
 - Average duration: 8 min
-- Total execution time: 0.3 hours
+- Total execution time: 0.5 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 1. Scaffolding & Data Models | 2/2 | 16 min | 8 min |
-| 2. RBAC & Security Gates | 0/2 | - | - |
+| 2. RBAC & Security Gates | 2/2 | 14 min | 7 min |
 | 3. Case State Machine & Audit | 0/2 | - | - |
 | 4. Case Register & Detail | 0/2 | - | - |
 | 5. Assignment & SLA Engine | 0/2 | - | - |
@@ -48,7 +48,7 @@ Progress: [█░░░░░░░░░] 12%
 | 8. Explainable AI Intelligence | 0/2 | - | - |
 
 **Recent Trend:**
-- Trend: On Track (9/9 automated tests passing, 0 build errors)
+- Trend: On Track (15/15 automated tests passing, 0 build errors)
 
 *Updated after each plan completion*
 
@@ -59,9 +59,9 @@ Progress: [█░░░░░░░░░] 12%
 Decisions are logged in [.planning/PROJECT.md](file:///c:/Users/karti/OneDrive/Desktop/SIH/.planning/PROJECT.md) Key Decisions table.
 Recent decisions affecting current work:
 
-- [Phase 1]: Created dual-compatible database engine (SQLite for dev/testing, PostgreSQL for production) with foreign key checks.
-- [Phase 1]: Built rich synthetic dataset with 58 cases, explicitly tagging 4 cases as Overdue and 6 as Approaching Deadline to test the SLA Risk Radar.
-- [Phase 1]: Established custom CSS design tokens with deep navy/slate palette, high contrast, and accessible status badges.
+- [Phase 2]: Enforced server-side IDOR protection in `assert_bureau_access` — Bureau Officers are restricted to their assigned bureau, while Supervisors/Admins retain cross-bureau visibility.
+- [Phase 2]: Implemented field sanitization in `sanitize_case_for_role` — confidential complainant statements and identities are server-redacted for Read-Only Auditors.
+- [Phase 2]: Interactive demo role switcher passes `X-Demo-Role` headers and is clearly demarcated with a persistent demonstration governance banner.
 
 ### Pending Todos
 
@@ -69,7 +69,7 @@ None yet.
 
 ### Blockers/Concerns
 
-None. Phase 2 unblocked and ready for execution.
+None. Phase 3 unblocked and ready for execution.
 
 ## Deferred Items
 
@@ -77,6 +77,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-10-24 00:58
-Stopped at: Phase 1 completed and verified.
+Last session: 2026-10-24 01:08
+Stopped at: Phase 2 completed and verified.
 Resume file: None

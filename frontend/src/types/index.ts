@@ -28,6 +28,8 @@ export interface UserSummary {
   full_name: string;
   role: UserRole;
   bureau_id?: string;
+  bureau_name?: string;
+  bureau_code?: string;
 }
 
 export interface Institution {

@@ -7,7 +7,7 @@ A phased journey delivering a production-grade, hackathon-ready institutional co
 ## Phases
 
 - [x] **Phase 1: Project Scaffolding, Data Models & Synthetic Seeder** - Setup FastAPI, React/Vite, SQLite/Postgres ORM schemas, and realistic synthetic complaint dataset generator.
-- [ ] **Phase 2: Authentication, RBAC & Server-Side Authorization Gates** - Implement token/session handling, 4 distinct roles, least-privilege route dependencies, and demo role-switcher.
+- [x] **Phase 2: Authentication, RBAC & Server-Side Authorization Gates** - Implement token/session handling, 4 distinct roles, least-privilege route dependencies, and demo role-switcher.
 - [ ] **Phase 3: Case Lifecycle State Machine & Tamper-Evident Audit Trail** - Deterministic status transitions, transition guards, mandatory closure data, and immutable event logging.
 - [ ] **Phase 4: Searchable Case Register & Interactive Case Detail Timeline** - High-density paginated case catalog, multi-criteria filtering, comprehensive case inspection, and chronological timeline.
 - [ ] **Phase 5: Bureau Assignment Workflow & SLA Aging Risk Radar** - Assignment/transfer logging, dynamic SLA deadline calculations, working-day logic, and risk radar warnings.
@@ -44,8 +44,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 02-01: Backend auth dependencies, role-permission matrix, and bureau data-scoping middleware.
-- [ ] 02-02: Frontend auth state management, demo role-switcher bar, and protected route wrappers.
+- [x] 02-01: Backend auth dependencies, role-permission matrix, and bureau data-scoping middleware.
+- [x] 02-02: Frontend auth state management, demo role-switcher bar, and protected route wrappers.
 
 ### Phase 3: Case Lifecycle State Machine & Tamper-Evident Audit Trail
 **Goal**: Implement a strictly enforced, validated case state machine with append-only audit trail logging every mutation.
@@ -145,7 +145,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Scaffolding & Data Models | 2/2 | Complete | 2026-10-24 |
-| 2. RBAC & Security Gates | 0/2 | Not started | - |
+| 2. RBAC & Security Gates | 2/2 | Complete | 2026-10-24 |
 | 3. Case State Machine & Audit | 0/2 | Not started | - |
 | 4. Case Register & Detail | 0/2 | Not started | - |
 | 5. Assignment & SLA Engine | 0/2 | Not started | - |

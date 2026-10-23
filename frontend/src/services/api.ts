@@ -1,13 +1,30 @@
-import { StandardResponse, ComplaintCase, DashboardMetrics } from "../types";
+import { StandardResponse, ComplaintCase, DashboardMetrics, UserRole, UserSummary } from "../types";
 
 const API_BASE = "/api/v1";
+
+export interface UserProfileResponse extends UserSummary {
+  bureau_name?: string;
+  bureau_code?: string;
+  permissions: string[];
+}
 
 class ApiService {
   private async request<T>(endpoint: string, options?: RequestInit): Promise<StandardResponse<T>> {
     try {
+      const activeRole = localStorage.getItem("aicte_demo_role") || "SUPERVISOR";
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+        "X-Demo-Role": activeRole,
+      };
+
+      const token = localStorage.getItem("aicte_token");
+      if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
+      }
+
       const response = await fetch(`${API_BASE}${endpoint}`, {
         headers: {
-          "Content-Type": "application/json",
+          ...headers,
           ...options?.headers,
         },
         ...options,
@@ -28,6 +45,18 @@ class ApiService {
 
   async checkHealth(): Promise<StandardResponse<{ status: string; service: string; database: string }>> {
     return this.request("/health");
+  }
+
+  async getCurrentUser(roleOverride?: UserRole): Promise<StandardResponse<UserProfileResponse>> {
+    const headers: Record<string, string> = {};
+    if (roleOverride) {
+      headers["X-Demo-Role"] = roleOverride;
+    }
+    return this.request("/auth/me", { headers });
+  }
+
+  async switchDemoRole(role: UserRole): Promise<StandardResponse<{ user: any; token: string }>> {
+    return this.request(`/auth/switch-demo-role/${role}`);
   }
 
   async getCases(params?: {
