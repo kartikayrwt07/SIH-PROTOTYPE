@@ -108,3 +108,48 @@ class CaseNoteRead(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
+
+class CaseAssignmentHistoryRead(BaseModel):
+    id: str
+    case_id: str
+    from_bureau_id: Optional[str] = None
+    to_bureau_id: str
+    assigned_by_id: Optional[str] = None
+    transfer_reason: str
+    created_at: datetime
+    from_bureau: Optional[BureauRead] = None
+    to_bureau: Optional[BureauRead] = None
+    assigned_by: Optional[UserSummary] = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class EscalateRequest(BaseModel):
+    reason: str = Field(..., min_length=3, description="Mandatory reason for escalation")
+
+
+class SlaRadarItem(BaseModel):
+    case_reference_id: str
+    subject: str
+    category: str
+    priority: CasePriority
+    status: CaseStatus
+    bureau_code: Optional[str] = None
+    bureau_name: Optional[str] = None
+    institution_name: Optional[str] = None
+    due_date: Optional[datetime] = None
+    escalation_level: int
+    sla_status: str
+    hours_remaining: Optional[float] = None
+    is_overdue: bool
+
+
+class SlaRadarSummary(BaseModel):
+    total_active_cases: int
+    overdue_count: int
+    approaching_count: int
+    on_track_count: int
+    completed_count: int
+    overdue_cases: List[SlaRadarItem]
+    approaching_cases: List[SlaRadarItem]
+

@@ -184,3 +184,142 @@ def test_case_notes():
     assert any(e["event_type"] == "NOTE_ADDED" for e in timeline)
 
 
+def test_case_assignment_workflow():
+    """Verify cross-bureau and officer case assignment with mandatory justification and audit logging."""
+    # 1. Get bureaus
+    bureau_res = client.get("/api/v1/bureaus")
+    assert bureau_res.status_code == 200
+    bureaus = bureau_res.json()["data"]
+    assert len(bureaus) >= 2
+
+    # 2. Get a case
+    case_res = client.get("/api/v1/cases?page=1&page_size=1", headers={"X-Demo-Role": "SUPERVISOR"})
+    assert case_res.status_code == 200
+    target_case = case_res.json()["data"][0]
+    case_ref = target_case["case_reference_id"]
+    current_bureau_id = target_case["bureau_id"]
+
+    # Pick a destination bureau different from current
+    dest_bureau = next(b for b in bureaus if b["id"] != current_bureau_id)
+
+    # 3. Auditor cannot reassign (403 Forbidden)
+    auditor_res = client.post(
+        f"/api/v1/cases/{case_ref}/assign",
+        headers={"X-Demo-Role": "AUDITOR"},
+        json={
+            "to_bureau_id": dest_bureau["id"],
+            "reason": "Auditor attempting assignment transfer"
+        }
+    )
+    assert auditor_res.status_code == 403
+
+    # 4. Short reason rejected (<3 chars)
+    short_res = client.post(
+        f"/api/v1/cases/{case_ref}/assign",
+        headers={"X-Demo-Role": "SUPERVISOR"},
+        json={
+            "to_bureau_id": dest_bureau["id"],
+            "reason": "ab"
+        }
+    )
+    assert short_res.status_code == 422
+
+    # 5. Fetch destination bureau officers
+    officers_res = client.get(f"/api/v1/bureaus/{dest_bureau['id']}/officers")
+    assert officers_res.status_code == 200
+    officers = officers_res.json()["data"]
+    dest_officer_id = officers[0]["id"] if officers else None
+
+    # 6. Valid reassignment by Supervisor
+    transfer_reason = f"Transferred to {dest_bureau['code']} for specialized committee review."
+    assign_res = client.post(
+        f"/api/v1/cases/{case_ref}/assign",
+        headers={"X-Demo-Role": "SUPERVISOR"},
+        json={
+            "to_bureau_id": dest_bureau["id"],
+            "to_officer_id": dest_officer_id,
+            "reason": transfer_reason
+        }
+    )
+    assert assign_res.status_code == 200
+    assigned_data = assign_res.json()["data"]
+    assert assigned_data["bureau_id"] == dest_bureau["id"]
+    if dest_officer_id:
+        assert assigned_data["assigned_officer_id"] == dest_officer_id
+
+    # 7. Assignment history endpoint records transfer
+    history_res = client.get(
+        f"/api/v1/cases/{case_ref}/assignment-history",
+        headers={"X-Demo-Role": "SUPERVISOR"}
+    )
+    assert history_res.status_code == 200
+    history = history_res.json()["data"]
+    assert len(history) >= 1
+    latest_transfer = history[0]
+    assert latest_transfer["to_bureau_id"] == dest_bureau["id"]
+    assert latest_transfer["transfer_reason"] == transfer_reason
+
+    # 8. Timeline shows REASSIGNED audit event
+    timeline_res = client.get(f"/api/v1/cases/{case_ref}/timeline", headers={"X-Demo-Role": "SUPERVISOR"})
+    assert timeline_res.status_code == 200
+    events = timeline_res.json()["data"]
+    assert any(e["event_type"] == "REASSIGNED" for e in events)
+
+
+def test_sla_radar_and_escalation():
+    """Verify SLA radar surveillance endpoint and administrative case escalation."""
+    # 1. Fetch SLA Radar
+    radar_res = client.get("/api/v1/cases/sla/radar", headers={"X-Demo-Role": "SUPERVISOR"})
+    assert radar_res.status_code == 200
+    radar = radar_res.json()["data"]
+
+    assert "total_active_cases" in radar
+    assert "overdue_count" in radar
+    assert "approaching_count" in radar
+    assert "on_track_count" in radar
+    assert "overdue_cases" in radar
+    assert "approaching_cases" in radar
+    assert radar["total_active_cases"] == (
+        radar["overdue_count"] + radar["approaching_count"] + radar["on_track_count"]
+    )
+
+    # 2. Pick a case to escalate
+    case_res = client.get("/api/v1/cases?page=1&page_size=1", headers={"X-Demo-Role": "SUPERVISOR"})
+    assert case_res.status_code == 200
+    case_ref = case_res.json()["data"][0]["case_reference_id"]
+    initial_escalation = case_res.json()["data"][0]["escalation_level"]
+
+    # 3. Auditor cannot escalate (403 Forbidden)
+    auditor_res = client.post(
+        f"/api/v1/cases/{case_ref}/escalate",
+        headers={"X-Demo-Role": "AUDITOR"},
+        json={"reason": "Auditor unauthorized escalation"}
+    )
+    assert auditor_res.status_code == 403
+
+    # 4. Short reason rejected (< 3 chars)
+    short_res = client.post(
+        f"/api/v1/cases/{case_ref}/escalate",
+        headers={"X-Demo-Role": "SUPERVISOR"},
+        json={"reason": "hi"}
+    )
+    assert short_res.status_code == 422
+
+    # 5. Valid escalation by Supervisor
+    escalate_reason = "Flagged due to prolonged inactivity and impending SLA breach."
+    good_res = client.post(
+        f"/api/v1/cases/{case_ref}/escalate",
+        headers={"X-Demo-Role": "SUPERVISOR"},
+        json={"reason": escalate_reason}
+    )
+    assert good_res.status_code == 200
+    updated_case = good_res.json()["data"]
+    assert updated_case["escalation_level"] >= initial_escalation
+
+    # 6. Timeline records ESCALATED audit event
+    timeline_res = client.get(f"/api/v1/cases/{case_ref}/timeline", headers={"X-Demo-Role": "SUPERVISOR"})
+    assert timeline_res.status_code == 200
+    events = timeline_res.json()["data"]
+    assert any(e["event_type"] == "ESCALATED" for e in events)
+
+

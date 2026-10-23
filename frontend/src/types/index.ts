@@ -141,3 +141,42 @@ export interface CaseNote {
   created_at: string;
   author?: UserSummary;
 }
+
+export interface CaseAssignmentHistory {
+  id: string;
+  case_id: string;
+  from_bureau_id?: string;
+  to_bureau_id: string;
+  assigned_by_id?: string;
+  transfer_reason: string;
+  created_at: string;
+  from_bureau?: Bureau;
+  to_bureau?: Bureau;
+  assigned_by?: UserSummary;
+}
+
+export interface SlaRadarItem {
+  case_reference_id: string;
+  subject: string;
+  category: string;
+  priority: CasePriority;
+  status: CaseStatus;
+  bureau_code?: string;
+  bureau_name?: string;
+  institution_name?: string;
+  due_date?: string;
+  escalation_level: number;
+  sla_status: string;
+  hours_remaining?: number;
+  is_overdue: boolean;
+}
+
+export interface SlaRadarSummary {
+  total_active_cases: number;
+  overdue_count: number;
+  approaching_count: number;
+  on_track_count: number;
+  completed_count: number;
+  overdue_cases: SlaRadarItem[];
+  approaching_cases: SlaRadarItem[];
+}

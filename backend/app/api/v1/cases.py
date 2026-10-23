@@ -1,3 +1,4 @@
+from datetime import datetime, timezone
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
@@ -6,7 +7,7 @@ from backend.app.core.database import get_db
 from backend.app.core.auth import get_current_user, assert_bureau_access, sanitize_case_for_role
 from backend.app.models.institution import Institution
 from backend.app.models.user import User, UserRole
-from backend.app.models.case import ComplaintCase, CaseStatus, CasePriority, CaseNote
+from backend.app.models.case import ComplaintCase, CaseStatus, CasePriority, CaseNote, CaseAssignmentHistory
 from backend.app.models.audit import AuditEventType
 from backend.app.schemas.case import (
     ComplaintCaseRead,
@@ -14,10 +15,17 @@ from backend.app.schemas.case import (
     TimelineEventRead,
     CaseNoteCreate,
     CaseNoteRead,
+    AssignmentRequest,
+    CaseAssignmentHistoryRead,
+    EscalateRequest,
+    SlaRadarItem,
+    SlaRadarSummary,
 )
 from backend.app.schemas.common import StandardResponse, PaginatedResponse, PaginationMetadata
 from backend.app.services.lifecycle import execute_transition, reopen_case
 from backend.app.services.audit import get_case_audit_trail, log_case_event
+from backend.app.services.assignment import assign_case
+from backend.app.services.sla import compute_case_sla_risk, escalate_case
 
 router = APIRouter(prefix="/cases")
 
@@ -128,6 +136,81 @@ def list_cases(
             has_prev=page > 1,
         )
     )
+
+
+@router.get("/sla/radar", response_model=StandardResponse[SlaRadarSummary])
+def get_sla_radar(
+    bureau_id: Optional[str] = Query(None, description="Optional bureau filter"),
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Real-time SLA aging surveillance radar: categorizes active cases by breach risk."""
+    query = (
+        db.query(ComplaintCase)
+        .join(Institution, ComplaintCase.institution_id == Institution.id, isouter=True)
+        .filter(ComplaintCase.status.notin_([CaseStatus.RESOLVED, CaseStatus.CLOSED]))
+    )
+
+    # Scoping by bureau for officers/auditors
+    if current_user.role in [UserRole.OFFICER, UserRole.AUDITOR] and current_user.bureau_id:
+        query = query.filter(ComplaintCase.bureau_id == current_user.bureau_id)
+    elif bureau_id:
+        query = query.filter(ComplaintCase.bureau_id == bureau_id)
+
+    cases = query.all()
+    now = datetime.now(timezone.utc)
+
+    overdue_items: List[SlaRadarItem] = []
+    approaching_items: List[SlaRadarItem] = []
+    on_track_count = 0
+
+    for c in cases:
+        risk = compute_case_sla_risk(c, now)
+        item = SlaRadarItem(
+            case_reference_id=c.case_reference_id,
+            subject=c.subject,
+            category=c.category,
+            priority=c.priority,
+            status=c.status,
+            bureau_code=c.bureau.code if c.bureau else None,
+            bureau_name=c.bureau.name if c.bureau else None,
+            institution_name=c.institution.name if c.institution else None,
+            due_date=c.due_date,
+            escalation_level=c.escalation_level,
+            sla_status=risk["status"],
+            hours_remaining=risk["hours_remaining"],
+            is_overdue=risk["is_overdue"],
+        )
+        if risk["status"] == "OVERDUE":
+            overdue_items.append(item)
+        elif risk["status"] == "APPROACHING":
+            approaching_items.append(item)
+        else:
+            on_track_count += 1
+
+    # Sort overdue by lowest hours_remaining (most overdue first)
+    overdue_items.sort(key=lambda x: x.hours_remaining if x.hours_remaining is not None else 0)
+    # Sort approaching by lowest hours_remaining (most urgent deadline first)
+    approaching_items.sort(key=lambda x: x.hours_remaining if x.hours_remaining is not None else 9999)
+
+    completed_q = db.query(ComplaintCase).filter(ComplaintCase.status.in_([CaseStatus.RESOLVED, CaseStatus.CLOSED]))
+    if current_user.role in [UserRole.OFFICER, UserRole.AUDITOR] and current_user.bureau_id:
+        completed_q = completed_q.filter(ComplaintCase.bureau_id == current_user.bureau_id)
+    elif bureau_id:
+        completed_q = completed_q.filter(ComplaintCase.bureau_id == bureau_id)
+    completed_count = completed_q.count()
+
+    summary = SlaRadarSummary(
+        total_active_cases=len(cases),
+        overdue_count=len(overdue_items),
+        approaching_count=len(approaching_items),
+        on_track_count=on_track_count,
+        completed_count=completed_count,
+        overdue_cases=overdue_items,
+        approaching_cases=approaching_items,
+    )
+
+    return StandardResponse(data=summary)
 
 
 @router.get("/{case_ref}", response_model=StandardResponse[ComplaintCaseRead])
@@ -321,4 +404,98 @@ def add_case_note(
     db.refresh(new_note)
 
     return StandardResponse(data=CaseNoteRead.model_validate(new_note))
+
+
+@router.post("/{case_ref}/assign", response_model=StandardResponse[ComplaintCaseRead])
+def reassign_case_endpoint(
+    case_ref: str,
+    request: AssignmentRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Reassign case to another bureau or officer with mandatory procedural justification."""
+    if current_user.role == UserRole.AUDITOR:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Read-Only Auditor role cannot reassign cases."
+        )
+
+    case = db.query(ComplaintCase).filter(ComplaintCase.case_reference_id == case_ref).first()
+    if not case:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Case with reference ID '{case_ref}' not found."
+        )
+
+    # Current user must have access to current case bureau
+    assert_bureau_access(current_user, case.bureau_id)
+
+    updated_case = assign_case(
+        db=db,
+        case=case,
+        to_bureau_id=request.to_bureau_id,
+        to_officer_id=request.to_officer_id,
+        assigned_by=current_user,
+        transfer_reason=request.reason,
+    )
+
+    case_dict = ComplaintCaseRead.model_validate(updated_case).model_dump()
+    case_dict = sanitize_case_for_role(case_dict, current_user.role)
+
+    return StandardResponse(data=ComplaintCaseRead(**case_dict))
+
+
+@router.get("/{case_ref}/assignment-history", response_model=StandardResponse[List[CaseAssignmentHistoryRead]])
+def get_case_assignment_history(
+    case_ref: str,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Retrieve full delegation and transfer history for the case."""
+    case = db.query(ComplaintCase).filter(ComplaintCase.case_reference_id == case_ref).first()
+    if not case:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Case with reference ID '{case_ref}' not found."
+        )
+
+    assert_bureau_access(current_user, case.bureau_id)
+
+    history = (
+        db.query(CaseAssignmentHistory)
+        .filter(CaseAssignmentHistory.case_id == case.id)
+        .order_by(CaseAssignmentHistory.created_at.desc())
+        .all()
+    )
+    return StandardResponse(data=[CaseAssignmentHistoryRead.model_validate(h) for h in history])
+
+
+@router.post("/{case_ref}/escalate", response_model=StandardResponse[ComplaintCaseRead])
+def escalate_case_endpoint(
+    case_ref: str,
+    request: EscalateRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Escalate a case to higher supervisory surveillance tier with mandatory justification."""
+    case = db.query(ComplaintCase).filter(ComplaintCase.case_reference_id == case_ref).first()
+    if not case:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Case with reference ID '{case_ref}' not found."
+        )
+
+    assert_bureau_access(current_user, case.bureau_id)
+
+    updated_case = escalate_case(
+        db=db,
+        case=case,
+        actor=current_user,
+        reason=request.reason,
+    )
+
+    case_dict = ComplaintCaseRead.model_validate(updated_case).model_dump()
+    case_dict = sanitize_case_for_role(case_dict, current_user.role)
+
+    return StandardResponse(data=ComplaintCaseRead(**case_dict))
 

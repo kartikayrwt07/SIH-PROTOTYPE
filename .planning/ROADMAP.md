@@ -89,8 +89,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 05-01: SLA calculation engine, working calendar logic, and bureau assignment/transfer endpoints.
-- [ ] 05-02: Frontend assignment action modal, transfer history drawer, and SLA Risk Radar indicator badges.
+- [x] 05-01: Cross-bureau assignment service, transfer API, assignment history tracking, and CaseReassignmentModal.
+- [x] 05-02: SLA policy calculation engine, aging risk classification, supervisory escalation API, and SlaRiskRadar panel.
 
 ### Phase 6: Executive Cross-Bureau Monitoring Dashboard & Bottleneck Analytics
 **Goal**: Deliver a comprehensive executive command center featuring aggregate operational metrics, bureau comparisons, and cycle time analytics.

@@ -10,6 +10,8 @@ import {
   Bureau,
   CaseFilterParams,
   CaseNote,
+  CaseAssignmentHistory,
+  SlaRadarSummary,
 } from "../types";
 
 const API_BASE = "/api/v1";
@@ -130,6 +132,42 @@ class ApiService {
 
   async getDashboardMetrics(): Promise<StandardResponse<DashboardMetrics>> {
     return this.request("/dashboard/metrics");
+  }
+
+  async getBureauOfficers(bureauId: string): Promise<StandardResponse<UserSummary[]>> {
+    return this.request(`/bureaus/${bureauId}/officers`);
+  }
+
+  async assignCase(
+    caseRef: string,
+    toBureauId: string,
+    toOfficerId: string | undefined,
+    reason: string
+  ): Promise<StandardResponse<ComplaintCase>> {
+    return this.request(`/cases/${caseRef}/assign`, {
+      method: "POST",
+      body: JSON.stringify({
+        to_bureau_id: toBureauId,
+        to_officer_id: toOfficerId || null,
+        reason,
+      }),
+    });
+  }
+
+  async getCaseAssignmentHistory(caseRef: string): Promise<StandardResponse<CaseAssignmentHistory[]>> {
+    return this.request(`/cases/${caseRef}/assignment-history`);
+  }
+
+  async getSlaRadar(bureauId?: string): Promise<StandardResponse<SlaRadarSummary>> {
+    const qs = bureauId ? `?bureau_id=${encodeURIComponent(bureauId)}` : "";
+    return this.request(`/cases/sla/radar${qs}`);
+  }
+
+  async escalateCase(caseRef: string, reason: string): Promise<StandardResponse<ComplaintCase>> {
+    return this.request(`/cases/${caseRef}/escalate`, {
+      method: "POST",
+      body: JSON.stringify({ reason }),
+    });
   }
 }
 

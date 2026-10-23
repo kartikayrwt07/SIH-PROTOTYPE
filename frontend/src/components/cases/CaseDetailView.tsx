@@ -14,6 +14,7 @@ import {
   History,
   Send,
   RotateCcw,
+  ArrowRightLeft,
 } from "lucide-react";
 import { ComplaintCase, TimelineEvent, CaseNote } from "../../types";
 import { api } from "../../services/api";
@@ -21,6 +22,7 @@ import { useAuth } from "../../context/AuthContext";
 import { SlaBadge } from "../common/SlaBadge";
 import { TimelineView } from "../timeline/TimelineView";
 import { CaseTransitionModal } from "./CaseTransitionModal";
+import { CaseReassignmentModal } from "./CaseReassignmentModal";
 
 interface CaseDetailViewProps {
   caseRef: string;
@@ -40,6 +42,7 @@ export const CaseDetailView: React.FC<CaseDetailViewProps> = ({ caseRef, onBack 
 
   // Transition modal state
   const [isTransitionOpen, setIsTransitionOpen] = useState<boolean>(false);
+  const [isReassignOpen, setIsReassignOpen] = useState<boolean>(false);
 
   // Notes composer state
   const [noteContent, setNoteContent] = useState<string>("");
@@ -199,21 +202,31 @@ export const CaseDetailView: React.FC<CaseDetailViewProps> = ({ caseRef, onBack 
           <SlaBadge dueDate={caseData.due_date} status={caseData.status} escalationLevel={caseData.escalation_level} />
 
           {canAdvance && (
-            <button
-              className="btn btn-primary"
-              onClick={() => setIsTransitionOpen(true)}
-              style={{ display: "inline-flex", alignItems: "center", gap: "0.4rem" }}
-            >
-              {caseData.status === "Resolved" ? (
-                <>
-                  <RotateCcw size={15} /> Reopen / Sign-off
-                </>
-              ) : (
-                <>
-                  <Shield size={15} /> Advance Status
-                </>
-              )}
-            </button>
+            <>
+              <button
+                className="btn btn-secondary"
+                onClick={() => setIsReassignOpen(true)}
+                style={{ display: "inline-flex", alignItems: "center", gap: "0.4rem" }}
+                title="Delegate or transfer case to another AICTE bureau or officer"
+              >
+                <ArrowRightLeft size={15} /> Transfer / Reassign
+              </button>
+              <button
+                className="btn btn-primary"
+                onClick={() => setIsTransitionOpen(true)}
+                style={{ display: "inline-flex", alignItems: "center", gap: "0.4rem" }}
+              >
+                {caseData.status === "Resolved" ? (
+                  <>
+                    <RotateCcw size={15} /> Reopen / Sign-off
+                  </>
+                ) : (
+                  <>
+                    <Shield size={15} /> Advance Status
+                  </>
+                )}
+              </button>
+            </>
           )}
 
           {isClosed && (
@@ -396,6 +409,25 @@ export const CaseDetailView: React.FC<CaseDetailViewProps> = ({ caseRef, onBack 
                 </div>
               </div>
             </div>
+
+            {canAdvance && (
+              <button
+                className="btn btn-secondary"
+                onClick={() => setIsReassignOpen(true)}
+                style={{
+                  marginTop: "0.85rem",
+                  width: "100%",
+                  fontSize: "0.8rem",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: "0.4rem",
+                  padding: "0.45rem",
+                }}
+              >
+                <ArrowRightLeft size={14} /> Reassign Bureau / Officer
+              </button>
+            )}
           </div>
 
           {/* Institution Card */}
@@ -638,6 +670,19 @@ export const CaseDetailView: React.FC<CaseDetailViewProps> = ({ caseRef, onBack 
           currentCase={caseData}
           isOpen={isTransitionOpen}
           onClose={() => setIsTransitionOpen(false)}
+          onSuccess={(updated) => {
+            setCaseData(updated);
+            loadCaseDetails();
+          }}
+        />
+      )}
+
+      {/* Reassignment Modal */}
+      {isReassignOpen && (
+        <CaseReassignmentModal
+          currentCase={caseData}
+          isOpen={isReassignOpen}
+          onClose={() => setIsReassignOpen(false)}
           onSuccess={(updated) => {
             setCaseData(updated);
             loadCaseDetails();

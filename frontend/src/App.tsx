@@ -6,6 +6,7 @@ import { ComplaintCase, TimelineEvent, CaseStatus } from "./types";
 import { TimelineView } from "./components/timeline/TimelineView";
 import { CaseRegister } from "./components/cases/CaseRegister";
 import { CaseDetailView } from "./components/cases/CaseDetailView";
+import { SlaRiskRadar } from "./components/sla/SlaRiskRadar";
 import {
   Database,
   ShieldAlert,
@@ -465,6 +466,16 @@ export const AppContent: React.FC = () => {
             </div>
           </div>
         </div>
+      )}
+
+      {/* 3. SLA Risk Radar Tab (Phase 5 Deliverable) */}
+      {activeTab === "sla_radar" && (
+        <SlaRiskRadar
+          onSelectCase={(caseRef) => {
+            setSelectedCaseDetailRef(caseRef);
+            setActiveTab("cases");
+          }}
+        />
       )}
 
       {/* 4. CSV Ingestion Tab (Phase 7 Preview) */}
