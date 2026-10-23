@@ -23,6 +23,7 @@ import { SlaBadge } from "../common/SlaBadge";
 import { TimelineView } from "../timeline/TimelineView";
 import { CaseTransitionModal } from "./CaseTransitionModal";
 import { CaseReassignmentModal } from "./CaseReassignmentModal";
+import { AiIntelligenceCard } from "../ai/AiIntelligenceCard";
 
 interface CaseDetailViewProps {
   caseRef: string;
@@ -259,6 +260,13 @@ export const CaseDetailView: React.FC<CaseDetailViewProps> = ({ caseRef, onBack 
       >
         {/* Left Column: Dossier Context & Metadata */}
         <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
+          {/* Explainable AI Intelligence & Duplicate Detection Layer */}
+          <AiIntelligenceCard
+            currentCase={caseData}
+            userRole={currentRole}
+            onTriageApplied={loadCaseDetails}
+          />
+
           {/* Case Overview Card */}
           <div className="card-base" style={{ padding: "1.25rem" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "0.5rem" }}>

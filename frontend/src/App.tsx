@@ -9,6 +9,7 @@ import { CaseDetailView } from "./components/cases/CaseDetailView";
 import { SlaRiskRadar } from "./components/sla/SlaRiskRadar";
 import { ExecutiveDashboard } from "./components/dashboard/ExecutiveDashboard";
 import { CsvIngestionModal } from "./components/ingest/CsvIngestionModal";
+import { SmartTriageView } from "./components/ai/SmartTriageView";
 import {
   Database,
   ShieldAlert,
@@ -387,7 +388,17 @@ export const AppContent: React.FC = () => {
         </div>
       )}
 
-      {/* 3. SLA Risk Radar Tab (Phase 5 Deliverable) */}
+      {/* 3. Smart Triage & AI Intelligence Layer Tab (Phase 8 Deliverable) */}
+      {activeTab === "smart_triage" && (
+        <SmartTriageView
+          onSelectCaseDetail={(caseRef) => {
+            setSelectedCaseDetailRef(caseRef);
+            setActiveTab("cases");
+          }}
+        />
+      )}
+
+      {/* 4. SLA Risk Radar Tab (Phase 5 Deliverable) */}
       {activeTab === "sla_radar" && (
         <SlaRiskRadar
           onSelectCase={(caseRef) => {

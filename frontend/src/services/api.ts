@@ -17,6 +17,12 @@ import {
   BottleneckAnalysis,
   CsvPreviewResponse,
   CsvCommitResponse,
+  DuplicateCheckRequest,
+  DuplicateCheckResponse,
+  TriageSuggestRequest,
+  TriageSuggestion,
+  TriageApplyRequest,
+  TriageApplyResponse,
 } from "../types";
 
 const API_BASE = "/api/v1";
@@ -235,6 +241,39 @@ class ApiService {
     } catch {
       return null;
     }
+  }
+
+  // -------------------------------------------------------------
+  // Phase 8: Explainable AI Intelligence & Duplicate Detection
+  // -------------------------------------------------------------
+
+  async checkDuplicates(payload: DuplicateCheckRequest): Promise<StandardResponse<DuplicateCheckResponse>> {
+    return this.request("/ai/duplicates/check", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  }
+
+  async getCaseDuplicates(caseRef: string, threshold: number = 0.35): Promise<StandardResponse<DuplicateCheckResponse>> {
+    return this.request(`/ai/duplicates/${caseRef}?threshold=${threshold}`);
+  }
+
+  async getTriageSuggestion(payload: TriageSuggestRequest): Promise<StandardResponse<TriageSuggestion>> {
+    return this.request("/ai/triage/suggest", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  }
+
+  async getCaseTriageSuggestion(caseRef: string): Promise<StandardResponse<TriageSuggestion>> {
+    return this.request(`/ai/triage/suggest/${caseRef}`);
+  }
+
+  async applyTriageSuggestion(payload: TriageApplyRequest): Promise<StandardResponse<TriageApplyResponse>> {
+    return this.request("/ai/triage/apply", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
   }
 }
 

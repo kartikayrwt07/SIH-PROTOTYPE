@@ -134,8 +134,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 08-01: Deterministic similarity service (TF-IDF vectorizer + cosine similarity) and triage recommendation rule engine.
-- [ ] 08-02: Frontend intelligence suggestion cards on Case Detail and Triage views with Accept/Dismiss actions.
+- [x] 08-01: Deterministic similarity service (TF-IDF vectorizer + cosine similarity) and triage recommendation rule engine.
+- [x] 08-02: Frontend intelligence suggestion cards on Case Detail and Triage views with Accept/Dismiss actions.
 
 ## Progress
 
@@ -151,4 +151,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8
 | 5. Assignment & SLA Engine | 2/2 | Complete | 2026-10-24 |
 | 6. Dashboard & Analytics | 2/2 | Complete | 2026-10-24 |
 | 7. CSV Ingestion & Export | 2/2 | Complete | 2026-10-24 |
-| 8. Explainable AI Intelligence | 0/2 | Not started | - |
+| 8. Explainable AI Intelligence | 2/2 | Complete | 2026-10-24 |

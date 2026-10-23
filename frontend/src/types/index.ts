@@ -264,3 +264,80 @@ export interface CsvCommitResponse {
   failed_count: number;
   created_case_references: string[];
 }
+
+// -------------------------------------------------------------
+// Phase 8: Explainable AI Intelligence & Duplicate Detection Types
+// -------------------------------------------------------------
+
+export interface DuplicateMatch {
+  case_reference_id: string;
+  subject: string;
+  institution_name: string;
+  institution_aicte_id: string;
+  bureau_code: string;
+  bureau_name: string;
+  similarity_score: number;
+  matched_keywords: string[];
+  status: string;
+  created_at: string;
+}
+
+export interface DuplicateCheckRequest {
+  subject: string;
+  description: string;
+  institution_aicte_id?: string | null;
+  exclude_case_ref?: string | null;
+  threshold?: number;
+}
+
+export interface DuplicateCheckResponse {
+  total_evaluated: number;
+  matches_found: number;
+  highest_similarity: number;
+  has_potential_duplicate: boolean;
+  matches: DuplicateMatch[];
+}
+
+export interface TriageRationaleItem {
+  category: string;
+  title: string;
+  explanation: string;
+  weight: number;
+  matched_tokens: string[];
+}
+
+export interface TriageSuggestRequest {
+  subject: string;
+  description: string;
+  institution_aicte_id?: string | null;
+  current_category?: string | null;
+}
+
+export interface TriageSuggestion {
+  recommended_bureau_id: string;
+  recommended_bureau_code: string;
+  recommended_bureau_name: string;
+  recommended_category: string;
+  recommended_priority: string;
+  confidence_score: number;
+  rationales: TriageRationaleItem[];
+}
+
+export interface TriageApplyRequest {
+  case_reference_id: string;
+  bureau_id?: string | null;
+  category?: string | null;
+  priority?: string | null;
+  justification?: string | null;
+}
+
+export interface TriageApplyResponse {
+  case_reference_id: string;
+  bureau_code: string;
+  bureau_name: string;
+  category: string;
+  priority: string;
+  status: string;
+  audit_event_id: string;
+  applied_at: string;
+}
