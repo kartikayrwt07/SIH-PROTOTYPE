@@ -1,0 +1,123 @@
+# Requirements: AICTE Integrated Complaint Case Monitoring Dashboard
+
+**Defined:** 2026-10-24
+**Core Value:** Provide dependable, auditable cross-bureau case tracking and transparent SLA risk monitoring across institutional complaints with strict data integrity, explainable intelligence, and zero fabricated official assertions.
+
+## v1 Requirements
+
+### Core Architecture & Foundation (ARCH)
+
+- [ ] **ARCH-01**: Modular backend architecture with FastAPI, SQLAlchemy 2.0 async/sync ORM, Pydantic v2 schemas, and Alembic migrations.
+- [ ] **ARCH-02**: Modern, accessible React + TypeScript + Vite frontend with curated design tokens, clear visual hierarchy, and responsive layout.
+- [ ] **ARCH-03**: Dual-database compatibility (SQLite for fast local development and unit tests; PostgreSQL ready for deployment).
+- [ ] **ARCH-04**: Database seeding command generating realistic synthetic institutions, complaint cases, assignments, and audit records with zero real personal data.
+
+### RBAC & Security (SEC)
+
+- [ ] **SEC-01**: Role-Based Access Control enforcing least privilege across 4 roles: Platform Administrator, Central Dashboard Viewer / Supervisor, Bureau/Cell Case Officer, and Read-Only Auditor.
+- [ ] **SEC-02**: Server-side permission enforcement on all API routes, preventing Insecure Direct Object References (IDOR) and unauthorized bureau cross-access.
+- [ ] **SEC-03**: Separation of internal sensitive case notes and confidential complainant descriptions from general public/audit summaries.
+- [ ] **SEC-04**: Interactive demo role-switcher widget prominently flagged as development/demo-only, completely bypassed or deactivated in production mode.
+
+### Case Lifecycle & State Machine (LIFE)
+
+- [ ] **LIFE-01**: Validated state machine enforcing permitted transitions: `Received -> Registered -> Under Triage -> Assigned -> In Progress -> Awaiting Information -> Under Review -> Resolved -> Closed`.
+- [ ] **LIFE-02**: Rejection of invalid status transitions with structured error responses and explanation of required pre-conditions.
+- [ ] **LIFE-03**: Mandatory capture of transition metadata (acting user, timestamp, previous status, new status, and reason/resolution remarks).
+- [ ] **LIFE-04**: Support for authorized case reopening and closure workflows requiring formal closure rationale.
+
+### Case Register & Detail (CASE)
+
+- [ ] **CASE-01**: Paginated, server-side sorted and filtered case register with stable, collision-free case reference IDs (e.g. `AICTE-2026-XXXX`).
+- [ ] **CASE-02**: Multi-parameter search across institution name, complaint subject, category, bureau/cell, and current status.
+- [ ] **CASE-03**: Comprehensive Case Detail view displaying complete metadata, institution profile, SLA deadline status, and assigned officer.
+- [ ] **CASE-04**: Chronological, append-oriented activity audit timeline reflecting every assignment, status change, escalation, and note.
+
+### Assignment, Escalation & SLA Engine (SLA)
+
+- [ ] **SLA-01**: Configurable SLA policy rules calculating case deadlines and risk thresholds based on case priority, category, and bureau.
+- [ ] **SLA-02**: Real-time SLA aging computation distinguishing "On Track", "Approaching Deadline (< 48h)", and "Breached / Overdue".
+- [ ] **SLA-03**: Bureau and officer assignment/reassignment workflow with audit history capturing reason for transfer.
+- [ ] **SLA-04**: Supervisory escalation mechanism flagging cases exceeding risk thresholds or stalled in queues.
+
+### Dashboard & Analytics (DASH)
+
+- [ ] **DASH-01**: Executive and Bureau-specific overview metric cards (Total, Open, Pending Action, Overdue, Approaching Deadline, Resolved).
+- [ ] **DASH-02**: Visual breakdown of case distribution by bureau/cell, status pipeline, and category.
+- [ ] **DASH-03**: SLA / Aging Risk Radar panel highlighting cases requiring urgent intervention with clear explainability of warning drivers.
+- [ ] **DASH-04**: Bottleneck & cycle time analytics showing average dwell time per lifecycle stage without punitive institution rankings.
+
+### Data Import & Export (DATA)
+
+- [ ] **DATA-01**: CSV import engine with schema validation, dry-run preview, field-level error reporting, and duplicate collision warnings.
+- [ ] **DATA-02**: Transaction-safe batch ingestion ensuring corrupted CSV rows do not partially write or poison the database.
+- [ ] **DATA-03**: Role-scoped CSV export utility respecting field redaction and user authorization boundaries.
+
+### Explainable Intelligence (AI)
+
+- [ ] **AI-01**: Deterministic duplicate complaint detection using text tokenization and TF-IDF cosine similarity against existing registered cases.
+- [ ] **AI-02**: Explainable category and bureau routing recommender based on keyword heuristics and historical patterns with confidence score.
+- [ ] **AI-03**: Transparent rationale breakdown display explaining exactly *why* a category, bureau, or duplicate match was suggested.
+- [ ] **AI-04**: Strict Human-in-the-Loop decision gate: recommendations require explicit officer acceptance or rejection; never auto-committed.
+
+## v2 Requirements (Deferred)
+
+- **V2-01**: Direct integration with official AICTE backend via secure government gateway APIs when authorized.
+- **V2-02**: Multilingual grievance submission and automated Indian language translation (Bhashini API integration).
+- **V2-03**: Real-time SMS and WhatsApp webhook notifications for complainant status updates.
+- **V2-04**: Local offline-first PWA mode for field inspectors and regional bureau visits.
+
+## Out of Scope
+
+| Feature | Reason |
+|---------|--------|
+| Live production AICTE database scraping/connection | Unauthorized and violates security boundaries during hackathon. |
+| Hardcoded statutory bureau names or legal SLA deadlines | Operating policies vary and are non-public; must remain dynamic and configurable. |
+| Autonomous case resolutions or liability determinations | AI cannot make judicial or administrative decisions; purely advisory. |
+| Public institution penalty scoreboards / shaming lists | Risks stigmatizing institutions based on unverified allegations or biased data. |
+| Heavy distributed queues (Kafka/RabbitMQ) | Overkill for hackathon scale; introduces unnecessary infrastructure friction. |
+
+## Traceability
+
+| Requirement | Phase | Status |
+|-------------|-------|--------|
+| ARCH-01 | Phase 1 | Pending |
+| ARCH-02 | Phase 1 | Pending |
+| ARCH-03 | Phase 1 | Pending |
+| ARCH-04 | Phase 1 | Pending |
+| SEC-01 | Phase 2 | Pending |
+| SEC-02 | Phase 2 | Pending |
+| SEC-03 | Phase 2 | Pending |
+| SEC-04 | Phase 2 | Pending |
+| LIFE-01 | Phase 3 | Pending |
+| LIFE-02 | Phase 3 | Pending |
+| LIFE-03 | Phase 3 | Pending |
+| LIFE-04 | Phase 3 | Pending |
+| CASE-01 | Phase 4 | Pending |
+| CASE-02 | Phase 4 | Pending |
+| CASE-03 | Phase 4 | Pending |
+| CASE-04 | Phase 4 | Pending |
+| SLA-01 | Phase 5 | Pending |
+| SLA-02 | Phase 5 | Pending |
+| SLA-03 | Phase 5 | Pending |
+| SLA-04 | Phase 5 | Pending |
+| DASH-01 | Phase 6 | Pending |
+| DASH-02 | Phase 6 | Pending |
+| DASH-03 | Phase 6 | Pending |
+| DASH-04 | Phase 6 | Pending |
+| DATA-01 | Phase 7 | Pending |
+| DATA-02 | Phase 7 | Pending |
+| DATA-03 | Phase 7 | Pending |
+| AI-01 | Phase 8 | Pending |
+| AI-02 | Phase 8 | Pending |
+| AI-03 | Phase 8 | Pending |
+| AI-04 | Phase 8 | Pending |
+
+**Coverage:**
+- v1 requirements: 32 total
+- Mapped to phases: 32
+- Unmapped: 0 ✓
+
+---
+*Requirements defined: 2026-10-24*
+*Last updated: 2026-10-24 after initial definition*
