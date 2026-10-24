@@ -11,7 +11,9 @@ class BureauWorkloadStat(BaseModel):
     overdue_cases: int
     approaching_cases: int
     resolved_cases: int
+    rejected_cases: int = 0
     resolution_rate_pct: float
+    avg_resolution_hours: float = 0.0
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -36,6 +38,9 @@ class ExecutiveKPIs(BaseModel):
     overdue_cases: int
     resolved_closed: int
     resolution_rate_pct: float
+    rejected_spam_cases: int = 0
+    avg_resolution_hours: float = 0.0
+    avg_resolution_days: float = 0.0
 
 
 class DashboardOverview(BaseModel):
@@ -74,5 +79,11 @@ class InstitutionPerformanceStat(BaseModel):
     resolution_rate_pct: float
     top_recurring_categories: List[RecurringCategoryCount]
     intervention_status: str  # "CRITICAL_INTERVENTION", "WATCHLIST", "COMPLIANT"
+    trust_score: int = 1000  # Dynamic Credit Score out of 1000
+    trust_grade: str = "AAA"  # AAA, AA, A-, BBB, B, C
+    risk_level: str = "LOW"  # LOW, MODERATE, HIGH, CRITICAL
+    automated_directive: str = "Standard Annual EOA Compliance Verification"
+    sla_penalty_points: int = 0
+    severe_penalty_points: int = 0
 
     model_config = ConfigDict(from_attributes=True)

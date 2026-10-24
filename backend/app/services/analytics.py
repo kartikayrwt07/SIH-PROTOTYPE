@@ -15,16 +15,20 @@ from backend.app.schemas.analytics import (
     InstitutionPerformanceStat,
     RecurringCategoryCount,
 )
+from backend.app.services.institution_trust import calculate_institution_trust_score
 
 
 def get_executive_kpis(
     db: Session,
     bureau_id: Optional[str] = None,
+    institution_id: Optional[str] = None,
 ) -> ExecutiveKPIs:
     """Calculate aggregate operational KPIs across active dockets."""
     query = db.query(ComplaintCase)
     if bureau_id:
         query = query.filter(ComplaintCase.bureau_id == bureau_id)
+    if institution_id:
+        query = query.filter(ComplaintCase.institution_id == institution_id)
 
     all_cases = query.all()
     total_cases = len(all_cases)
@@ -38,12 +42,17 @@ def get_executive_kpis(
             overdue_cases=0,
             resolved_closed=0,
             resolution_rate_pct=0.0,
+            rejected_spam_cases=0,
+            avg_resolution_hours=0.0,
+            avg_resolution_days=0.0,
         )
 
     resolved_closed = 0
+    rejected_spam_cases = 0
     pending_action = 0
     overdue_cases = 0
     approaching_deadline = 0
+    resolution_durations: List[float] = []
 
     now = datetime.now(timezone.utc)
     pending_statuses = {
@@ -54,8 +63,20 @@ def get_executive_kpis(
     }
 
     for c in all_cases:
+        if c.status == CaseStatus.REJECTED:
+            rejected_spam_cases += 1
+            # CRITICAL: Excluded from resolved_closed and resolution_durations.
+            # Instant spam/malformed rejections must NEVER drag down average resolution time or inflate resolution rate.
+            continue
+
         if c.status in [CaseStatus.RESOLVED, CaseStatus.CLOSED]:
             resolved_closed += 1
+            if c.resolved_at and c.created_at:
+                c_created = c.created_at if c.created_at.tzinfo else c.created_at.replace(tzinfo=timezone.utc)
+                c_resolved = c.resolved_at if c.resolved_at.tzinfo else c.resolved_at.replace(tzinfo=timezone.utc)
+                diff_hours = (c_resolved - c_created).total_seconds() / 3600.0
+                if diff_hours >= 0:
+                    resolution_durations.append(diff_hours)
         else:
             if c.status in pending_statuses:
                 pending_action += 1
@@ -65,8 +86,16 @@ def get_executive_kpis(
             elif risk["status"] == "APPROACHING":
                 approaching_deadline += 1
 
-    open_cases = total_cases - resolved_closed
-    resolution_rate_pct = round((resolved_closed / total_cases) * 100, 1)
+    open_cases = total_cases - resolved_closed - rejected_spam_cases
+    valid_cases = total_cases - rejected_spam_cases
+    resolution_rate_pct = round((resolved_closed / valid_cases) * 100, 1) if valid_cases > 0 else 0.0
+
+    if resolution_durations:
+        avg_res_hours = round(sum(resolution_durations) / len(resolution_durations), 1)
+        avg_res_days = round(avg_res_hours / 24.0, 1)
+    else:
+        avg_res_hours = 0.0
+        avg_res_days = 0.0
 
     return ExecutiveKPIs(
         total_cases=total_cases,
@@ -76,25 +105,46 @@ def get_executive_kpis(
         overdue_cases=overdue_cases,
         resolved_closed=resolved_closed,
         resolution_rate_pct=resolution_rate_pct,
+        rejected_spam_cases=rejected_spam_cases,
+        avg_resolution_hours=avg_res_hours,
+        avg_resolution_days=avg_res_days,
     )
 
 
-def get_bureau_workload_breakdown(db: Session) -> List[BureauWorkloadStat]:
+def get_bureau_workload_breakdown(
+    db: Session,
+    institution_id: Optional[str] = None,
+) -> List[BureauWorkloadStat]:
     """Calculate comparative workload and pending volume across all active AICTE bureaus."""
     bureaus = db.query(Bureau).filter(Bureau.is_active == True).order_by(Bureau.name).all()
     stats: List[BureauWorkloadStat] = []
     now = datetime.now(timezone.utc)
 
     for b in bureaus:
-        cases = db.query(ComplaintCase).filter(ComplaintCase.bureau_id == b.id).all()
+        case_query = db.query(ComplaintCase).filter(ComplaintCase.bureau_id == b.id)
+        if institution_id:
+            case_query = case_query.filter(ComplaintCase.institution_id == institution_id)
+        cases = case_query.all()
         total = len(cases)
         resolved = 0
+        rejected = 0
         overdue = 0
         approaching = 0
+        bureau_durations: List[float] = []
 
         for c in cases:
+            if c.status == CaseStatus.REJECTED:
+                rejected += 1
+                continue
+
             if c.status in [CaseStatus.RESOLVED, CaseStatus.CLOSED]:
                 resolved += 1
+                if c.resolved_at and c.created_at:
+                    c_created = c.created_at if c.created_at.tzinfo else c.created_at.replace(tzinfo=timezone.utc)
+                    c_resolved = c.resolved_at if c.resolved_at.tzinfo else c.resolved_at.replace(tzinfo=timezone.utc)
+                    diff_h = (c_resolved - c_created).total_seconds() / 3600.0
+                    if diff_h >= 0:
+                        bureau_durations.append(diff_h)
             else:
                 risk = compute_case_sla_risk(c, now)
                 if risk["status"] == "OVERDUE":
@@ -102,8 +152,10 @@ def get_bureau_workload_breakdown(db: Session) -> List[BureauWorkloadStat]:
                 elif risk["status"] == "APPROACHING":
                     approaching += 1
 
-        open_cases = total - resolved
-        rate = round((resolved / total) * 100, 1) if total > 0 else 0.0
+        open_cases = total - resolved - rejected
+        valid_bureau_cases = total - rejected
+        rate = round((resolved / valid_bureau_cases) * 100, 1) if valid_bureau_cases > 0 else 0.0
+        avg_bureau_h = round(sum(bureau_durations) / len(bureau_durations), 1) if bureau_durations else 0.0
 
         stats.append(
             BureauWorkloadStat(
@@ -115,7 +167,9 @@ def get_bureau_workload_breakdown(db: Session) -> List[BureauWorkloadStat]:
                 overdue_cases=overdue,
                 approaching_cases=approaching,
                 resolved_cases=resolved,
+                rejected_cases=rejected,
                 resolution_rate_pct=rate,
+                avg_resolution_hours=avg_bureau_h,
             )
         )
 
@@ -125,6 +179,7 @@ def get_bureau_workload_breakdown(db: Session) -> List[BureauWorkloadStat]:
 def compute_lifecycle_dwell_times(
     db: Session,
     bureau_id: Optional[str] = None,
+    institution_id: Optional[str] = None,
 ) -> BottleneckAnalysis:
     """Analyze historical audit transitions and active durations to detect operational bottlenecks."""
     all_stages = [
@@ -156,6 +211,8 @@ def compute_lifecycle_dwell_times(
     case_query = db.query(ComplaintCase)
     if bureau_id:
         case_query = case_query.filter(ComplaintCase.bureau_id == bureau_id)
+    if institution_id:
+        case_query = case_query.filter(ComplaintCase.institution_id == institution_id)
     cases = case_query.all()
     case_ids = [c.id for c in cases]
 
@@ -260,14 +317,17 @@ def compute_lifecycle_dwell_times(
 def get_dashboard_overview(
     db: Session,
     bureau_id: Optional[str] = None,
+    institution_id: Optional[str] = None,
 ) -> DashboardOverview:
     """Consolidate KPIs, bureau workload breakdown, and status/category distributions."""
-    kpis = get_executive_kpis(db, bureau_id=bureau_id)
-    by_bureau = get_bureau_workload_breakdown(db)
+    kpis = get_executive_kpis(db, bureau_id=bureau_id, institution_id=institution_id)
+    by_bureau = get_bureau_workload_breakdown(db, institution_id=institution_id)
 
     case_query = db.query(ComplaintCase)
     if bureau_id:
         case_query = case_query.filter(ComplaintCase.bureau_id == bureau_id)
+    if institution_id:
+        case_query = case_query.filter(ComplaintCase.institution_id == institution_id)
     cases = case_query.all()
 
     by_status: Dict[str, int] = {}
@@ -328,12 +388,17 @@ def get_institution_performance_stats(
             continue
 
         resolved = 0
+        rejected = 0
         pending = 0
         overdue = 0
         approaching = 0
         category_counts: Dict[str, int] = {}
 
         for c in cases:
+            if c.status == CaseStatus.REJECTED:
+                rejected += 1
+                continue
+
             if c.status in [CaseStatus.RESOLVED, CaseStatus.CLOSED]:
                 resolved += 1
             else:
@@ -348,8 +413,9 @@ def get_institution_performance_stats(
             cat = c.category or "General Grievance"
             category_counts[cat] = category_counts.get(cat, 0) + 1
 
-        open_cases = total - resolved
-        resolution_rate = round((resolved / total) * 100, 1) if total > 0 else 0.0
+        open_cases = total - resolved - rejected
+        valid_total = total - rejected
+        resolution_rate = round((resolved / valid_total) * 100, 1) if valid_total > 0 else 0.0
 
         # Sort top recurring categories
         sorted_cats = sorted(category_counts.items(), key=lambda x: x[1], reverse=True)[:3]
@@ -366,6 +432,9 @@ def get_institution_performance_stats(
         if intervention_status and intervention_status.strip() and intervention_status.upper() != "ALL":
             if status != intervention_status.strip().upper():
                 continue
+
+        # Compute dynamic credit score out of 1000
+        trust_detail = calculate_institution_trust_score(inst, db, now)
 
         results.append(
             InstitutionPerformanceStat(
@@ -384,6 +453,12 @@ def get_institution_performance_stats(
                 resolution_rate_pct=resolution_rate,
                 top_recurring_categories=top_recurring,
                 intervention_status=status,
+                trust_score=trust_detail.trust_score,
+                trust_grade=trust_detail.trust_grade,
+                risk_level=trust_detail.risk_level,
+                automated_directive=trust_detail.automated_directive,
+                sla_penalty_points=trust_detail.deduction_breakdown.sla_breach_points,
+                severe_penalty_points=trust_detail.deduction_breakdown.severe_complaint_points,
             )
         )
 

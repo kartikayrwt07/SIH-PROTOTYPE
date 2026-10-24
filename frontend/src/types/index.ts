@@ -11,7 +11,8 @@ export type CaseStatus =
   | "Awaiting Information"
   | "Under Review"
   | "Resolved"
-  | "Closed";
+  | "Closed"
+  | "Rejected";
 
 export interface Bureau {
   id: string;
@@ -78,6 +79,8 @@ export interface CaseAttachment {
   mime_type: string;
   storage_path: string;
   storage_bucket: string;
+  storage_provider?: string;
+  secure_url?: string;
   category: "FEE_RECEIPT" | "BANK_STATEMENT" | "AFFILIATION_DOCUMENT" | "FACILITY_PHOTOGRAPH" | "SALARY_SLIP" | "COMMUNICATION_RECORD" | "OTHER";
   description?: string;
   is_confidential: boolean;
@@ -157,7 +160,9 @@ export interface BureauWorkloadStat {
   overdue_cases: number;
   approaching_cases: number;
   resolved_cases: number;
+  rejected_cases?: number;
   resolution_rate_pct: number;
+  avg_resolution_hours?: number;
 }
 
 export interface StageDwellTimeStat {
@@ -178,6 +183,9 @@ export interface ExecutiveKPIs {
   overdue_cases: number;
   resolved_closed: number;
   resolution_rate_pct: number;
+  rejected_spam_cases?: number;
+  avg_resolution_hours?: number;
+  avg_resolution_days?: number;
 }
 
 export interface DashboardOverview {
@@ -218,6 +226,95 @@ export interface InstitutionPerformanceStat {
   resolution_rate_pct: number;
   top_recurring_categories: RecurringCategoryCount[];
   intervention_status: RegulatoryInterventionStatus;
+  trust_score?: number;
+  trust_grade?: string;
+  risk_level?: "LOW" | "MODERATE" | "HIGH" | "CRITICAL";
+  automated_directive?: string;
+  sla_penalty_points?: number;
+  severe_penalty_points?: number;
+}
+
+export interface DeductionBreakdown {
+  sla_breaches_count: number;
+  sla_breach_points: number;
+  approaching_warnings_count: number;
+  approaching_warning_points: number;
+  severe_complaints_count: number;
+  severe_complaint_points: number;
+  sensitive_category_count: number;
+  sensitive_category_points: number;
+  master_ticket_clusters_count: number;
+  master_ticket_points: number;
+  backlog_dwell_count: number;
+  backlog_dwell_points: number;
+  recovery_bonus_points: number;
+  total_deductions: number;
+}
+
+export interface CaseDeductionCitation {
+  case_reference_id: string;
+  subject: string;
+  category: string;
+  priority: string;
+  status: string;
+  points_deducted: number;
+  deduction_reason: string;
+  created_at: string;
+}
+
+export interface InstitutionTrustScoreDetail {
+  institution_id: string;
+  aicte_permanent_id: string;
+  name: string;
+  state: string;
+  district: string;
+  institution_type: string;
+  trust_score: number;
+  base_score: number;
+  trust_grade: string;
+  risk_level: "LOW" | "MODERATE" | "HIGH" | "CRITICAL";
+  risk_tier: string;
+  trend: "improving" | "stable" | "deteriorating";
+  total_cases: number;
+  open_cases: number;
+  resolved_cases: number;
+  overdue_cases: number;
+  resolution_rate_pct: number;
+  top_recurring_categories: RecurringCategoryCount[];
+  deduction_breakdown: DeductionBreakdown;
+  citations: CaseDeductionCitation[];
+  automated_directive: string;
+  recommended_action_code: "MANDATORY_INSPECTION_FREEZE" | "SHOW_CAUSE_SUMMONS" | "HEIGHTENED_MONITORING" | "ROUTINE_COMPLIANCE";
+  last_audit_date: string;
+}
+
+export interface InstitutionOption {
+  id: string;
+  aicte_permanent_id: string;
+  name: string;
+  state: string;
+  district: string;
+  institution_type?: string;
+}
+
+export interface TrustLeaderboardSummary {
+  national_average_score: number;
+  total_institutions: number;
+  critical_risk_count: number;
+  high_risk_count: number;
+  watchlist_count: number;
+  compliant_count: number;
+  total_sla_breaches: number;
+  total_penalties_deducted: number;
+}
+
+export interface RegulatoryActionResponse {
+  success: boolean;
+  institution_id: string;
+  action_type: string;
+  reference_number: string;
+  issued_at: string;
+  message: string;
 }
 
 export type SlaRiskLevel = "ON_TRACK" | "APPROACHING" | "OVERDUE" | "COMPLETED";
@@ -595,5 +692,65 @@ export interface MasterTicketStats {
   avg_group_size: number;
   largest_group_size: number;
   top_categories: Array<{ category: string; count: number }>;
+}
+
+export interface InstitutionRecurringViolation {
+  category: string;
+  count: number;
+  percentage: number;
+  sample_subjects: string[];
+  has_cluster: boolean;
+  cluster_case_refs: string[];
+  cluster_avg_similarity: number;
+  anchor_case_ref?: string | null;
+  master_ticket_id?: string | null;
+}
+
+export interface InstitutionViolationBreakdown {
+  institution_id: string;
+  institution_name: string;
+  aicte_permanent_id: string;
+  state: string;
+  district: string;
+  institution_type: string;
+  total_cases: number;
+  open_cases: number;
+  resolved_cases: number;
+  cluster_count: number;
+  primary_violation: string;
+  risk_severity: "CRITICAL" | "HIGH" | "ELEVATED" | "STANDARD";
+  top_recurring_themes: InstitutionRecurringViolation[];
+}
+
+// -------------------------------------------------------------
+// Telegram Bot Tracker Types
+// -------------------------------------------------------------
+
+export interface TelegramBotCommand {
+  command: string;
+  description: string;
+}
+
+export interface TelegramBotInfo {
+  bot_name: string;
+  bot_username: string;
+  is_configured: boolean;
+  webhook_url_example: string;
+  commands: TelegramBotCommand[];
+  supported_formats: string[];
+}
+
+export interface TelegramSimulateRequest {
+  message: string;
+  first_name?: string;
+  chat_id?: number;
+}
+
+export interface TelegramSimulateResponse {
+  message_sent: string;
+  reply_html: string;
+  extracted_case_ref?: string | null;
+  chat_id: number;
+  parse_mode: string;
 }
 

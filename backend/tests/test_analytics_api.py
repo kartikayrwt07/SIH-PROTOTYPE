@@ -143,3 +143,54 @@ def test_institution_performance_filtering():
         assert status_res.status_code == 200
         for inst in status_res.json()["data"]:
             assert inst["intervention_status"] == status
+
+
+def test_dashboard_metrics_institution_filtering():
+    """Verify that filtering dashboard metrics by institution_id returns college-scoped KPIs."""
+    inst_res = client.get("/api/v1/institutions/all", headers={"X-Demo-Role": "SUPERVISOR"})
+    assert inst_res.status_code == 200
+    insts = inst_res.json()["data"]
+    assert len(insts) > 0
+    test_inst_id = insts[0]["id"]
+
+    # Global total
+    global_res = client.get("/api/v1/dashboard/metrics", headers={"X-Demo-Role": "SUPERVISOR"})
+    global_total = global_res.json()["data"]["kpis"]["total_cases"]
+
+    # Scoped total for single institution
+    scoped_res = client.get(f"/api/v1/dashboard/metrics?institution_id={test_inst_id}", headers={"X-Demo-Role": "SUPERVISOR"})
+    assert scoped_res.status_code == 200
+    scoped_data = scoped_res.json()["data"]
+    scoped_total = scoped_data["kpis"]["total_cases"]
+
+    assert scoped_total <= global_total
+    assert scoped_data["kpis"]["open_cases"] + scoped_data["kpis"]["resolved_closed"] == scoped_total
+
+
+def test_bottlenecks_institution_filtering():
+    """Verify that filtering bottlenecks by institution_id scopes lifecycle stage counts."""
+    inst_res = client.get("/api/v1/institutions/all", headers={"X-Demo-Role": "SUPERVISOR"})
+    test_inst_id = inst_res.json()["data"][0]["id"]
+
+    scoped_res = client.get(f"/api/v1/dashboard/bottlenecks?institution_id={test_inst_id}", headers={"X-Demo-Role": "SUPERVISOR"})
+    assert scoped_res.status_code == 200
+    data = scoped_res.json()["data"]
+    assert "stages" in data
+    assert len(data["stages"]) == 9
+
+
+def test_spam_rejection_metrics_isolation():
+    """Verify that spam/malformed rejections populate rejected_spam_cases and do not corrupt MTTR."""
+    res = client.get("/api/v1/dashboard/metrics", headers={"X-Demo-Role": "SUPERVISOR"})
+    assert res.status_code == 200
+    kpis = res.json()["data"]["kpis"]
+
+    assert "rejected_spam_cases" in kpis
+    assert "avg_resolution_hours" in kpis
+    assert "avg_resolution_days" in kpis
+
+    # Mathematical integrity check: Total must cleanly account for Open, Resolved/Closed, and Rejected
+    assert kpis["total_cases"] == kpis["open_cases"] + kpis["resolved_closed"] + kpis["rejected_spam_cases"]
+    assert kpis["avg_resolution_hours"] >= 0.0
+
+

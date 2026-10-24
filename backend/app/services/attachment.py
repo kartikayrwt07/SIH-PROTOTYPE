@@ -100,9 +100,15 @@ def create_case_attachment(
             detail="File upload rejected: Antivirus scanner detected malicious signature or threat payload."
         )
 
+    from backend.app.services.cloud_storage import cloud_storage
+
     attachment_id = str(uuid.uuid4())
-    safe_name = f"{attachment_id}_{file_name.replace(' ', '_')}"
-    storage_path = f"evidence/{case.case_reference_id}/{safe_name}"
+    storage_path, secure_url, bucket_name, provider_name = cloud_storage.upload_file(
+        file_bytes=file_bytes,
+        file_name=file_name,
+        content_type=mime_type,
+        case_ref=case.case_reference_id,
+    )
 
     attachment = CaseAttachment(
         id=attachment_id,
@@ -112,7 +118,9 @@ def create_case_attachment(
         file_size_bytes=len(file_bytes),
         mime_type=mime_type,
         storage_path=storage_path,
-        storage_bucket="aicte-case-evidence",
+        storage_bucket=bucket_name,
+        storage_provider=provider_name,
+        secure_url=secure_url,
         category=category,
         description=description,
         is_confidential=is_confidential,

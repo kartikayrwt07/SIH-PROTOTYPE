@@ -24,6 +24,7 @@ router = APIRouter(prefix="/dashboard")
 @router.get("/metrics", response_model=StandardResponse[DashboardOverview])
 def get_dashboard_metrics(
     bureau_id: Optional[str] = Query(None, description="Filter metrics by AICTE Bureau"),
+    institution_id: Optional[str] = Query(None, description="Filter metrics by Technical Institution ID"),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -33,13 +34,14 @@ def get_dashboard_metrics(
     if current_user.role in [UserRole.OFFICER, UserRole.AUDITOR] and current_user.bureau_id:
         effective_bureau_id = current_user.bureau_id
 
-    overview = get_dashboard_overview(db, bureau_id=effective_bureau_id)
+    overview = get_dashboard_overview(db, bureau_id=effective_bureau_id, institution_id=institution_id)
     return StandardResponse(data=overview)
 
 
 @router.get("/bottlenecks", response_model=StandardResponse[BottleneckAnalysis])
 def get_bottleneck_analysis(
     bureau_id: Optional[str] = Query(None, description="Filter dwell times by Bureau"),
+    institution_id: Optional[str] = Query(None, description="Filter dwell times by Technical Institution ID"),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -48,7 +50,7 @@ def get_bottleneck_analysis(
     if current_user.role in [UserRole.OFFICER, UserRole.AUDITOR] and current_user.bureau_id:
         effective_bureau_id = current_user.bureau_id
 
-    analysis = compute_lifecycle_dwell_times(db, bureau_id=effective_bureau_id)
+    analysis = compute_lifecycle_dwell_times(db, bureau_id=effective_bureau_id, institution_id=institution_id)
     return StandardResponse(data=analysis)
 
 

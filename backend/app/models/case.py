@@ -17,6 +17,7 @@ class CaseStatus(str, enum.Enum):
     UNDER_REVIEW = "Under Review"
     RESOLVED = "Resolved"
     CLOSED = "Closed"
+    REJECTED = "Rejected"  # Dedicated terminal state for malformed, spam, or out-of-jurisdiction complaints
 
 
 class ComplaintCase(Base):

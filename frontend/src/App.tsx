@@ -9,6 +9,8 @@ import { ExecutiveDashboard } from "./components/dashboard/ExecutiveDashboard";
 import { CsvIngestionModal } from "./components/ingest/CsvIngestionModal";
 import { SmartTriageView } from "./components/ai/SmartTriageView";
 import { MasterTicketHub } from "./components/ai/MasterTicketHub";
+import { TelegramBotView } from "./components/telegram/TelegramBotView";
+import { InstitutionTrustLeaderboard } from "./components/institutions/InstitutionTrustLeaderboard";
 import { MagicIntakeView } from "./components/ingest/MagicIntakeView";
 import {
   ShieldAlert,
@@ -92,6 +94,9 @@ export const AppContent: React.FC = () => {
           onNavigateToSlaRadar={() => {
             setActiveTab("sla_radar");
           }}
+          onNavigateToTrustLeaderboard={() => {
+            setActiveTab("trust_scores");
+          }}
         />
       )}
 
@@ -122,6 +127,21 @@ export const AppContent: React.FC = () => {
       {/* 3.5 Master Tickets & Smart Duplicate Grouping */}
       {activeTab === "master_tickets" && (
         <MasterTicketHub
+          onSelectCase={(caseRef) => {
+            setSelectedCaseDetailRef(caseRef);
+            setActiveTab("cases");
+          }}
+        />
+      )}
+
+      {/* 3.6 Telegram Bot Tracker (Phase 10) */}
+      {activeTab === "telegram_bot" && (
+        <TelegramBotView />
+      )}
+
+      {/* 3.7 Dynamic College Trust Scores & Leaderboard (Phase 11) */}
+      {activeTab === "trust_scores" && (
+        <InstitutionTrustLeaderboard
           onSelectCase={(caseRef) => {
             setSelectedCaseDetailRef(caseRef);
             setActiveTab("cases");

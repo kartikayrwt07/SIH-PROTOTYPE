@@ -35,6 +35,14 @@ import {
   MasterTicketSummary,
   MasterTicketStats,
   InstitutionPerformanceStat,
+  TelegramBotInfo,
+  TelegramSimulateRequest,
+  TelegramSimulateResponse,
+  InstitutionViolationBreakdown,
+  InstitutionTrustScoreDetail,
+  TrustLeaderboardSummary,
+  RegulatoryActionResponse,
+  InstitutionOption,
 } from "../types";
 
 const API_BASE = "/api/v1";
@@ -158,6 +166,12 @@ class ApiService {
     });
   }
 
+  async rejectCase(caseRef: string, reason: string): Promise<StandardResponse<ComplaintCase>> {
+    return this.request(`/cases/${caseRef}/reject?reason=${encodeURIComponent(reason)}`, {
+      method: "POST",
+    });
+  }
+
   async getCaseTimeline(caseRef: string): Promise<StandardResponse<TimelineEvent[]>> {
     return this.request(`/cases/${caseRef}/timeline`);
   }
@@ -181,14 +195,24 @@ class ApiService {
     return this.request("/dashboard/metrics");
   }
 
-  async getDashboardOverview(bureauId?: string): Promise<StandardResponse<DashboardOverview>> {
-    const qs = bureauId ? `?bureau_id=${encodeURIComponent(bureauId)}` : "";
+  async getDashboardOverview(bureauId?: string, institutionId?: string): Promise<StandardResponse<DashboardOverview>> {
+    const params = new URLSearchParams();
+    if (bureauId) params.append("bureau_id", bureauId);
+    if (institutionId) params.append("institution_id", institutionId);
+    const qs = params.toString() ? `?${params.toString()}` : "";
     return this.request(`/dashboard/metrics${qs}`);
   }
 
-  async getBottleneckAnalysis(bureauId?: string): Promise<StandardResponse<BottleneckAnalysis>> {
-    const qs = bureauId ? `?bureau_id=${encodeURIComponent(bureauId)}` : "";
+  async getBottleneckAnalysis(bureauId?: string, institutionId?: string): Promise<StandardResponse<BottleneckAnalysis>> {
+    const params = new URLSearchParams();
+    if (bureauId) params.append("bureau_id", bureauId);
+    if (institutionId) params.append("institution_id", institutionId);
+    const qs = params.toString() ? `?${params.toString()}` : "";
     return this.request(`/dashboard/bottlenecks${qs}`);
+  }
+
+  async getAllInstitutions(): Promise<StandardResponse<InstitutionOption[]>> {
+    return this.request("/institutions/all");
   }
 
   async getBureauWorkload(): Promise<StandardResponse<BureauWorkloadStat[]>> {
@@ -453,6 +477,78 @@ class ApiService {
 
   async getMasterTicketDetail(ticketRef: string): Promise<StandardResponse<MasterTicketRead>> {
     return this.request(`/ai/master-tickets/${ticketRef}`);
+  }
+
+  async getInstitutionRecurringBreakdown(params?: {
+    min_cases?: number;
+    state?: string;
+    search?: string;
+  }): Promise<StandardResponse<InstitutionViolationBreakdown[]>> {
+    const searchParams = new URLSearchParams();
+    if (params?.min_cases) {
+      searchParams.append("min_cases", String(params.min_cases));
+    }
+    if (params?.state && params.state !== "ALL") {
+      searchParams.append("state", params.state);
+    }
+    if (params?.search && params.search.trim()) {
+      searchParams.append("search", params.search.trim());
+    }
+    const qs = searchParams.toString() ? `?${searchParams.toString()}` : "";
+    return this.request(`/ai/master-tickets/institution-breakdown${qs}`);
+  }
+
+  // -------------------------------------------------------------
+  // Telegram Bot Grievance Tracker
+  // -------------------------------------------------------------
+
+  async getTelegramInfo(): Promise<StandardResponse<TelegramBotInfo>> {
+    return this.request("/telegram/info");
+  }
+
+  async simulateTelegramMessage(payload: TelegramSimulateRequest): Promise<StandardResponse<TelegramSimulateResponse>> {
+    return this.request("/telegram/simulate", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  }
+
+  // -------------------------------------------------------------
+  // Dynamic Institution Trust Scores & High-Risk Leaderboard
+  // -------------------------------------------------------------
+
+  async getInstitutionTrustScores(params?: {
+    sort_order?: "worst_first" | "best_first";
+    state?: string;
+    risk_level?: string;
+    limit?: number;
+  }): Promise<StandardResponse<InstitutionTrustScoreDetail[]>> {
+    const searchParams = new URLSearchParams();
+    if (params?.sort_order) searchParams.append("sort_order", params.sort_order);
+    if (params?.state && params.state !== "ALL") searchParams.append("state", params.state);
+    if (params?.risk_level && params.risk_level !== "ALL") searchParams.append("risk_level", params.risk_level);
+    if (params?.limit) searchParams.append("limit", String(params.limit));
+    const qs = searchParams.toString() ? `?${searchParams.toString()}` : "";
+    return this.request(`/institutions/trust-scores${qs}`);
+  }
+
+  async getTrustScoresSummary(state?: string): Promise<StandardResponse<TrustLeaderboardSummary>> {
+    const qs = state && state !== "ALL" ? `?state=${encodeURIComponent(state)}` : "";
+    return this.request(`/institutions/trust-scores/summary${qs}`);
+  }
+
+  async getInstitutionTrustDetail(institutionId: string): Promise<StandardResponse<InstitutionTrustScoreDetail>> {
+    return this.request(`/institutions/${encodeURIComponent(institutionId)}/trust-score`);
+  }
+
+  async executeRegulatoryAction(
+    institutionId: string,
+    payload: { action_type: string; directive_notes: string }
+  ): Promise<StandardResponse<RegulatoryActionResponse>> {
+    return this.request(`/institutions/${encodeURIComponent(institutionId)}/action`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
   }
 }
 

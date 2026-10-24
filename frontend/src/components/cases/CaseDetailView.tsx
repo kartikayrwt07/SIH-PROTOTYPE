@@ -18,8 +18,12 @@ import {
   Languages,
   Globe,
   FileCheck,
+  Paperclip,
+  UploadCloud,
+  ExternalLink,
+  HardDrive,
 } from "lucide-react";
-import { ComplaintCase, TimelineEvent, CaseNote } from "../../types";
+import { ComplaintCase, TimelineEvent, CaseNote, CaseAttachment } from "../../types";
 import { api } from "../../services/api";
 import { useAuth } from "../../context/AuthContext";
 import { SlaBadge } from "../common/SlaBadge";
@@ -38,7 +42,10 @@ export const CaseDetailView: React.FC<CaseDetailViewProps> = ({ caseRef, onBack 
   const [caseData, setCaseData] = useState<ComplaintCase | null>(null);
   const [timeline, setTimeline] = useState<TimelineEvent[]>([]);
   const [notes, setNotes] = useState<CaseNote[]>([]);
-  const [activeTab, setActiveTab] = useState<"timeline" | "notes" | "institution">("timeline");
+  const [attachments, setAttachments] = useState<CaseAttachment[]>([]);
+  const [activeTab, setActiveTab] = useState<"timeline" | "notes" | "attachments">("timeline");
+  const [isUploading, setIsUploading] = useState<boolean>(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
 
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -59,10 +66,11 @@ export const CaseDetailView: React.FC<CaseDetailViewProps> = ({ caseRef, onBack 
     setIsLoading(true);
     setError(null);
     try {
-      const [caseRes, timelineRes, notesRes] = await Promise.all([
+      const [caseRes, timelineRes, notesRes, attachRes] = await Promise.all([
         api.getCaseDetail(caseRef),
         api.getCaseTimeline(caseRef),
         api.getCaseNotes(caseRef),
+        api.getCaseAttachments(caseRef),
       ]);
 
       if (caseRes.success && caseRes.data) {
@@ -77,6 +85,10 @@ export const CaseDetailView: React.FC<CaseDetailViewProps> = ({ caseRef, onBack 
 
       if (notesRes.success && notesRes.data) {
         setNotes(notesRes.data);
+      }
+
+      if (attachRes.success && attachRes.data) {
+        setAttachments(attachRes.data);
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error connecting to case service");
@@ -146,7 +158,8 @@ export const CaseDetailView: React.FC<CaseDetailViewProps> = ({ caseRef, onBack 
 
   const isAuditor = currentRole === "AUDITOR";
   const isClosed = caseData.status === "Closed";
-  const canAdvance = !isAuditor && !isClosed;
+  const isRejected = caseData.status === "Rejected";
+  const canAdvance = !isAuditor && !isClosed && !isRejected;
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
@@ -248,6 +261,25 @@ export const CaseDetailView: React.FC<CaseDetailViewProps> = ({ caseRef, onBack 
               }}
             >
               <Lock size={13} /> Case Terminal (Closed)
+            </span>
+          )}
+
+          {isRejected && (
+            <span
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "0.3rem",
+                fontSize: "0.8rem",
+                color: "#EF4444",
+                background: "rgba(239, 68, 68, 0.15)",
+                border: "1px solid rgba(239, 68, 68, 0.3)",
+                padding: "0.3rem 0.6rem",
+                borderRadius: "4px",
+                fontWeight: 700,
+              }}
+            >
+              <Lock size={13} /> Case Rejected / Spam (Terminal)
             </span>
           )}
         </div>
@@ -593,6 +625,27 @@ export const CaseDetailView: React.FC<CaseDetailViewProps> = ({ caseRef, onBack 
             >
               <FileText size={16} /> Internal Notes ({notes.length})
             </button>
+
+            <button
+              onClick={() => setActiveTab("attachments")}
+              style={{
+                flex: 1,
+                padding: "0.85rem",
+                background: "transparent",
+                border: "none",
+                borderBottom: activeTab === "attachments" ? "2px solid var(--accent-saffron)" : "2px solid transparent",
+                color: activeTab === "attachments" ? "var(--accent-saffron)" : "var(--text-muted)",
+                fontWeight: activeTab === "attachments" ? 700 : 500,
+                fontSize: "0.85rem",
+                cursor: "pointer",
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "0.4rem",
+              }}
+            >
+              <Paperclip size={16} /> Cloud Evidence ({attachments.length})
+            </button>
           </div>
 
           {/* Tab 1: Timeline */}
@@ -733,6 +786,159 @@ export const CaseDetailView: React.FC<CaseDetailViewProps> = ({ caseRef, onBack 
                       </div>
                       <div style={{ fontSize: "0.85rem", color: "var(--text-secondary)", lineHeight: 1.45 }}>
                         {n.content}
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Tab 3: Cloud Evidence & Attachments */}
+          {activeTab === "attachments" && (
+            <div style={{ padding: "1.25rem", display: "flex", flexDirection: "column", gap: "1rem" }}>
+              {/* Evidence Upload Header (Non-auditors) */}
+              {!isAuditor && (
+                <div
+                  style={{
+                    padding: "1rem",
+                    borderRadius: "8px",
+                    background: "rgba(30, 41, 59, 0.4)",
+                    border: "1px dashed var(--border-subtle)",
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    flexWrap: "wrap",
+                    gap: "0.75rem",
+                  }}
+                >
+                  <div>
+                    <div style={{ fontWeight: 600, fontSize: "0.88rem", color: "var(--text-primary)", display: "flex", alignItems: "center", gap: "0.4rem" }}>
+                      <HardDrive size={15} color="var(--accent-saffron)" /> Cloud Storage Bucket (Supabase / S3)
+                    </div>
+                    <div style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>
+                      Upload verified fee receipts, affidavits, or lab inspection evidence (PDF, PNG, JPG, DOCX).
+                    </div>
+                  </div>
+                  <div>
+                    <label
+                      className="btn-primary"
+                      style={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: "0.4rem",
+                        cursor: isUploading ? "not-allowed" : "pointer",
+                        fontSize: "0.8rem",
+                        padding: "0.45rem 0.85rem",
+                      }}
+                    >
+                      <UploadCloud size={14} />
+                      {isUploading ? "Uploading to Cloud..." : "Upload Evidence"}
+                      <input
+                        type="file"
+                        accept=".pdf,.png,.jpg,.jpeg,.webp,.docx"
+                        style={{ display: "none" }}
+                        disabled={isUploading}
+                        onChange={async (e) => {
+                          const file = e.target.files?.[0];
+                          if (!file) return;
+                          setIsUploading(true);
+                          setUploadError(null);
+                          try {
+                            const fd = new FormData();
+                            fd.append("file", file);
+                            fd.append("category", "OTHER");
+                            fd.append("description", `Evidence: ${file.name}`);
+                            const res = await api.uploadCaseAttachment(caseRef, fd);
+                            if (res.success && res.data) {
+                              setAttachments((prev) => [res.data!, ...prev]);
+                            } else {
+                              setUploadError(res.error?.message || "Upload failed.");
+                            }
+                          } catch (err) {
+                            setUploadError(err instanceof Error ? err.message : "Error uploading evidence.");
+                          } finally {
+                            setIsUploading(false);
+                            e.target.value = "";
+                          }
+                        }}
+                      />
+                    </label>
+                  </div>
+                </div>
+              )}
+
+              {uploadError && (
+                <div style={{ padding: "0.5rem 0.75rem", background: "rgba(239, 68, 68, 0.15)", border: "1px solid var(--risk-overdue)", borderRadius: "6px", color: "var(--risk-overdue)", fontSize: "0.8rem" }}>
+                  {uploadError}
+                </div>
+              )}
+
+              {/* Attachments List */}
+              <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+                {attachments.length === 0 ? (
+                  <div style={{ textAlign: "center", padding: "2.5rem 1rem", color: "var(--text-muted)" }}>
+                    <Paperclip size={32} style={{ margin: "0 auto 0.5rem", opacity: 0.3 }} />
+                    <p style={{ margin: 0, fontSize: "0.88rem" }}>No evidentiary documents uploaded yet.</p>
+                    <p style={{ margin: "0.25rem 0 0", fontSize: "0.75rem" }}>
+                      Upload verified fee receipts, affidavits, or lab inspection proof.
+                    </p>
+                  </div>
+                ) : (
+                  attachments.map((att) => (
+                    <div
+                      key={att.id}
+                      style={{
+                        padding: "0.85rem",
+                        borderRadius: "8px",
+                        background: "rgba(30, 41, 59, 0.5)",
+                        border: "1px solid var(--border-subtle)",
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        gap: "0.75rem",
+                        flexWrap: "wrap",
+                      }}
+                    >
+                      <div style={{ display: "flex", alignItems: "flex-start", gap: "0.6rem" }}>
+                        <div style={{ padding: "0.5rem", borderRadius: "6px", background: "rgba(255, 153, 51, 0.15)", color: "var(--accent-saffron)" }}>
+                          <FileText size={18} />
+                        </div>
+                        <div>
+                          <div style={{ fontWeight: 600, fontSize: "0.88rem", color: "var(--text-primary)" }}>
+                            {att.file_name}
+                          </div>
+                          <div style={{ display: "flex", gap: "0.5rem", alignItems: "center", marginTop: "3px", fontSize: "0.72rem", color: "var(--text-muted)" }}>
+                            <span>{(att.file_size_bytes / 1024).toFixed(1)} KB</span>
+                            <span>•</span>
+                            <span style={{ textTransform: "capitalize" }}>{att.category.replace("_", " ")}</span>
+                            <span>•</span>
+                            <span style={{ color: "#10b981", fontWeight: 600 }}>SCAN: {att.scan_status}</span>
+                            <span>•</span>
+                            <span style={{ background: "rgba(59, 130, 246, 0.15)", color: "#60a5fa", padding: "1px 6px", borderRadius: "4px" }}>
+                              {att.storage_provider ? att.storage_provider.toUpperCase() : "SUPABASE"}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div>
+                        <a
+                          href={att.secure_url || `/api/v1/cases/${caseRef}/attachments`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="btn-secondary"
+                          style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: "0.35rem",
+                            fontSize: "0.78rem",
+                            padding: "0.35rem 0.65rem",
+                            textDecoration: "none",
+                          }}
+                        >
+                          View Cloud Object <ExternalLink size={12} />
+                        </a>
                       </div>
                     </div>
                   ))

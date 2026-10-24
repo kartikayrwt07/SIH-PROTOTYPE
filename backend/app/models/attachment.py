@@ -39,6 +39,8 @@ class CaseAttachment(Base):
     mime_type = Column(String(100), nullable=False)
     storage_path = Column(String(500), nullable=False)
     storage_bucket = Column(String(100), default="aicte-case-evidence", nullable=False)
+    storage_provider = Column(String(50), default="supabase", nullable=False)  # "supabase" | "s3"
+    secure_url = Column(String(1000), nullable=False)  # Direct secure CDN/Bucket URL
 
     category = Column(Enum(AttachmentCategory), default=AttachmentCategory.OTHER, nullable=False)
     description = Column(String(255), nullable=True)

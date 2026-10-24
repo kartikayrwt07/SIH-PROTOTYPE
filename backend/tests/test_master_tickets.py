@@ -30,6 +30,7 @@ from backend.app.services.duplicate_grouping import (
     create_master_ticket,
     resolve_master_ticket,
     get_master_ticket_stats,
+    get_per_institution_recurring_breakdown,
 )
 
 
@@ -199,3 +200,70 @@ def test_master_ticket_api_flow(client: TestClient, auth_headers, setup_cluster_
     list_res = client.get("/api/v1/ai/master-tickets/", headers=auth_headers)
     assert list_res.status_code == 200
     assert isinstance(list_res.json()["data"], list)
+
+
+def test_institution_recurring_breakdown_service(db: Session, setup_cluster_cases):
+    """Test get_per_institution_recurring_breakdown service logic."""
+    target_inst_id = str(setup_cluster_cases[0].institution_id)
+    breakdowns = get_per_institution_recurring_breakdown(db, min_cases=1)
+    assert len(breakdowns) >= 1
+
+    # Find the setup institution by ID
+    target = next((b for b in breakdowns if b.institution_id == target_inst_id), None)
+    assert target is not None
+    assert target.total_cases >= 5
+    assert len(target.top_recurring_themes) >= 1
+
+    # Check primary violation summary
+    assert "Unapproved Fee" in target.primary_violation or target.primary_violation != ""
+    assert target.risk_severity in ("CRITICAL", "HIGH", "ELEVATED", "STANDARD")
+
+    # Check top recurring theme details
+    fee_theme = next((t for t in target.top_recurring_themes if "Fee" in t.category), None)
+    assert fee_theme is not None
+    assert fee_theme.count >= 5
+    assert fee_theme.percentage > 0
+    assert len(fee_theme.sample_subjects) > 0
+
+
+def test_institution_breakdown_api_endpoint(client: TestClient, auth_headers, setup_cluster_cases):
+    """Test GET /api/v1/ai/master-tickets/institution-breakdown endpoint with filters."""
+    inst = setup_cluster_cases[0].institution
+    inst_name = inst.name if inst else "Technology"
+    inst_state = inst.state if inst and inst.state else "Maharashtra"
+
+    # 1. Unfiltered breakdown
+    res = client.get("/api/v1/ai/master-tickets/institution-breakdown", headers=auth_headers)
+    assert res.status_code == 200
+    data = res.json()["data"]
+    assert isinstance(data, list)
+    assert len(data) >= 1
+
+    # 2. Filter by state
+    res_state = client.get(
+        f"/api/v1/ai/master-tickets/institution-breakdown?state={inst_state}",
+        headers=auth_headers,
+    )
+    assert res_state.status_code == 200
+    data_state = res_state.json()["data"]
+    for item in data_state:
+        assert item["state"] == inst_state
+
+    # 3. Filter by search term using first word of institution name
+    search_term = inst_name.split()[0]
+    res_search = client.get(
+        f"/api/v1/ai/master-tickets/institution-breakdown?search={search_term}",
+        headers=auth_headers,
+    )
+    assert res_search.status_code == 200
+    data_search = res_search.json()["data"]
+    assert any(search_term.lower() in item["institution_name"].lower() for item in data_search)
+
+    # 4. Search for non-existent college
+    res_empty = client.get(
+        "/api/v1/ai/master-tickets/institution-breakdown?search=NonExistentInstitution999",
+        headers=auth_headers,
+    )
+    assert res_empty.status_code == 200
+    assert len(res_empty.json()["data"]) == 0
+

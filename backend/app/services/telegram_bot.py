@@ -20,7 +20,7 @@ from backend.app.models.bureau import Bureau
 
 
 CASE_REF_REGEX = re.compile(
-    r"\b(AIC-[A-Z0-9-]+|MT-[A-Z0-9]+)\b",
+    r"\b(AIC(?:TE)?-[A-Z0-9-]+|MT-[A-Z0-9-]+)\b",
     re.IGNORECASE
 )
 
@@ -60,8 +60,8 @@ def extract_case_reference(text: str) -> Optional[str]:
     if match:
         return match.group(1).upper()
 
-    # If the user typed a raw alphanumeric case ref directly
-    if re.match(r"^[A-Za-z0-9-]+$", cleaned) and len(cleaned) >= 5:
+    # If the user typed a raw alphanumeric case ref directly (must contain a digit or hyphen)
+    if re.match(r"^[A-Za-z0-9-]+$", cleaned) and (any(c.isdigit() for c in cleaned) or "-" in cleaned) and len(cleaned) >= 5:
         return cleaned.upper()
 
     return None

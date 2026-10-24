@@ -20,6 +20,7 @@ from backend.app.schemas.master_ticket import (
     MasterTicketRead,
     MasterTicketSummary,
     MasterTicketStats,
+    InstitutionViolationBreakdown,
 )
 from backend.app.services.duplicate_grouping import (
     auto_detect_duplicate_groups,
@@ -28,6 +29,7 @@ from backend.app.services.duplicate_grouping import (
     get_master_ticket_detail,
     list_master_tickets,
     get_master_ticket_stats,
+    get_per_institution_recurring_breakdown,
 )
 
 router = APIRouter()
@@ -150,6 +152,32 @@ def get_master_ticket_stats_endpoint(
     """Returns aggregated statistics: total tickets, time saved, group sizes, top categories."""
     stats = get_master_ticket_stats(db)
     return StandardResponse(data=stats, success=True)
+
+
+@router.get(
+    "/institution-breakdown",
+    response_model=StandardResponse[List[InstitutionViolationBreakdown]],
+    summary="Per-institution recurring grievance violation breakdown and cluster analysis",
+)
+def get_institution_breakdown_endpoint(
+    min_cases: int = Query(2, ge=1, le=50, description="Minimum grievances required for college inclusion"),
+    state: Optional[str] = Query(None, description="Filter by state jurisdiction"),
+    search: Optional[str] = Query(None, description="Search by institution name or AICTE ID"),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """
+    Identifies and surfaces for each technical institution its top recurring
+    grievance themes, quantification of recurring violations, sample complaint subjects,
+    and correlations with active AI duplicate clusters.
+    """
+    breakdown = get_per_institution_recurring_breakdown(
+        db=db,
+        min_cases=min_cases,
+        state=state,
+        search=search,
+    )
+    return StandardResponse(data=breakdown, success=True)
 
 
 @router.get(

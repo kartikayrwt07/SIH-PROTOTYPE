@@ -208,6 +208,8 @@ export const CaseRegister: React.FC<CaseRegisterProps> = ({
         return { bg: "rgba(16, 185, 129, 0.15)", color: "#34d399" };
       case "Closed":
         return { bg: "rgba(100, 116, 139, 0.2)", color: "#94a3b8" };
+      default:
+        return { bg: "rgba(100, 116, 139, 0.2)", color: "#94a3b8" };
     }
   };
 

@@ -150,3 +150,34 @@ class MasterTicketStats(BaseModel):
     avg_group_size: float
     largest_group_size: int
     top_categories: List[dict] = Field(default_factory=list)
+
+
+# ---------- Per-Institution Recurring Violation Breakdown ----------
+class InstitutionRecurringViolation(BaseModel):
+    category: str
+    count: int
+    percentage: float
+    sample_subjects: List[str] = Field(default_factory=list)
+    has_cluster: bool = False
+    cluster_case_refs: List[str] = Field(default_factory=list)
+    cluster_avg_similarity: float = 0.0
+    anchor_case_ref: Optional[str] = None
+    master_ticket_id: Optional[str] = None
+
+
+class InstitutionViolationBreakdown(BaseModel):
+    institution_id: str
+    institution_name: str
+    aicte_permanent_id: str
+    state: str
+    district: str
+    institution_type: str
+    total_cases: int
+    open_cases: int
+    resolved_cases: int
+    cluster_count: int
+    primary_violation: str
+    risk_severity: str  # "CRITICAL", "HIGH", "ELEVATED", "STANDARD"
+    top_recurring_themes: List[InstitutionRecurringViolation] = Field(default_factory=list)
+
+    model_config = ConfigDict(from_attributes=True)

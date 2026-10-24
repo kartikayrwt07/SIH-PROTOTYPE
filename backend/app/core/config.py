@@ -19,6 +19,16 @@ class Settings(BaseSettings):
     TELEGRAM_BOT_TOKEN: str = "DEMO_TELEGRAM_BOT_TOKEN"
     TELEGRAM_WEBHOOK_SECRET: str = ""
 
+    # Cloud Storage & Bucket Configuration (Supabase Storage / AWS S3)
+    STORAGE_PROVIDER: str = "supabase"  # "supabase" | "s3"
+    SUPABASE_URL: str = "https://rocrtbthsbdkwikatjjf.supabase.co"
+    SUPABASE_SERVICE_ROLE_KEY: str = ""
+    SUPABASE_STORAGE_BUCKET: str = "aicte-case-evidence"
+    AWS_S3_BUCKET: str = "aicte-case-evidence"
+    AWS_REGION: str = "ap-south-1"
+    AWS_ACCESS_KEY_ID: str = ""
+    AWS_SECRET_ACCESS_KEY: str = ""
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",

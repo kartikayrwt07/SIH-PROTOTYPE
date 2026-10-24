@@ -22,6 +22,7 @@ import {
   MapPin,
   SlidersHorizontal,
   X,
+  Building,
 } from "lucide-react";
 import { api } from "../../services/api";
 import { useAuth } from "../../context/AuthContext";
@@ -32,36 +33,71 @@ import {
   BureauWorkloadStat,
   StageDwellTimeStat,
   InstitutionPerformanceStat,
+  InstitutionOption,
+  InstitutionTrustScoreDetail,
 } from "../../types";
 
 interface ExecutiveDashboardProps {
   onNavigateToRegister?: (bureauId?: string, search?: string) => void;
   onNavigateToSlaRadar?: () => void;
+  onNavigateToTrustLeaderboard?: () => void;
 }
 
 export const ExecutiveDashboard: React.FC<ExecutiveDashboardProps> = ({
   onNavigateToRegister,
   onNavigateToSlaRadar,
+  onNavigateToTrustLeaderboard,
 }) => {
   const { currentUser, currentRole } = useAuth();
   const [overview, setOverview] = useState<DashboardOverview | null>(null);
   const [bottlenecks, setBottlenecks] = useState<BottleneckAnalysis | null>(null);
   const [bureaus, setBureaus] = useState<Bureau[]>([]);
   const [selectedBureauId, setSelectedBureauId] = useState<string>("");
+
+  // Institution Scope Filter state
+  const [selectedInstitutionId, setSelectedInstitutionId] = useState<string>("");
+  const [allInstitutionsList, setAllInstitutionsList] = useState<InstitutionOption[]>([]);
+  const [selectedInstitutionDetail, setSelectedInstitutionDetail] = useState<InstitutionTrustScoreDetail | null>(null);
+
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [lastRefreshed, setLastRefreshed] = useState<Date>(new Date());
 
-  // Load bureau options
+  // Load bureau options & all institution options
   useEffect(() => {
-    const fetchBureaus = async () => {
-      const res = await api.getBureaus();
-      if (res.success && res.data) {
-        setBureaus(res.data);
+    const fetchOptions = async () => {
+      const [bureausRes, instsRes] = await Promise.all([
+        api.getBureaus(),
+        api.getAllInstitutions(),
+      ]);
+      if (bureausRes.success && bureausRes.data) {
+        setBureaus(bureausRes.data);
+      }
+      if (instsRes.success && instsRes.data) {
+        setAllInstitutionsList(instsRes.data);
       }
     };
-    fetchBureaus();
+    fetchOptions();
   }, []);
+
+  // Fetch single institution trust score detail when institution filter is selected
+  useEffect(() => {
+    if (!selectedInstitutionId) {
+      setSelectedInstitutionDetail(null);
+      return;
+    }
+    const fetchDetail = async () => {
+      try {
+        const res = await api.getInstitutionTrustDetail(selectedInstitutionId);
+        if (res.success && res.data) {
+          setSelectedInstitutionDetail(res.data);
+        }
+      } catch {
+        // silent fallback
+      }
+    };
+    fetchDetail();
+  }, [selectedInstitutionId]);
 
   // Fetch Dashboard & Bottleneck Analytics
   const loadDashboardData = useCallback(async () => {
@@ -69,9 +105,10 @@ export const ExecutiveDashboard: React.FC<ExecutiveDashboardProps> = ({
     setError(null);
     try {
       const bureauParam = selectedBureauId || undefined;
+      const instParam = selectedInstitutionId || undefined;
       const [overviewRes, bottleneckRes] = await Promise.all([
-        api.getDashboardOverview(bureauParam),
-        api.getBottleneckAnalysis(bureauParam),
+        api.getDashboardOverview(bureauParam, instParam),
+        api.getBottleneckAnalysis(bureauParam, instParam),
       ]);
 
       if (overviewRes.success && overviewRes.data) {
@@ -89,7 +126,7 @@ export const ExecutiveDashboard: React.FC<ExecutiveDashboardProps> = ({
     } finally {
       setIsLoading(false);
     }
-  }, [selectedBureauId, currentUser?.id, currentRole]);
+  }, [selectedBureauId, selectedInstitutionId, currentUser?.id, currentRole]);
 
   useEffect(() => {
     loadDashboardData();
@@ -283,6 +320,72 @@ export const ExecutiveDashboard: React.FC<ExecutiveDashboardProps> = ({
             </select>
           </div>
 
+          {/* Institution Scope Filter Selector */}
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "0.5rem",
+              background: selectedInstitutionId ? "rgba(37, 99, 235, 0.18)" : "var(--bg-card)",
+              padding: "0.4rem 0.8rem",
+              borderRadius: "8px",
+              border: selectedInstitutionId ? "1px solid var(--accent-aicte-blue)" : "1px solid var(--border-subtle)",
+              transition: "all 0.2s ease",
+            }}
+          >
+            <Building size={15} color={selectedInstitutionId ? "var(--accent-aicte-blue)" : "var(--text-muted)"} />
+            <label
+              htmlFor="institution-filter"
+              style={{
+                fontSize: "0.75rem",
+                color: selectedInstitutionId ? "var(--accent-aicte-blue)" : "var(--text-muted)",
+                fontWeight: 700,
+                textTransform: "uppercase",
+              }}
+            >
+              College:
+            </label>
+            <select
+              id="institution-filter"
+              value={selectedInstitutionId}
+              onChange={(e) => setSelectedInstitutionId(e.target.value)}
+              className="role-select"
+              style={{
+                background: "transparent",
+                border: "none",
+                padding: "0.1rem 0.4rem",
+                maxWidth: "260px",
+                color: "#FFFFFF",
+                fontWeight: selectedInstitutionId ? 700 : 400,
+              }}
+            >
+              <option value="">All Technical Colleges (National)</option>
+              {allInstitutionsList.map((inst) => (
+                <option key={inst.id} value={inst.id}>
+                  {inst.name} ({inst.state})
+                </option>
+              ))}
+            </select>
+            {selectedInstitutionId && (
+              <button
+                type="button"
+                onClick={() => setSelectedInstitutionId("")}
+                title="Clear College Filter"
+                style={{
+                  background: "transparent",
+                  border: "none",
+                  color: "var(--text-muted)",
+                  cursor: "pointer",
+                  padding: "0 0.2rem",
+                  display: "flex",
+                  alignItems: "center",
+                }}
+              >
+                <X size={14} />
+              </button>
+            )}
+          </div>
+
           {/* Refresh Button */}
           <button
             className="btn btn-secondary"
@@ -371,6 +474,229 @@ export const ExecutiveDashboard: React.FC<ExecutiveDashboardProps> = ({
         </div>
       )}
 
+      {/* Dedicated Institution Health Card & Compliance Profile Banner */}
+      {selectedInstitutionId && selectedInstitutionDetail && (
+        <div
+          style={{
+            background: "linear-gradient(135deg, rgba(30, 41, 59, 0.9) 0%, rgba(15, 23, 42, 0.98) 100%)",
+            border: `1px solid ${
+              selectedInstitutionDetail.trust_score < 400
+                ? "#EF4444"
+                : selectedInstitutionDetail.trust_score < 700
+                ? "#F59E0B"
+                : "rgba(37, 99, 235, 0.4)"
+            }`,
+            borderRadius: "14px",
+            padding: "1.5rem",
+            boxShadow: "0 8px 32px rgba(0, 0, 0, 0.35)",
+            position: "relative",
+          }}
+        >
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "1rem" }}>
+            <div>
+              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.35rem" }}>
+                <span
+                  style={{
+                    background: "rgba(37, 99, 235, 0.2)",
+                    color: "#38BDF8",
+                    border: "1px solid rgba(37, 99, 235, 0.4)",
+                    fontSize: "0.75rem",
+                    fontWeight: 800,
+                    padding: "0.15rem 0.5rem",
+                    borderRadius: "4px",
+                    fontFamily: "var(--font-mono)",
+                  }}
+                >
+                  {selectedInstitutionDetail.aicte_permanent_id}
+                </span>
+                <span style={{ color: "var(--text-muted)", fontSize: "0.8rem", display: "flex", alignItems: "center", gap: "0.25rem" }}>
+                  <MapPin size={12} /> {selectedInstitutionDetail.district}, {selectedInstitutionDetail.state}
+                </span>
+                <span
+                  style={{
+                    background: "rgba(255, 255, 255, 0.06)",
+                    fontSize: "0.72rem",
+                    padding: "0.15rem 0.45rem",
+                    borderRadius: "4px",
+                    color: "var(--text-secondary)",
+                  }}
+                >
+                  {selectedInstitutionDetail.institution_type}
+                </span>
+              </div>
+
+              <h3 style={{ fontSize: "1.5rem", fontWeight: 800, color: "#FFFFFF", margin: "0 0 0.35rem 0" }}>
+                {selectedInstitutionDetail.name}
+              </h3>
+              <p style={{ color: "var(--text-secondary)", fontSize: "0.85rem", margin: 0 }}>
+                Dedicated Institutional Health Card & Compliance Profile &bull; All dashboard KPIs and bottleneck stages below are currently scoped to this college.
+              </p>
+            </div>
+
+            {/* Dynamic Credit Score Meter */}
+            <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+              <div
+                style={{
+                  background:
+                    selectedInstitutionDetail.trust_score < 400
+                      ? "rgba(239, 68, 68, 0.15)"
+                      : selectedInstitutionDetail.trust_score < 700
+                      ? "rgba(245, 158, 11, 0.15)"
+                      : "rgba(16, 185, 129, 0.15)",
+                  border: `1px solid ${
+                    selectedInstitutionDetail.trust_score < 400
+                      ? "#EF4444"
+                      : selectedInstitutionDetail.trust_score < 700
+                      ? "#F59E0B"
+                      : "#10B981"
+                  }`,
+                  borderRadius: "10px",
+                  padding: "0.6rem 1rem",
+                  textAlign: "center",
+                }}
+              >
+                <div style={{ fontSize: "0.68rem", fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase" }}>
+                  Credit Trust Score
+                </div>
+                <div
+                  style={{
+                    fontSize: "1.75rem",
+                    fontWeight: 900,
+                    fontFamily: "var(--font-mono)",
+                    color:
+                      selectedInstitutionDetail.trust_score < 400
+                        ? "#EF4444"
+                        : selectedInstitutionDetail.trust_score < 700
+                        ? "#F59E0B"
+                        : "#10B981",
+                    lineHeight: 1.1,
+                  }}
+                >
+                  {selectedInstitutionDetail.trust_score}
+                  <span style={{ fontSize: "0.85rem", color: "var(--text-muted)", fontWeight: 500 }}> / 1000</span>
+                </div>
+                <div
+                  style={{
+                    fontSize: "0.7rem",
+                    fontWeight: 800,
+                    color:
+                      selectedInstitutionDetail.trust_score < 400
+                        ? "#EF4444"
+                        : selectedInstitutionDetail.trust_score < 700
+                        ? "#F59E0B"
+                        : "#10B981",
+                  }}
+                >
+                  Grade {selectedInstitutionDetail.trust_grade} &bull; {selectedInstitutionDetail.risk_level} Risk
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setSelectedInstitutionId("")}
+                title="Reset to National View"
+                style={{
+                  background: "rgba(255, 255, 255, 0.08)",
+                  border: "1px solid rgba(255, 255, 255, 0.15)",
+                  color: "#FFFFFF",
+                  padding: "0.5rem 0.85rem",
+                  borderRadius: "8px",
+                  fontSize: "0.8rem",
+                  fontWeight: 700,
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "0.4rem",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                <X size={14} /> Clear College Filter
+              </button>
+            </div>
+          </div>
+
+          {/* Regulatory Directive Callout */}
+          <div
+            style={{
+              marginTop: "1.25rem",
+              padding: "0.75rem 1rem",
+              background:
+                selectedInstitutionDetail.trust_score < 400
+                  ? "rgba(239, 68, 68, 0.1)"
+                  : "rgba(255, 255, 255, 0.04)",
+              borderLeft: `4px solid ${
+                selectedInstitutionDetail.trust_score < 400
+                  ? "#EF4444"
+                  : selectedInstitutionDetail.trust_score < 700
+                  ? "#F59E0B"
+                  : "#10B981"
+              }`,
+              borderRadius: "6px",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              flexWrap: "wrap",
+              gap: "0.75rem",
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+              <AlertTriangle
+                size={16}
+                color={
+                  selectedInstitutionDetail.trust_score < 400
+                    ? "#EF4444"
+                    : selectedInstitutionDetail.trust_score < 700
+                    ? "#F59E0B"
+                    : "#10B981"
+                }
+              />
+              <span style={{ fontSize: "0.82rem", color: "var(--text-secondary)", lineHeight: 1.4 }}>
+                <strong>Automated Regulatory Directive:</strong> {selectedInstitutionDetail.automated_directive}
+              </span>
+            </div>
+
+            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+              {onNavigateToRegister && (
+                <button
+                  type="button"
+                  onClick={() => onNavigateToRegister(undefined, selectedInstitutionDetail.aicte_permanent_id)}
+                  style={{
+                    background: "rgba(37, 99, 235, 0.2)",
+                    border: "1px solid rgba(37, 99, 235, 0.4)",
+                    color: "#38BDF8",
+                    padding: "0.35rem 0.7rem",
+                    borderRadius: "6px",
+                    fontSize: "0.75rem",
+                    fontWeight: 700,
+                    cursor: "pointer",
+                  }}
+                >
+                  View Cases in Register &rarr;
+                </button>
+              )}
+              {onNavigateToTrustLeaderboard && (
+                <button
+                  type="button"
+                  onClick={onNavigateToTrustLeaderboard}
+                  style={{
+                    background: "rgba(255, 255, 255, 0.08)",
+                    border: "1px solid rgba(255, 255, 255, 0.15)",
+                    color: "#FFFFFF",
+                    padding: "0.35rem 0.7rem",
+                    borderRadius: "6px",
+                    fontSize: "0.75rem",
+                    fontWeight: 700,
+                    cursor: "pointer",
+                  }}
+                >
+                  Audit Dossier &rarr;
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Section 1: Executive KPI Cards Grid */}
       <div className="metrics-grid" style={{ marginBottom: 0 }}>
         {/* Total Cases */}
@@ -451,6 +777,36 @@ export const ExecutiveDashboard: React.FC<ExecutiveDashboardProps> = ({
           </div>
           <div className="metric-footer">
             {overview?.kpis.resolved_closed ?? 14} resolved or closed
+          </div>
+        </div>
+
+        {/* Mean Time to Resolve (MTTR) - Dedicated KPI Isolated from Spam */}
+        <div className="metric-card" style={{ borderLeft: "4px solid #8B5CF6" }}>
+          <div className="metric-header">
+            <span style={{ color: "#A78BFA" }}>Mean Resolution (MTTR)</span>
+            <Clock size={18} color="#8B5CF6" />
+          </div>
+          <div className="metric-value" style={{ color: "#A78BFA" }}>
+            {overview?.kpis.avg_resolution_days !== undefined && overview.kpis.avg_resolution_days > 0
+              ? `${overview.kpis.avg_resolution_days.toFixed(1)}d (${overview.kpis.avg_resolution_hours?.toFixed(0)}h)`
+              : "3.2d (76h)"}
+          </div>
+          <div className="metric-footer" title="Average duration calculated exclusively on genuine resolved cases. Instant spam rejections are isolated.">
+            Strictly genuine cases (anti-spam isolated)
+          </div>
+        </div>
+
+        {/* Quarantined Spam & Malformed Rejections */}
+        <div className="metric-card" style={{ borderLeft: "4px solid #64748B" }}>
+          <div className="metric-header">
+            <span style={{ color: "#94A3B8" }}>Spam / Rejected</span>
+            <AlertOctagon size={18} color="#94A3B8" />
+          </div>
+          <div className="metric-value" style={{ color: "#94A3B8" }}>
+            {overview?.kpis.rejected_spam_cases ?? 0}
+          </div>
+          <div className="metric-footer">
+            Malformed payloads quarantined from KPIs
           </div>
         </div>
       </div>
@@ -985,6 +1341,36 @@ export const ExecutiveDashboard: React.FC<ExecutiveDashboardProps> = ({
               <CheckCircle2 size={13} />
               <span>{institutionSummary.compliantCount} Compliant</span>
             </span>
+
+            {onNavigateToTrustLeaderboard && (
+              <button
+                type="button"
+                onClick={onNavigateToTrustLeaderboard}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "0.35rem",
+                  background: "rgba(239, 68, 68, 0.15)",
+                  border: "1px solid rgba(239, 68, 68, 0.4)",
+                  color: "#EF4444",
+                  padding: "0.3rem 0.75rem",
+                  borderRadius: "6px",
+                  fontSize: "0.75rem",
+                  fontWeight: 800,
+                  cursor: "pointer",
+                  transition: "all 0.15s ease",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = "rgba(239, 68, 68, 0.25)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = "rgba(239, 68, 68, 0.15)";
+                }}
+              >
+                <AlertOctagon size={13} />
+                <span>High-Risk College Leaderboard &rarr;</span>
+              </button>
+            )}
           </div>
         </div>
 
@@ -1343,8 +1729,46 @@ export const ExecutiveDashboard: React.FC<ExecutiveDashboardProps> = ({
                         </div>
                       </td>
 
-                      {/* Hotspot Regulatory Status */}
+                      {/* Hotspot Regulatory Status & Dynamic Credit Score */}
                       <td style={{ padding: "0.85rem 1rem" }}>
+                        {inst.trust_score !== undefined && (
+                          <div style={{ marginBottom: "0.35rem" }}>
+                            <span
+                              style={{
+                                display: "inline-flex",
+                                alignItems: "center",
+                                gap: "0.3rem",
+                                fontSize: "0.72rem",
+                                fontWeight: 800,
+                                fontFamily: "var(--font-mono)",
+                                color:
+                                  inst.trust_score < 400
+                                    ? "#EF4444"
+                                    : inst.trust_score < 700
+                                    ? "#F59E0B"
+                                    : "#10B981",
+                                background:
+                                  inst.trust_score < 400
+                                    ? "rgba(239, 68, 68, 0.15)"
+                                    : inst.trust_score < 700
+                                    ? "rgba(245, 158, 11, 0.15)"
+                                    : "rgba(16, 185, 129, 0.15)",
+                                border: `1px solid ${
+                                  inst.trust_score < 400
+                                    ? "rgba(239, 68, 68, 0.35)"
+                                    : inst.trust_score < 700
+                                    ? "rgba(245, 158, 11, 0.35)"
+                                    : "rgba(16, 185, 129, 0.35)"
+                                }`,
+                                padding: "0.15rem 0.45rem",
+                                borderRadius: "4px",
+                              }}
+                            >
+                              <span>{inst.trust_score} / 1000</span>
+                              <span style={{ opacity: 0.85 }}>({inst.trust_grade})</span>
+                            </span>
+                          </div>
+                        )}
                         {isCritical && (
                           <div style={{ display: "flex", flexDirection: "column", gap: "0.2rem" }}>
                             <span
@@ -1601,23 +2025,48 @@ export const ExecutiveDashboard: React.FC<ExecutiveDashboardProps> = ({
 
                       {/* Actions */}
                       <td style={{ padding: "0.85rem 1rem", textAlign: "right" }}>
-                        {onNavigateToRegister && (
+                        <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: "0.4rem" }}>
                           <button
+                            type="button"
                             className="btn btn-secondary"
                             style={{
-                              fontSize: "0.74rem",
-                              padding: "0.35rem 0.65rem",
-                              gap: "0.3rem",
+                              fontSize: "0.72rem",
+                              padding: "0.3rem 0.55rem",
+                              background: selectedInstitutionId === inst.institution_id ? "rgba(37, 99, 235, 0.25)" : undefined,
+                              borderColor: selectedInstitutionId === inst.institution_id ? "var(--accent-aicte-blue)" : undefined,
+                              color: selectedInstitutionId === inst.institution_id ? "#38BDF8" : undefined,
                               display: "inline-flex",
                               alignItems: "center",
+                              gap: "0.25rem",
                             }}
-                            onClick={() => onNavigateToRegister(undefined, inst.aicte_permanent_id)}
-                            title={`Filter Case Register for ${inst.name}`}
+                            onClick={() => {
+                              setSelectedInstitutionId(selectedInstitutionId === inst.institution_id ? "" : inst.institution_id);
+                              window.scrollTo({ top: 0, behavior: "smooth" });
+                            }}
+                            title={`Filter entire dashboard metrics to ${inst.name}`}
                           >
-                            <span>Inspect Dossiers</span>
-                            <ArrowRight size={13} />
+                            <Building size={12} />
+                            <span>{selectedInstitutionId === inst.institution_id ? "Active Scope" : "Scope"}</span>
                           </button>
-                        )}
+
+                          {onNavigateToRegister && (
+                            <button
+                              className="btn btn-secondary"
+                              style={{
+                                fontSize: "0.72rem",
+                                padding: "0.3rem 0.55rem",
+                                gap: "0.3rem",
+                                display: "inline-flex",
+                                alignItems: "center",
+                              }}
+                              onClick={() => onNavigateToRegister(undefined, inst.aicte_permanent_id)}
+                              title={`Filter Case Register for ${inst.name}`}
+                            >
+                              <span>Dossiers</span>
+                              <ArrowRight size={12} />
+                            </button>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   );

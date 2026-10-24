@@ -1,8 +1,10 @@
-import React, { useState, useEffect, useCallback, useRef } from "react";
+import React, { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import {
   Layers, Search, CheckCircle, AlertTriangle, ChevronRight,
   Zap, Users, TrendingUp, ArrowRight, X, Check, RefreshCw, Sparkles,
-  Timer, ExternalLink, ShieldCheck,
+  Timer, ExternalLink, ShieldCheck, Building2, AlertOctagon,
+  MapPin, ChevronDown, ChevronUp, FileText, Flame,
+  SlidersHorizontal,
 } from "lucide-react";
 import { api } from "../../services/api";
 import type {
@@ -11,13 +13,15 @@ import type {
   MasterTicketSummary,
   MasterTicketRead,
   MasterTicketStats,
+  InstitutionViolationBreakdown,
+  InstitutionRecurringViolation,
 } from "../../types";
 
 interface MasterTicketHubProps {
   onSelectCase?: (caseRef: string) => void;
 }
 
-type SubTab = "clusters" | "tickets";
+type SubTab = "clusters" | "tickets" | "institutions";
 
 export const MasterTicketHub: React.FC<MasterTicketHubProps> = ({ onSelectCase }) => {
   const [activeSubTab, setActiveSubTab] = useState<SubTab>("clusters");
@@ -35,6 +39,13 @@ export const MasterTicketHub: React.FC<MasterTicketHubProps> = ({ onSelectCase }
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [threshold, setThreshold] = useState(0.70);
   const [minGroupSize, setMinGroupSize] = useState(2);
+
+  // Per-institution recurring violations state
+  const [institutionBreakdowns, setInstitutionBreakdowns] = useState<InstitutionViolationBreakdown[]>([]);
+  const [loadingBreakdown, setLoadingBreakdown] = useState(false);
+  const [breakdownSearch, setBreakdownSearch] = useState("");
+  const [breakdownState, setBreakdownState] = useState("");
+  const [expandedColleges, setExpandedColleges] = useState<Record<string, boolean>>({});
 
   const isInitialMount = useRef(true);
 
@@ -54,9 +65,40 @@ export const MasterTicketHub: React.FC<MasterTicketHubProps> = ({ onSelectCase }
     setLoading(false);
   }, [statusFilter]);
 
+  // Fetch per-institution recurring violations breakdown
+  const fetchInstitutionBreakdown = useCallback(async () => {
+    setLoadingBreakdown(true);
+    try {
+      const res = await api.getInstitutionRecurringBreakdown({
+        state: breakdownState || undefined,
+        search: breakdownSearch || undefined,
+      });
+      if (res.success && res.data) {
+        setInstitutionBreakdowns(res.data);
+      }
+    } catch (e) {
+      console.error("Failed to load institution breakdown:", e);
+    } finally {
+      setLoadingBreakdown(false);
+    }
+  }, [breakdownState, breakdownSearch]);
+
   useEffect(() => {
     fetchData();
-  }, [fetchData]);
+    fetchInstitutionBreakdown();
+  }, [fetchData, fetchInstitutionBreakdown]);
+
+  const uniqueStates = useMemo(() => {
+    const set = new Set<string>();
+    institutionBreakdowns.forEach((b) => {
+      if (b.state) set.add(b.state);
+    });
+    return Array.from(set).sort();
+  }, [institutionBreakdowns]);
+
+  const toggleCollegeExpanded = (instId: string) => {
+    setExpandedColleges((prev) => ({ ...prev, [instId]: !prev[instId] }));
+  };
 
   // Run AI duplicate cluster scan
   const runDetection = useCallback(async (currThreshold: number, currMinSize: number) => {
@@ -869,6 +911,422 @@ export const MasterTicketHub: React.FC<MasterTicketHubProps> = ({ onSelectCase }
     );
   };
 
+  // ─────── Per-Institution Recurring Issues Breakdown ───────
+  const renderInstitutionBreakdown = () => {
+    const criticalCount = institutionBreakdowns.filter((b) => b.risk_severity === "CRITICAL").length;
+    const highCount = institutionBreakdowns.filter((b) => b.risk_severity === "HIGH").length;
+    const totalThemesCount = institutionBreakdowns.reduce((acc, b) => acc + b.top_recurring_themes.length, 0);
+
+    const getSeverityBadge = (severity: string) => {
+      switch (severity) {
+        case "CRITICAL":
+          return (
+            <span style={{
+              background: "rgba(239,68,68,0.18)", color: "#F87171", border: "1px solid rgba(239,68,68,0.4)",
+              padding: "0.2rem 0.55rem", borderRadius: "6px", fontSize: "0.72rem", fontWeight: 800,
+              display: "inline-flex", alignItems: "center", gap: "0.3rem",
+            }}>
+              <Flame size={12} color="#EF4444" /> CRITICAL HOTSPOT
+            </span>
+          );
+        case "HIGH":
+          return (
+            <span style={{
+              background: "rgba(245,158,11,0.18)", color: "#FBBF24", border: "1px solid rgba(245,158,11,0.4)",
+              padding: "0.2rem 0.55rem", borderRadius: "6px", fontSize: "0.72rem", fontWeight: 800,
+              display: "inline-flex", alignItems: "center", gap: "0.3rem",
+            }}>
+              <AlertTriangle size={12} color="#F59E0B" /> HIGH CONCENTRATION
+            </span>
+          );
+        case "ELEVATED":
+          return (
+            <span style={{
+              background: "rgba(59,130,246,0.18)", color: "#93C5FD", border: "1px solid rgba(59,130,246,0.4)",
+              padding: "0.2rem 0.55rem", borderRadius: "6px", fontSize: "0.72rem", fontWeight: 700,
+              display: "inline-flex", alignItems: "center", gap: "0.3rem",
+            }}>
+              <AlertOctagon size={12} color="#3B82F6" /> ELEVATED
+            </span>
+          );
+        default:
+          return (
+            <span style={{
+              background: "rgba(107,114,128,0.2)", color: "#D1D5DB", border: "1px solid rgba(107,114,128,0.3)",
+              padding: "0.2rem 0.55rem", borderRadius: "6px", fontSize: "0.72rem", fontWeight: 700,
+              display: "inline-flex", alignItems: "center", gap: "0.3rem",
+            }}>
+              <ShieldCheck size={12} color="#9CA3AF" /> STANDARD
+            </span>
+          );
+      }
+    };
+
+    return (
+      <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+        {/* KPI Summary */}
+        <div style={{
+          display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+          gap: "0.85rem",
+        }}>
+          <div style={{
+            background: "var(--bg-surface)", border: "1px solid var(--border-subtle)",
+            borderRadius: "10px", padding: "1rem", display: "flex", flexDirection: "column", gap: "0.25rem",
+          }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", color: "#8B5CF6", fontSize: "0.8rem", fontWeight: 700 }}>
+              <Building2 size={16} /> MONITORED COLLEGES
+            </div>
+            <div style={{ fontSize: "1.5rem", fontWeight: 800, color: "#FFFFFF" }}>
+              {institutionBreakdowns.length}
+            </div>
+            <div style={{ fontSize: "0.72rem", color: "var(--text-muted)" }}>Technical institutes with active grievances</div>
+          </div>
+
+          <div style={{
+            background: "var(--bg-surface)", border: "1px solid rgba(239,68,68,0.3)",
+            borderRadius: "10px", padding: "1rem", display: "flex", flexDirection: "column", gap: "0.25rem",
+          }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", color: "#EF4444", fontSize: "0.8rem", fontWeight: 700 }}>
+              <Flame size={16} /> CRITICAL HOTSPOTS
+            </div>
+            <div style={{ fontSize: "1.5rem", fontWeight: 800, color: "#F87171" }}>
+              {criticalCount}
+            </div>
+            <div style={{ fontSize: "0.72rem", color: "var(--text-muted)" }}>Severe repeat violation clusters (≥5 cases)</div>
+          </div>
+
+          <div style={{
+            background: "var(--bg-surface)", border: "1px solid rgba(245,158,11,0.3)",
+            borderRadius: "10px", padding: "1rem", display: "flex", flexDirection: "column", gap: "0.25rem",
+          }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", color: "#F59E0B", fontSize: "0.8rem", fontWeight: 700 }}>
+              <AlertTriangle size={16} /> HIGH ATTENTION
+            </div>
+            <div style={{ fontSize: "1.5rem", fontWeight: 800, color: "#FBBF24" }}>
+              {highCount}
+            </div>
+            <div style={{ fontSize: "0.72rem", color: "var(--text-muted)" }}>Moderate recurring patterns requiring action</div>
+          </div>
+
+          <div style={{
+            background: "var(--bg-surface)", border: "1px solid var(--border-subtle)",
+            borderRadius: "10px", padding: "1rem", display: "flex", flexDirection: "column", gap: "0.25rem",
+          }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", color: "#3B82F6", fontSize: "0.8rem", fontWeight: 700 }}>
+              <SlidersHorizontal size={16} /> RECURRING THEMES
+            </div>
+            <div style={{ fontSize: "1.5rem", fontWeight: 800, color: "#60A5FA" }}>
+              {totalThemesCount}
+            </div>
+            <div style={{ fontSize: "0.72rem", color: "var(--text-muted)" }}>Aggregated systemic violation topics</div>
+          </div>
+        </div>
+
+        {/* Search & Filter Bar */}
+        <div style={{
+          display: "flex", alignItems: "center", gap: "0.75rem", flexWrap: "wrap",
+          background: "var(--bg-surface)", border: "1px solid var(--border-subtle)",
+          borderRadius: "10px", padding: "0.75rem 1rem",
+        }}>
+          <div style={{ position: "relative", flex: 1, minWidth: "220px" }}>
+            <Search size={16} color="var(--text-muted)" style={{ position: "absolute", left: "0.75rem", top: "50%", transform: "translateY(-50%)" }} />
+            <input
+              type="text"
+              placeholder="Search college name, AICTE ID, or district..."
+              value={breakdownSearch}
+              onChange={(e) => setBreakdownSearch(e.target.value)}
+              style={{
+                width: "100%", padding: "0.55rem 0.75rem 0.55rem 2.25rem",
+                background: "rgba(255,255,255,0.05)", border: "1px solid var(--border-subtle)",
+                borderRadius: "8px", color: "#FFFFFF", fontSize: "0.85rem", outline: "none",
+              }}
+            />
+          </div>
+
+          <select
+            value={breakdownState}
+            onChange={(e) => setBreakdownState(e.target.value)}
+            style={{
+              padding: "0.55rem 0.85rem", background: "rgba(255,255,255,0.05)",
+              border: "1px solid var(--border-subtle)", borderRadius: "8px",
+              color: "#FFFFFF", fontSize: "0.85rem", cursor: "pointer", outline: "none",
+            }}
+          >
+            <option value="" style={{ background: "#1F2937" }}>All States ({uniqueStates.length})</option>
+            {uniqueStates.map((st) => (
+              <option key={st} value={st} style={{ background: "#1F2937" }}>{st}</option>
+            ))}
+          </select>
+
+          <button
+            onClick={() => fetchInstitutionBreakdown()}
+            disabled={loadingBreakdown}
+            style={{
+              background: "rgba(255,255,255,0.08)", border: "1px solid var(--border-subtle)",
+              color: "#E2E8F0", padding: "0.55rem 0.9rem", borderRadius: "8px",
+              fontSize: "0.85rem", fontWeight: 600, cursor: "pointer",
+              display: "inline-flex", alignItems: "center", gap: "0.4rem",
+            }}
+          >
+            <RefreshCw size={14} className={loadingBreakdown ? "spin" : ""} />
+            <span>Refresh</span>
+          </button>
+        </div>
+
+        {/* Institution Cards List */}
+        {loadingBreakdown && institutionBreakdowns.length === 0 ? (
+          <div style={{ textAlign: "center", padding: "3rem", color: "var(--text-muted)", fontSize: "0.9rem" }}>
+            <RefreshCw size={24} className="spin" style={{ margin: "0 auto 0.75rem", display: "block", color: "#F59E0B" }} />
+            Aggregating institution violation breakdown...
+          </div>
+        ) : institutionBreakdowns.length === 0 ? (
+          <div style={{
+            textAlign: "center", padding: "3rem 1.5rem",
+            background: "var(--bg-surface)", border: "1px solid var(--border-subtle)",
+            borderRadius: "12px", color: "var(--text-muted)", fontSize: "0.9rem",
+          }}>
+            <Building2 size={28} color="#9CA3AF" style={{ margin: "0 auto 0.5rem", display: "block" }} />
+            <div style={{ fontWeight: 600, color: "#E2E8F0", marginBottom: "0.25rem" }}>
+              No institutions match current filters
+            </div>
+            <div>Try clearing the state or search filter to view all monitored technical colleges.</div>
+          </div>
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: "0.85rem" }}>
+            {institutionBreakdowns.map((inst) => {
+              const isExpanded = !!expandedColleges[inst.institution_id];
+              const borderLeftColor =
+                inst.risk_severity === "CRITICAL" ? "#EF4444" :
+                inst.risk_severity === "HIGH" ? "#F59E0B" :
+                inst.risk_severity === "ELEVATED" ? "#3B82F6" : "#6B7280";
+
+              return (
+                <div
+                  key={inst.institution_id}
+                  style={{
+                    background: "var(--bg-surface)",
+                    border: "1px solid var(--border-subtle)",
+                    borderLeft: `4px solid ${borderLeftColor}`,
+                    borderRadius: "12px", padding: "1.25rem",
+                    transition: "all 0.2s ease",
+                  }}
+                >
+                  {/* Card Header */}
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "0.75rem" }}>
+                    <div style={{ flex: 1, minWidth: "260px" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "0.6rem", flexWrap: "wrap", marginBottom: "0.35rem" }}>
+                        <h4 style={{ fontSize: "1.1rem", fontWeight: 700, color: "#FFFFFF", margin: 0 }}>
+                          {inst.institution_name}
+                        </h4>
+                        {getSeverityBadge(inst.risk_severity)}
+                        {inst.aicte_permanent_id && (
+                          <span style={{
+                            background: "rgba(255,255,255,0.06)", color: "#CBD5E1",
+                            padding: "0.15rem 0.45rem", borderRadius: "4px", fontSize: "0.72rem",
+                            fontFamily: "monospace",
+                          }}>
+                            AICTE: {inst.aicte_permanent_id}
+                          </span>
+                        )}
+                      </div>
+
+                      <div style={{ display: "flex", alignItems: "center", gap: "1rem", flexWrap: "wrap", fontSize: "0.8rem", color: "var(--text-secondary)" }}>
+                        {(inst.district || inst.state) && (
+                          <span style={{ display: "inline-flex", alignItems: "center", gap: "0.3rem" }}>
+                            <MapPin size={13} color="#94A3B8" />
+                            {[inst.district, inst.state].filter(Boolean).join(", ")}
+                          </span>
+                        )}
+                        {inst.institution_type && (
+                          <span style={{ color: "var(--text-muted)" }}>• {inst.institution_type}</span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Stats Badges */}
+                    <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", flexWrap: "wrap" }}>
+                      <div style={{
+                        background: "rgba(255,255,255,0.04)", border: "1px solid var(--border-subtle)",
+                        borderRadius: "8px", padding: "0.35rem 0.65rem", textAlign: "center",
+                      }}>
+                        <div style={{ fontSize: "0.7rem", color: "var(--text-muted)", textTransform: "uppercase" }}>Total</div>
+                        <div style={{ fontSize: "0.95rem", fontWeight: 800, color: "#FFFFFF" }}>{inst.total_cases}</div>
+                      </div>
+
+                      <div style={{
+                        background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.3)",
+                        borderRadius: "8px", padding: "0.35rem 0.65rem", textAlign: "center",
+                      }}>
+                        <div style={{ fontSize: "0.7rem", color: "#FBBF24", textTransform: "uppercase" }}>Open</div>
+                        <div style={{ fontSize: "0.95rem", fontWeight: 800, color: "#FBBF24" }}>{inst.open_cases}</div>
+                      </div>
+
+                      {inst.cluster_count > 0 && (
+                        <div style={{
+                          background: "rgba(139,92,246,0.12)", border: "1px solid rgba(139,92,246,0.3)",
+                          borderRadius: "8px", padding: "0.35rem 0.65rem", textAlign: "center",
+                        }}>
+                          <div style={{ fontSize: "0.7rem", color: "#C4B5FD", textTransform: "uppercase" }}>AI Clusters</div>
+                          <div style={{ fontSize: "0.95rem", fontWeight: 800, color: "#C4B5FD" }}>{inst.cluster_count}</div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Primary Violation Banner */}
+                  {inst.primary_violation && (
+                    <div style={{
+                      marginTop: "0.9rem",
+                      background: "linear-gradient(135deg, rgba(239,68,68,0.08), rgba(245,158,11,0.08))",
+                      border: "1px solid rgba(245,158,11,0.25)",
+                      borderRadius: "8px", padding: "0.6rem 0.9rem",
+                      display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "0.5rem",
+                    }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                        <Flame size={16} color="#EF4444" />
+                        <span style={{ fontSize: "0.85rem", fontWeight: 700, color: "#FCD34D" }}>
+                          Primary Systemic Grievance:
+                        </span>
+                        <span style={{ fontSize: "0.85rem", fontWeight: 600, color: "#FFFFFF" }}>
+                          {inst.primary_violation}
+                        </span>
+                      </div>
+
+                      <button
+                        onClick={() => toggleCollegeExpanded(inst.institution_id)}
+                        style={{
+                          background: "transparent", border: "none", color: "#93C5FD",
+                          cursor: "pointer", fontSize: "0.78rem", fontWeight: 700,
+                          display: "inline-flex", alignItems: "center", gap: "0.25rem",
+                        }}
+                      >
+                        <span>{isExpanded ? "Hide Breakdown" : `View All Themes (${inst.top_recurring_themes.length})`}</span>
+                        {isExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Recurring Themes Detail */}
+                  {isExpanded && (
+                    <div style={{ marginTop: "1rem", display: "flex", flexDirection: "column", gap: "0.75rem", borderTop: "1px solid rgba(255,255,255,0.06)", paddingTop: "0.85rem" }}>
+                      <div style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                        Aggregated Grievance Themes & Violation Distribution
+                      </div>
+
+                      {inst.top_recurring_themes.map((theme: InstitutionRecurringViolation, tIdx: number) => (
+                        <div
+                          key={tIdx}
+                          style={{
+                            background: "rgba(255,255,255,0.02)",
+                            border: "1px solid rgba(255,255,255,0.06)",
+                            borderRadius: "8px", padding: "0.75rem",
+                            display: "flex", flexDirection: "column", gap: "0.4rem",
+                          }}
+                        >
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "0.4rem" }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                              <span style={{ fontSize: "0.88rem", fontWeight: 700, color: "#FFFFFF" }}>
+                                {theme.category}
+                              </span>
+                              {theme.has_cluster && (
+                                <span style={{
+                                  background: "rgba(139,92,246,0.18)", color: "#C4B5FD",
+                                  border: "1px solid rgba(139,92,246,0.35)", padding: "0.1rem 0.45rem",
+                                  borderRadius: "4px", fontSize: "0.7rem", fontWeight: 700,
+                                  display: "inline-flex", alignItems: "center", gap: "0.25rem",
+                                }}>
+                                  <Zap size={11} color="#A78BFA" />
+                                  AI Cluster ({theme.cluster_case_refs.length} linked)
+                                </span>
+                              )}
+                            </div>
+
+                            <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
+                              <span style={{ fontSize: "0.8rem", fontWeight: 700, color: "#FCD34D" }}>
+                                {theme.count} {theme.count === 1 ? "case" : "cases"} ({theme.percentage.toFixed(0)}%)
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Percentage progress bar */}
+                          <div style={{
+                            width: "100%", height: "5px", background: "rgba(255,255,255,0.08)",
+                            borderRadius: "3px", overflow: "hidden",
+                          }}>
+                            <div style={{
+                              width: `${Math.min(100, theme.percentage)}%`, height: "100%",
+                              background: theme.has_cluster
+                                ? "linear-gradient(90deg, #8B5CF6, #EC4899)"
+                                : "linear-gradient(90deg, #3B82F6, #10B981)",
+                              borderRadius: "3px",
+                            }} />
+                          </div>
+
+                          {/* Sample grievance subjects pills */}
+                          {theme.sample_subjects && theme.sample_subjects.length > 0 && (
+                            <div style={{ marginTop: "0.3rem", display: "flex", flexDirection: "column", gap: "0.25rem" }}>
+                              <div style={{ fontSize: "0.7rem", color: "var(--text-muted)" }}>Recent sample grievances:</div>
+                              <div style={{ display: "flex", flexWrap: "wrap", gap: "0.35rem" }}>
+                                {theme.sample_subjects.map((sub, sIdx) => (
+                                  <span
+                                    key={sIdx}
+                                    style={{
+                                      background: "rgba(255,255,255,0.04)",
+                                      border: "1px solid rgba(255,255,255,0.07)",
+                                      borderRadius: "4px", padding: "0.15rem 0.5rem",
+                                      fontSize: "0.74rem", color: "#CBD5E1",
+                                    }}
+                                  >
+                                    "{sub}"
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Action links */}
+                          <div style={{ display: "flex", gap: "0.5rem", marginTop: "0.35rem", justifyContent: "flex-end" }}>
+                            {theme.has_cluster && (
+                              <button
+                                onClick={() => setActiveSubTab("clusters")}
+                                style={{
+                                  background: "rgba(139,92,246,0.15)", border: "1px solid rgba(139,92,246,0.35)",
+                                  color: "#C4B5FD", borderRadius: "4px", padding: "0.2rem 0.55rem",
+                                  fontSize: "0.72rem", fontWeight: 700, cursor: "pointer",
+                                  display: "inline-flex", alignItems: "center", gap: "0.3rem",
+                                }}
+                              >
+                                <Zap size={11} /> Group in Clusters Tab
+                              </button>
+                            )}
+
+                            {theme.anchor_case_ref && onSelectCase && (
+                              <button
+                                onClick={() => onSelectCase(theme.anchor_case_ref!)}
+                                style={{
+                                  background: "transparent", border: "1px solid var(--border-subtle)",
+                                  color: "var(--text-secondary)", borderRadius: "4px", padding: "0.2rem 0.55rem",
+                                  fontSize: "0.72rem", cursor: "pointer",
+                                  display: "inline-flex", alignItems: "center", gap: "0.3rem",
+                                }}
+                              >
+                                <FileText size={11} /> Dossier ({theme.anchor_case_ref})
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    );
+  };
+
   // ─────── MAIN RENDER ───────
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
@@ -892,10 +1350,10 @@ export const MasterTicketHub: React.FC<MasterTicketHubProps> = ({ onSelectCase }
         <>
           {renderStatsCards()}
 
-          {/* Sub-Tabs: Detected Clusters vs Created Master Tickets */}
+          {/* Sub-Tabs: Detected Clusters vs Created Master Tickets vs Per-College Breakdown */}
           <div style={{
             display: "flex", gap: "0.5rem", borderBottom: "1px solid var(--border-subtle)",
-            paddingBottom: "0.5rem", marginTop: "0.5rem",
+            paddingBottom: "0.5rem", marginTop: "0.5rem", flexWrap: "wrap",
           }}>
             <button
               onClick={() => setActiveSubTab("clusters")}
@@ -926,6 +1384,21 @@ export const MasterTicketHub: React.FC<MasterTicketHubProps> = ({ onSelectCase }
               <Layers size={16} color={activeSubTab === "tickets" ? "#60A5FA" : "currentColor"} />
               <span>Created Master Tickets ({tickets.length})</span>
             </button>
+
+            <button
+              onClick={() => setActiveSubTab("institutions")}
+              style={{
+                background: activeSubTab === "institutions" ? "rgba(245,158,11,0.15)" : "transparent",
+                color: activeSubTab === "institutions" ? "#FCD34D" : "var(--text-muted)",
+                border: `1px solid ${activeSubTab === "institutions" ? "#F59E0B" : "transparent"}`,
+                padding: "0.55rem 1.1rem", borderRadius: "8px", fontWeight: 700, fontSize: "0.85rem",
+                cursor: "pointer", display: "flex", alignItems: "center", gap: "0.5rem",
+                transition: "all 0.2s ease",
+              }}
+            >
+              <Building2 size={16} color={activeSubTab === "institutions" ? "#FBBF24" : "currentColor"} />
+              <span>Per-College Recurring Violations ({institutionBreakdowns.length})</span>
+            </button>
           </div>
 
           {activeSubTab === "clusters" ? (
@@ -933,8 +1406,10 @@ export const MasterTicketHub: React.FC<MasterTicketHubProps> = ({ onSelectCase }
               {renderDetectionPanel()}
               {renderDetectedGroups()}
             </>
-          ) : (
+          ) : activeSubTab === "tickets" ? (
             renderTicketList()
+          ) : (
+            renderInstitutionBreakdown()
           )}
         </>
       )}

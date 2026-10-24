@@ -15,6 +15,7 @@ class AuditEventType(str, enum.Enum):
     RESOLVED = "RESOLVED"
     CLOSED = "CLOSED"
     REOPENED = "REOPENED"
+    REJECTED = "REJECTED"
 
 
 class CaseAuditEvent(Base):
