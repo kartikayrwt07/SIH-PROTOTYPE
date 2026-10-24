@@ -8,9 +8,23 @@ from backend.app.core.database import engine, Base, SessionLocal
 from backend.app.api.v1.router import api_router
 from backend.app.schemas.common import StandardResponse, ErrorInfo, ErrorDetail
 from backend.app.services.vector_cache import vector_index
+from backend.app.db.migrate_multilingual import migrate_multilingual_columns
+from backend.app.db.migrate_master_tickets import migrate_master_ticket_tables
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    # Ensure multilingual schema columns exist
+    try:
+        migrate_multilingual_columns()
+    except Exception as e:
+        print(f"[Migration] Multilingual columns check deferred: {e}")
+
+    # Ensure master ticket tables exist
+    try:
+        migrate_master_ticket_tables()
+    except Exception as e:
+        print(f"[Migration] Master ticket tables check deferred: {e}")
+
     # Warm up in-memory vector similarity index
     db = SessionLocal()
     try:

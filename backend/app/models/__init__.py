@@ -15,6 +15,11 @@ from backend.app.models.attachment import (
     AttachmentCategory,
     ScanStatus,
 )
+from backend.app.models.master_ticket import (
+    MasterTicket,
+    MasterTicketChild,
+    MasterTicketStatus,
+)
 
 __all__ = [
     "Bureau",
@@ -36,4 +41,7 @@ __all__ = [
     "CaseAttachment",
     "AttachmentCategory",
     "ScanStatus",
+    "MasterTicket",
+    "MasterTicketChild",
+    "MasterTicketStatus",
 ]

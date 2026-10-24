@@ -64,6 +64,9 @@ export interface ComplaintCase {
   bureau?: Bureau;
   assigned_officer?: UserSummary;
   complainant_verification_badge?: ComplainantVerificationBadge;
+  original_language?: string | null;
+  original_description?: string | null;
+  translation_provider?: string | null;
 }
 
 export interface CaseAttachment {
@@ -408,6 +411,16 @@ export interface BureauRouting {
   key_evidence_tokens: string[];
 }
 
+export interface TranslationResult {
+  source_language: string;
+  source_language_name: string;
+  is_translated: boolean;
+  original_text: string;
+  translated_text: string;
+  confidence: number;
+  provider: string;
+}
+
 export interface MagicAnalysisResult {
   extracted_college: ExtractedInstitution;
   categorization: CategorizationResult;
@@ -415,6 +428,7 @@ export interface MagicAnalysisResult {
   bureau_routing: BureauRouting;
   generated_subject: string;
   summary_insight: string;
+  translation: TranslationResult;
 }
 
 export interface MagicIngestRequest {
@@ -435,3 +449,126 @@ export interface MagicIngestResponse {
   created_at?: string | null;
   docket_message: string;
 }
+
+// -------------------------------------------------------------
+// Smart Duplicate Grouping / Master Ticket Types
+// -------------------------------------------------------------
+
+export type MasterTicketStatus = "Open" | "In Progress" | "Resolved" | "Closed";
+
+export interface MasterTicketChild {
+  id: string;
+  case_id: string;
+  case_reference_id: string;
+  subject: string;
+  status: string;
+  similarity_score: number;
+  linked_at: string;
+  is_anchor: boolean;
+}
+
+export interface MasterTicketRead {
+  id: string;
+  ticket_reference_id: string;
+  institution_id: string;
+  institution_name: string;
+  institution_aicte_id: string;
+  bureau_id: string;
+  bureau_code: string;
+  bureau_name: string;
+  assigned_officer_id?: string | null;
+  assigned_officer_name?: string | null;
+  consolidated_subject: string;
+  consolidated_description: string;
+  category: string;
+  common_grievance_theme?: string | null;
+  child_count: number;
+  similarity_threshold: number;
+  avg_similarity_score: number;
+  status: MasterTicketStatus;
+  resolution_remarks?: string | null;
+  time_saved_hours: number;
+  created_at: string;
+  updated_at: string;
+  resolved_at?: string | null;
+  children: MasterTicketChild[];
+}
+
+export interface MasterTicketSummary {
+  id: string;
+  ticket_reference_id: string;
+  institution_name: string;
+  bureau_code: string;
+  bureau_name: string;
+  consolidated_subject: string;
+  category: string;
+  child_count: number;
+  avg_similarity_score: number;
+  status: MasterTicketStatus;
+  time_saved_hours: number;
+  created_at: string;
+}
+
+export interface DetectedGroup {
+  anchor_case_reference_id: string;
+  anchor_subject: string;
+  institution_name: string;
+  institution_aicte_id: string;
+  bureau_code: string;
+  bureau_name: string;
+  category: string;
+  member_count: number;
+  avg_similarity: number;
+  member_case_refs: string[];
+  common_keywords: string[];
+}
+
+export interface AutoDetectResponse {
+  total_cases_scanned: number;
+  groups_detected: number;
+  total_groupable_cases: number;
+  estimated_time_saved_hours: number;
+  groups: DetectedGroup[];
+}
+
+export interface CreateMasterTicketRequest {
+  case_reference_ids: string[];
+  consolidated_subject?: string | null;
+  resolution_remarks?: string | null;
+}
+
+export interface CreateMasterTicketResponse {
+  ticket_reference_id: string;
+  child_count: number;
+  institution_name: string;
+  category: string;
+  avg_similarity_score: number;
+  time_saved_hours: number;
+  message: string;
+}
+
+export interface ResolveMasterTicketRequest {
+  resolution_remarks: string;
+  child_status?: string;
+}
+
+export interface ResolveMasterTicketResponse {
+  ticket_reference_id: string;
+  children_resolved: number;
+  children_already_resolved: number;
+  total_time_saved_hours: number;
+  resolution_remarks: string;
+  resolved_at: string;
+}
+
+export interface MasterTicketStats {
+  total_master_tickets: number;
+  open_tickets: number;
+  resolved_tickets: number;
+  total_children_grouped: number;
+  total_time_saved_hours: number;
+  avg_group_size: number;
+  largest_group_size: number;
+  top_categories: Array<{ category: string; count: number }>;
+}
+

@@ -61,6 +61,9 @@ class ComplaintCaseRead(BaseModel):
     updated_at: datetime
     resolved_at: Optional[datetime] = None
     closed_at: Optional[datetime] = None
+    original_language: Optional[str] = "en"
+    original_description: Optional[str] = None
+    translation_provider: Optional[str] = None
 
     institution: Optional[InstitutionRead] = None
     bureau: Optional[BureauRead] = None

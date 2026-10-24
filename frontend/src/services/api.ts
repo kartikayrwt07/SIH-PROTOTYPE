@@ -26,6 +26,14 @@ import {
   MagicAnalysisResult,
   MagicIngestRequest,
   MagicIngestResponse,
+  AutoDetectResponse,
+  CreateMasterTicketRequest,
+  CreateMasterTicketResponse,
+  ResolveMasterTicketRequest,
+  ResolveMasterTicketResponse,
+  MasterTicketRead,
+  MasterTicketSummary,
+  MasterTicketStats,
 } from "../types";
 
 const API_BASE = "/api/v1";
@@ -383,6 +391,52 @@ class ApiService {
       method: "POST",
       body: JSON.stringify(payload),
     });
+  }
+
+  // -------------------------------------------------------------
+  // Smart Duplicate Grouping / Master Tickets
+  // -------------------------------------------------------------
+
+  async detectDuplicateGroups(payload: {
+    institution_aicte_id?: string | null;
+    category?: string | null;
+    similarity_threshold?: number;
+    min_group_size?: number;
+  }): Promise<StandardResponse<AutoDetectResponse>> {
+    return this.request("/ai/master-tickets/detect", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  }
+
+  async createMasterTicket(payload: CreateMasterTicketRequest): Promise<StandardResponse<CreateMasterTicketResponse>> {
+    return this.request("/ai/master-tickets/create", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  }
+
+  async resolveMasterTicket(ticketRef: string, payload: ResolveMasterTicketRequest): Promise<StandardResponse<ResolveMasterTicketResponse>> {
+    return this.request(`/ai/master-tickets/${ticketRef}/resolve`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  }
+
+  async listMasterTickets(statusFilter?: string, bureauId?: string): Promise<StandardResponse<MasterTicketSummary[]>> {
+    const query = new URLSearchParams();
+    if (statusFilter) query.append("status", statusFilter);
+    if (bureauId) query.append("bureau_id", bureauId);
+    const qs = query.toString() ? `?${query.toString()}` : "";
+    return this.request(`/ai/master-tickets/list${qs}`);
+  }
+
+  async getMasterTicketStats(): Promise<StandardResponse<MasterTicketStats>> {
+    return this.request("/ai/master-tickets/stats");
+  }
+
+  async getMasterTicketDetail(ticketRef: string): Promise<StandardResponse<MasterTicketRead>> {
+    return this.request(`/ai/master-tickets/${ticketRef}`);
   }
 }
 

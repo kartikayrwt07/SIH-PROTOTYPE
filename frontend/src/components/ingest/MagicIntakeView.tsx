@@ -13,6 +13,9 @@ import {
   ShieldAlert,
   Clock,
   User,
+  Languages,
+  Globe,
+  FileCheck,
 } from "lucide-react";
 import { api } from "../../services/api";
 import {
@@ -27,7 +30,39 @@ interface MagicIntakeViewProps {
 
 const PRESET_SCENARIOS = [
   {
+    title: "🇮🇳 हिन्दी: छात्रावास रैगिंग व जानलेवा धमकी",
+    languageTag: "Hindi (हिन्दी)",
+    isVernacular: true,
+    bureau: "STU (Student Welfare)",
+    priority: "URGENT",
+    college: "Bharati Institute of Tech",
+    badgeColor: "#EF4444",
+    text: "मैं भारती इंस्टीट्यूट ऑफ टेक्नोलॉजी एंड साइंस का प्रथम वर्ष का छात्र हूँ। छात्रावास में सीनियर छात्रों द्वारा हमारे साथ गंभीर मारपीट और रैगिंग की जा रही है। वार्डन को शिकायत करने पर हमें जान से मारने की धमकी दी गई है। कृपया तुरंत कार्रवाई करें।",
+  },
+  {
+    title: "🇮🇳 தமிழ்: கூடுதல் கட்டணம் & சான்றிதழ் பிடிப்பு",
+    languageTag: "Tamil (தமிழ்)",
+    isVernacular: true,
+    bureau: "FIN (Finance Bureau)",
+    priority: "HIGH",
+    college: "Vellore Metropolitan Tech",
+    badgeColor: "#F59E0B",
+    text: "நான் வேலூர் மெட்ரோபொலிட்டன் தொழில்நுட்பக் கல்லூரியின் முதலாமாண்டு மாணவன். கல்லூரி நிர்வாகம் அனுமதிக்கப்படாத கூடுதல் கட்டணம் மற்றும் நன்கொடை வசூலிக்கிறது. மேலும் எங்களது அசல் 12-ஆம் வகுப்பு சான்றிதழ்களை திருப்பித் தர மறுக்கிறது.",
+  },
+  {
+    title: "🇮🇳 मराठी: अनधिकृत अभ्यासक्रम व प्रयोगशाळा अभाव",
+    languageTag: "Marathi (मराठी)",
+    isVernacular: true,
+    bureau: "APPR (Approval Bureau)",
+    priority: "HIGH",
+    college: "Sahyadri Engineering College",
+    badgeColor: "#3B82F6",
+    text: "सह्याद्री अभियांत्रिकी महाविद्यालयात मान्यता नसलेला कृत्रिम बुद्धिमत्ता (AI) अभ्यासक्रम चालवला जात आहे. प्रयोगशाळांमध्ये आवश्यक साहित्य नाही आणि AICTE च्या मानकांचे सर्रास उल्लंघन होत आहे.",
+  },
+  {
     title: "Ragging & Dorm Bullying",
+    languageTag: "English (EN)",
+    isVernacular: false,
     bureau: "STU (Student Welfare)",
     priority: "URGENT",
     college: "Bharati Institute of Tech",
@@ -36,6 +71,8 @@ const PRESET_SCENARIOS = [
   },
   {
     title: "Fee Extortion & Deposit Refund",
+    languageTag: "English (EN)",
+    isVernacular: false,
     bureau: "FIN (Finance Bureau)",
     priority: "HIGH",
     college: "Sahyadri Engineering College",
@@ -44,6 +81,8 @@ const PRESET_SCENARIOS = [
   },
   {
     title: "Unapproved AI Course & Lab Deficit",
+    languageTag: "English (EN)",
+    isVernacular: false,
     bureau: "APPR (Approval Bureau)",
     priority: "HIGH",
     college: "Avadh Institute of Engg",
@@ -52,6 +91,8 @@ const PRESET_SCENARIOS = [
   },
   {
     title: "Faculty 7th Pay Arrears",
+    languageTag: "English (EN)",
+    isVernacular: false,
     bureau: "FDC (Faculty Cell)",
     priority: "MEDIUM",
     college: "Vellore Metropolitan Tech",
@@ -69,12 +110,19 @@ export const MagicIntakeView: React.FC<MagicIntakeViewProps> = ({
   const [studentEmail, setStudentEmail] = useState<string>("");
   const [studentPhone, setStudentPhone] = useState<string>("");
   const [showComplainantDetails, setShowComplainantDetails] = useState<boolean>(false);
+  const [presetFilter, setPresetFilter] = useState<"ALL" | "VERNACULAR" | "ENGLISH">("ALL");
 
   const [isAnalyzing, setIsAnalyzing] = useState<boolean>(false);
   const [isDocketing, setIsDocketing] = useState<boolean>(false);
   const [analysisResult, setAnalysisResult] = useState<MagicAnalysisResult | null>(null);
   const [docketResponse, setDocketResponse] = useState<MagicIngestResponse | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  const filteredPresets = PRESET_SCENARIOS.filter((sc) => {
+    if (presetFilter === "VERNACULAR") return sc.isVernacular;
+    if (presetFilter === "ENGLISH") return !sc.isVernacular;
+    return true;
+  });
 
   const handleApplyPreset = (presetText: string) => {
     setGrievanceText(presetText);
@@ -177,7 +225,7 @@ export const MagicIntakeView: React.FC<MagicIntakeViewProps> = ({
           }}
         />
 
-        <div style={{ display: "flex", alignItems: "center", gap: "0.6rem", marginBottom: "0.5rem" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "0.6rem", marginBottom: "0.5rem", flexWrap: "wrap" }}>
           <span
             style={{
               background: "rgba(249, 115, 22, 0.18)",
@@ -197,6 +245,25 @@ export const MagicIntakeView: React.FC<MagicIntakeViewProps> = ({
             <Sparkles size={12} color="var(--accent-saffron)" />
             Zero-Shot Autonomous AI Ingestion
           </span>
+          <span
+            style={{
+              background: "rgba(16, 185, 129, 0.18)",
+              border: "1px solid rgba(16, 185, 129, 0.4)",
+              color: "#34D399",
+              padding: "0.25rem 0.65rem",
+              borderRadius: "9999px",
+              fontSize: "0.72rem",
+              fontWeight: 700,
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "0.35rem",
+              letterSpacing: "0.04em",
+              textTransform: "uppercase",
+            }}
+          >
+            <Languages size={12} color="#10B981" />
+            Bhashini NMT Multilingual (MeitY)
+          </span>
           <span style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>• 384-D Dense Semantic Vector Space</span>
         </div>
 
@@ -204,35 +271,87 @@ export const MagicIntakeView: React.FC<MagicIntakeViewProps> = ({
           The "Magic" Grievance Intake
         </h1>
         <p style={{ color: "var(--text-secondary)", fontSize: "0.92rem", lineHeight: 1.5, maxWidth: "860px" }}>
-          Paste any raw, unstructured student or faculty complaint below. The AI instantly extracts the institution name,
-          evaluates statutory violation categories, assigns risk priority, and routes the docket directly to the correct AICTE bureau
-          without human intervention.
+          Paste any raw, unstructured student or faculty complaint in English, Hindi (हिन्दी), Tamil (தமிழ்), or Marathi (मराठी).
+          The Bhashini NMT pipeline detects vernacular dialects, auto-translates for central triage, binds the institution entity,
+          and archives verbatim text as legal evidence under Section 65B without human intervention.
         </p>
       </div>
 
       {/* Preset Evaluation Scenarios */}
       <div className="card-base" style={{ padding: "1.25rem 1.5rem" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.85rem" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.85rem", flexWrap: "wrap", gap: "0.5rem" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
             <Wand2 size={16} color="var(--accent-saffron)" />
             <span style={{ fontSize: "0.82rem", fontWeight: 700, color: "var(--text-primary)", textTransform: "uppercase", letterSpacing: "0.04em" }}>
               Quick-Fill Evaluator Test Cases
             </span>
           </div>
-          <span style={{ fontSize: "0.72rem", color: "var(--text-muted)" }}>
-            Click any scenario to populate live AI grievance
-          </span>
+
+          {/* Preset Language Filter Tabs */}
+          <div style={{ display: "flex", gap: "0.35rem", background: "rgba(0, 0, 0, 0.25)", padding: "0.2rem", borderRadius: "6px" }}>
+            <button
+              type="button"
+              onClick={() => setPresetFilter("ALL")}
+              style={{
+                background: presetFilter === "ALL" ? "rgba(255, 255, 255, 0.12)" : "transparent",
+                color: presetFilter === "ALL" ? "#FFFFFF" : "var(--text-muted)",
+                border: "none",
+                borderRadius: "4px",
+                padding: "0.25rem 0.55rem",
+                fontSize: "0.72rem",
+                fontWeight: 600,
+                cursor: "pointer",
+              }}
+            >
+              All Scenarios
+            </button>
+            <button
+              type="button"
+              onClick={() => setPresetFilter("VERNACULAR")}
+              style={{
+                background: presetFilter === "VERNACULAR" ? "rgba(249, 115, 22, 0.25)" : "transparent",
+                color: presetFilter === "VERNACULAR" ? "var(--accent-saffron-light)" : "var(--text-muted)",
+                border: presetFilter === "VERNACULAR" ? "1px solid rgba(249, 115, 22, 0.4)" : "none",
+                borderRadius: "4px",
+                padding: "0.25rem 0.55rem",
+                fontSize: "0.72rem",
+                fontWeight: 700,
+                cursor: "pointer",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "0.25rem",
+              }}
+            >
+              🇮🇳 Vernacular (Bhashini NMT)
+            </button>
+            <button
+              type="button"
+              onClick={() => setPresetFilter("ENGLISH")}
+              style={{
+                background: presetFilter === "ENGLISH" ? "rgba(255, 255, 255, 0.12)" : "transparent",
+                color: presetFilter === "ENGLISH" ? "#FFFFFF" : "var(--text-muted)",
+                border: "none",
+                borderRadius: "4px",
+                padding: "0.25rem 0.55rem",
+                fontSize: "0.72rem",
+                fontWeight: 600,
+                cursor: "pointer",
+              }}
+            >
+              English Direct
+            </button>
+          </div>
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: "0.75rem" }}>
-          {PRESET_SCENARIOS.map((sc, i) => (
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: "0.75rem" }}>
+          {filteredPresets.map((sc, i) => (
             <button
               key={i}
               type="button"
               onClick={() => handleApplyPreset(sc.text)}
               style={{
-                background: "rgba(255, 255, 255, 0.03)",
-                border: "1px solid var(--border-subtle)",
+                background: sc.isVernacular ? "rgba(249, 115, 22, 0.04)" : "rgba(255, 255, 255, 0.03)",
+                border: sc.isVernacular ? "1px solid rgba(249, 115, 22, 0.25)" : "1px solid var(--border-subtle)",
                 borderRadius: "10px",
                 padding: "0.85rem",
                 textAlign: "left",
@@ -244,11 +363,11 @@ export const MagicIntakeView: React.FC<MagicIntakeViewProps> = ({
               }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.borderColor = "var(--accent-saffron)";
-                e.currentTarget.style.background = "rgba(249, 115, 22, 0.08)";
+                e.currentTarget.style.background = "rgba(249, 115, 22, 0.09)";
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.borderColor = "var(--border-subtle)";
-                e.currentTarget.style.background = "rgba(255, 255, 255, 0.03)";
+                e.currentTarget.style.borderColor = sc.isVernacular ? "rgba(249, 115, 22, 0.25)" : "var(--border-subtle)";
+                e.currentTarget.style.background = sc.isVernacular ? "rgba(249, 115, 22, 0.04)" : "rgba(255, 255, 255, 0.03)";
               }}
             >
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -267,9 +386,23 @@ export const MagicIntakeView: React.FC<MagicIntakeViewProps> = ({
                   {sc.priority}
                 </span>
               </div>
-              <span style={{ fontSize: "0.72rem", color: "var(--accent-saffron-light)" }}>
-                Expected Bureau: {sc.bureau}
-              </span>
+              <div style={{ display: "flex", alignItems: "center", gap: "0.35rem" }}>
+                <span
+                  style={{
+                    fontSize: "0.68rem",
+                    padding: "0.1rem 0.35rem",
+                    borderRadius: "3px",
+                    background: sc.isVernacular ? "rgba(249, 115, 22, 0.15)" : "rgba(255, 255, 255, 0.06)",
+                    color: sc.isVernacular ? "var(--accent-saffron-light)" : "var(--text-secondary)",
+                    fontWeight: 600,
+                  }}
+                >
+                  {sc.languageTag}
+                </span>
+                <span style={{ fontSize: "0.72rem", color: "var(--accent-saffron-light)" }}>
+                  &bull; {sc.bureau}
+                </span>
+              </div>
               <span style={{ fontSize: "0.7rem", color: "var(--text-muted)" }}>
                 College: {sc.college}
               </span>
@@ -623,6 +756,217 @@ export const MagicIntakeView: React.FC<MagicIntakeViewProps> = ({
               Autonomous Ingestion Confidence: {Math.round(analysisResult.bureau_routing.confidence * 100)}%
             </span>
           </div>
+
+          {/* Bhashini Multilingual & Legal Evidence HUD */}
+          {analysisResult.translation && (
+            <div
+              className="card-base"
+              style={{
+                padding: "1.25rem 1.5rem",
+                border: analysisResult.translation.is_translated
+                  ? "1px solid rgba(249, 115, 22, 0.45)"
+                  : "1px solid var(--border-subtle)",
+                background: analysisResult.translation.is_translated
+                  ? "linear-gradient(135deg, rgba(249, 115, 22, 0.08) 0%, rgba(18, 28, 56, 0.95) 100%)"
+                  : "rgba(18, 28, 56, 0.85)",
+                borderRadius: "12px",
+              }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  flexWrap: "wrap",
+                  gap: "0.75rem",
+                  marginBottom: "1rem",
+                  borderBottom: "1px solid var(--border-subtle)",
+                  paddingBottom: "0.75rem",
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
+                  <div
+                    style={{
+                      width: "32px",
+                      height: "32px",
+                      borderRadius: "8px",
+                      background: "rgba(249, 115, 22, 0.2)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <Languages size={18} color="var(--accent-saffron)" />
+                  </div>
+                  <div>
+                    <div style={{ fontSize: "0.95rem", fontWeight: 700, color: "#FFFFFF" }}>
+                      Bhashini National Language Translation (MeitY)
+                    </div>
+                    <div style={{ fontSize: "0.72rem", color: "var(--text-muted)" }}>
+                      National Language Translation Mission &bull; Section 65B Legal Evidence Safeguard
+                    </div>
+                  </div>
+                </div>
+
+                <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", flexWrap: "wrap" }}>
+                  <span
+                    style={{
+                      fontSize: "0.72rem",
+                      fontWeight: 700,
+                      padding: "0.25rem 0.6rem",
+                      borderRadius: "6px",
+                      background: analysisResult.translation.is_translated ? "rgba(249, 115, 22, 0.2)" : "rgba(16, 185, 129, 0.2)",
+                      color: analysisResult.translation.is_translated ? "var(--accent-saffron-light)" : "#34D399",
+                      border: analysisResult.translation.is_translated ? "1px solid rgba(249, 115, 22, 0.4)" : "1px solid rgba(16, 185, 129, 0.4)",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "0.35rem",
+                    }}
+                  >
+                    <Globe size={13} />
+                    {analysisResult.translation.source_language_name} ({analysisResult.translation.source_language.toUpperCase()})
+                    {analysisResult.translation.is_translated ? " → English" : " (Direct English)"}
+                  </span>
+
+                  <span
+                    style={{
+                      fontSize: "0.7rem",
+                      color: "var(--text-muted)",
+                      padding: "0.25rem 0.5rem",
+                      background: "rgba(255, 255, 255, 0.04)",
+                      borderRadius: "6px",
+                    }}
+                  >
+                    Provider: {analysisResult.translation.provider}
+                  </span>
+                </div>
+              </div>
+
+              {analysisResult.translation.is_translated ? (
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "1rem" }}>
+                  {/* Left: Original Vernacular Legal Evidence */}
+                  <div
+                    style={{
+                      background: "rgba(11, 19, 43, 0.8)",
+                      border: "1px solid rgba(249, 115, 22, 0.3)",
+                      borderRadius: "8px",
+                      padding: "1rem",
+                    }}
+                  >
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        marginBottom: "0.5rem",
+                      }}
+                    >
+                      <span
+                        style={{
+                          fontSize: "0.72rem",
+                          fontWeight: 700,
+                          textTransform: "uppercase",
+                          letterSpacing: "0.05em",
+                          color: "var(--accent-saffron)",
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "0.35rem",
+                        }}
+                      >
+                        <FileCheck size={14} />
+                        Original Vernacular Evidence (Legal Record)
+                      </span>
+                      <span
+                        style={{
+                          fontSize: "0.65rem",
+                          padding: "0.1rem 0.4rem",
+                          borderRadius: "4px",
+                          background: "rgba(249, 115, 22, 0.15)",
+                          color: "var(--accent-saffron-light)",
+                        }}
+                      >
+                        Tamper-Proof
+                      </span>
+                    </div>
+                    <div
+                      style={{
+                        fontSize: "0.88rem",
+                        color: "#FFFFFF",
+                        lineHeight: 1.6,
+                        fontFamily: "var(--font-sans)",
+                        whiteSpace: "pre-wrap",
+                      }}
+                    >
+                      {analysisResult.translation.original_text}
+                    </div>
+                  </div>
+
+                  {/* Right: English NMT Translation */}
+                  <div
+                    style={{
+                      background: "rgba(11, 19, 43, 0.8)",
+                      border: "1px solid rgba(59, 130, 246, 0.3)",
+                      borderRadius: "8px",
+                      padding: "1rem",
+                    }}
+                  >
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        marginBottom: "0.5rem",
+                      }}
+                    >
+                      <span
+                        style={{
+                          fontSize: "0.72rem",
+                          fontWeight: 700,
+                          textTransform: "uppercase",
+                          letterSpacing: "0.05em",
+                          color: "#60A5FA",
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "0.35rem",
+                        }}
+                      >
+                        <Globe size={14} />
+                        AICTE Central English Translation (NMT)
+                      </span>
+                      <span
+                        style={{
+                          fontSize: "0.65rem",
+                          padding: "0.1rem 0.4rem",
+                          borderRadius: "4px",
+                          background: "rgba(59, 130, 246, 0.15)",
+                          color: "#93C5FD",
+                        }}
+                      >
+                        Triage Vector Ingestion
+                      </span>
+                    </div>
+                    <div
+                      style={{
+                        fontSize: "0.88rem",
+                        color: "var(--text-primary)",
+                        lineHeight: 1.6,
+                        whiteSpace: "pre-wrap",
+                      }}
+                    >
+                      {analysisResult.translation.translated_text}
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.82rem", color: "var(--text-secondary)" }}>
+                  <CheckCircle2 size={16} color="#10B981" />
+                  <span>
+                    Direct English grievance: Retained verbatim with digital integrity checksum. No translation necessary.
+                  </span>
+                </div>
+              )}
+            </div>
+          )}
 
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "1rem" }}>
             {/* 1. Extracted College */}

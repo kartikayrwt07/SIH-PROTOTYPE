@@ -20,12 +20,15 @@ from backend.app.services.triage_classifier import (
     semantic_triage_classifier,
     BUREAU_ARCHETYPES,
 )
+from backend.app.services.csv_io import generate_case_reference
+from backend.app.services.bhashini import bhashini_service
 from backend.app.schemas.magic_ingest import (
     ExtractedInstitution,
     CategorizationResult,
     PriorityAssignment,
     BureauRouting,
     MagicAnalysisResult,
+    TranslationResult,
     MagicIngestRequest,
     MagicIngestResponse,
 )
@@ -165,20 +168,31 @@ def analyze_grievance_magic(
 ) -> MagicAnalysisResult:
     """
     Performs comprehensive zero-shot NLP parsing and classification of grievance text.
+    Leverages Bhashini NMT for Indian vernacular languages (Hindi, Tamil, Marathi, etc.)
+    while preserving original vernacular legal evidence.
     """
     clean_text = grievance_text.strip()
 
-    # 1. Extract institution
-    extracted_college = extract_institution_from_text(clean_text, db)
+    # 0. Bhashini Multilingual Detection & Translation
+    trans_meta = bhashini_service.translate_to_english(clean_text)
+    effective_text = trans_meta["translated_text"] if trans_meta["is_translated"] else clean_text
+
+    # 1. Extract institution using effective translated English text
+    extracted_college = extract_institution_from_text(effective_text, db)
+    # If not a database match on translated text, attempt extraction on raw text as well
+    if not extracted_college.is_database_match and trans_meta["is_translated"]:
+        college_from_raw = extract_institution_from_text(clean_text, db)
+        if college_from_raw.is_database_match:
+            extracted_college = college_from_raw
 
     # 2. Extract / Synthesize subject
-    first_sentence = clean_text.split(".")[0].strip()
+    first_sentence = effective_text.split(".")[0].strip()
     if len(first_sentence) > 100:
         first_sentence = first_sentence[:97] + "..."
     generated_subject = first_sentence if len(first_sentence) >= 15 else f"Grievance regarding {extracted_college.name}"
 
-    # 3. Dense Zero-Shot Classification
-    classification = semantic_triage_classifier.classify_text(generated_subject, clean_text)
+    # 3. Dense Zero-Shot Classification on effective translated text
+    classification = semantic_triage_classifier.classify_text(generated_subject, effective_text)
     bureau_code = classification["bureau_code"]
     category = classification["category"]
     sim_score = classification["similarity_score"]
@@ -191,8 +205,8 @@ def analyze_grievance_magic(
         bureau_code = target_bureau.code if target_bureau else "APPR"
 
     # 4. Priority Assignment & Urgency Signal Detection
-    clean_lower = clean_text.lower()
-    detected_urgency = [trigger for trigger in URGENCY_TRIGGERS if trigger in clean_lower]
+    effective_lower = effective_text.lower()
+    detected_urgency = [trigger for trigger in URGENCY_TRIGGERS if trigger in effective_lower]
 
     priority = classification["priority"]
     if detected_urgency and bureau_code in ["STU", "FIN"]:
@@ -207,7 +221,7 @@ def analyze_grievance_magic(
 
     # Key evidence tokens
     archetype_tokens = BUREAU_ARCHETYPES.get(bureau_code, {}).get("archetype_text", "").split()
-    evidence_tokens = [w for w in set(archetype_tokens) if len(w) > 4 and w in clean_lower][:6]
+    evidence_tokens = [w for w in set(archetype_tokens) if len(w) > 4 and w in effective_lower][:6]
 
     # Rationale breakdown
     routing_rationale = (
@@ -219,6 +233,8 @@ def analyze_grievance_magic(
         f"AI routed grievance directly to {target_bureau.name} under '{category}' "
         f"at '{extracted_college.name}' with {priority} priority."
     )
+    if trans_meta["is_translated"]:
+        summary_insight += f" [Localized from {trans_meta['source_language_name']} via {trans_meta['provider']}]"
 
     return MagicAnalysisResult(
         extracted_college=extracted_college,
@@ -244,6 +260,7 @@ def analyze_grievance_magic(
         ),
         generated_subject=generated_subject,
         summary_insight=summary_insight,
+        translation=TranslationResult(**trans_meta),
     )
 
 
@@ -253,8 +270,8 @@ def ingest_magic_grievance(
 ) -> MagicIngestResponse:
     """
     Executes autonomous zero-shot AI ingestion:
-    1. Analyzes and extracts college, category, priority, and bureau.
-    2. If auto_docket is True, creates new ComplaintCase and audit records.
+    1. Analyzes and extracts college, category, priority, and bureau (with Bhashini multilingual translation).
+    2. If auto_docket is True, creates new ComplaintCase retaining original vernacular evidence.
     """
     analysis = analyze_grievance_magic(request.grievance_text, db)
 
@@ -266,37 +283,30 @@ def ingest_magic_grievance(
         )
 
     # 1. Generate unique case reference ID
-    year = datetime.now(timezone.utc).year
-    latest_case = (
-        db.query(ComplaintCase)
-        .order_by(ComplaintCase.created_at.desc())
-        .first()
-    )
-    counter = 1001
-    if latest_case and latest_case.case_reference_id:
-        match = re.search(r"AICTE-\d{4}-(\d+)", latest_case.case_reference_id)
-        if match:
-            try:
-                counter = int(match.group(1)) + 1
-            except ValueError:
-                pass
-    case_ref = f"AICTE-{year}-{counter:04d}"
+    case_ref = generate_case_reference(db)
 
     # 2. Calculate dynamic due date from SLA hours
     now = datetime.now(timezone.utc)
     due_date = now + timedelta(hours=analysis.priority_assignment.sla_hours)
 
     # 3. Create ComplaintCase
+    # Use English translated text for central triage dashboard and retain raw vernacular in original_description
     new_case = ComplaintCase(
         case_reference_id=case_ref,
         subject=analysis.generated_subject,
-        description_redacted=request.grievance_text.strip(),
+        description_redacted=analysis.translation.translated_text if analysis.translation.is_translated else request.grievance_text.strip(),
         description_confidential=(
             f"Complainant Name: {request.student_name or 'Anonymous Student'}\n"
             f"Contact Email: {request.student_email or 'N/A'}\n"
             f"Contact Phone: {request.student_phone or 'N/A'}\n"
-            f"Original Grievance:\n{request.grievance_text.strip()}"
+            f"Detected Language: {analysis.translation.source_language_name} ({analysis.translation.source_language})\n"
+            f"Translation Provider: {analysis.translation.provider}\n\n"
+            f"--- ORIGINAL VERNACULAR EVIDENCE ---\n{analysis.translation.original_text}\n\n"
+            f"--- ENGLISH NMT TRANSLATION ---\n{analysis.translation.translated_text}"
         ),
+        original_language=analysis.translation.source_language,
+        original_description=analysis.translation.original_text,
+        translation_provider=analysis.translation.provider,
         category=analysis.categorization.category,
         priority=CasePriority(analysis.priority_assignment.priority),
         status=CaseStatus.ASSIGNED,
@@ -325,6 +335,10 @@ def ingest_magic_grievance(
             "confidence": analysis.bureau_routing.confidence,
             "evidence_tokens": analysis.bureau_routing.key_evidence_tokens,
             "complainant": request.student_name or "Anonymous",
+            "source_language": analysis.translation.source_language,
+            "source_language_name": analysis.translation.source_language_name,
+            "is_translated": analysis.translation.is_translated,
+            "translation_provider": analysis.translation.provider,
         },
         timestamp=now,
     )

@@ -8,6 +8,7 @@ import { SlaRiskRadar } from "./components/sla/SlaRiskRadar";
 import { ExecutiveDashboard } from "./components/dashboard/ExecutiveDashboard";
 import { CsvIngestionModal } from "./components/ingest/CsvIngestionModal";
 import { SmartTriageView } from "./components/ai/SmartTriageView";
+import { MasterTicketHub } from "./components/ai/MasterTicketHub";
 import { MagicIntakeView } from "./components/ingest/MagicIntakeView";
 import {
   ShieldAlert,
@@ -109,6 +110,16 @@ export const AppContent: React.FC = () => {
       {activeTab === "smart_triage" && (
         <SmartTriageView
           onSelectCaseDetail={(caseRef) => {
+            setSelectedCaseDetailRef(caseRef);
+            setActiveTab("cases");
+          }}
+        />
+      )}
+
+      {/* 3.5 Master Tickets & Smart Duplicate Grouping */}
+      {activeTab === "master_tickets" && (
+        <MasterTicketHub
+          onSelectCase={(caseRef) => {
             setSelectedCaseDetailRef(caseRef);
             setActiveTab("cases");
           }}

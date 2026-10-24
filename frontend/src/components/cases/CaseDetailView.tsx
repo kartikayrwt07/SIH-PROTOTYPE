@@ -15,6 +15,9 @@ import {
   Send,
   RotateCcw,
   ArrowRightLeft,
+  Languages,
+  Globe,
+  FileCheck,
 } from "lucide-react";
 import { ComplaintCase, TimelineEvent, CaseNote } from "../../types";
 import { api } from "../../services/api";
@@ -40,6 +43,7 @@ export const CaseDetailView: React.FC<CaseDetailViewProps> = ({ caseRef, onBack 
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState<boolean>(false);
+  const [evidenceMode, setEvidenceMode] = useState<"TRANSLATED" | "ORIGINAL">("TRANSLATED");
 
   // Transition modal state
   const [isTransitionOpen, setIsTransitionOpen] = useState<boolean>(false);
@@ -308,23 +312,90 @@ export const CaseDetailView: React.FC<CaseDetailViewProps> = ({ caseRef, onBack 
               {caseData.subject}
             </h2>
 
-            {/* Description */}
+            {/* Description with Bhashini Multilingual Evidence Toggle */}
             <div
               style={{
                 marginTop: "0.75rem",
                 padding: "0.85rem",
-                background: "rgba(15, 23, 42, 0.5)",
+                background: evidenceMode === "ORIGINAL" ? "rgba(249, 115, 22, 0.06)" : "rgba(15, 23, 42, 0.5)",
                 borderRadius: "6px",
-                border: "1px solid var(--border-subtle)",
+                border: evidenceMode === "ORIGINAL" ? "1px solid rgba(249, 115, 22, 0.35)" : "1px solid var(--border-subtle)",
                 fontSize: "0.875rem",
                 color: "var(--text-secondary)",
                 lineHeight: 1.5,
+                transition: "all 0.2s ease",
               }}
             >
-              <div style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--text-muted)", marginBottom: "4px", textTransform: "uppercase" }}>
-                Summary / Redacted Description
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.5rem", flexWrap: "wrap", gap: "0.4rem" }}>
+                <div style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", display: "flex", alignItems: "center", gap: "0.35rem" }}>
+                  {evidenceMode === "ORIGINAL" ? (
+                    <>
+                      <FileCheck size={13} color="var(--accent-saffron)" />
+                      <span style={{ color: "var(--accent-saffron)" }}>Verbatim Vernacular Legal Evidence (Court-Admissible)</span>
+                    </>
+                  ) : (
+                    <>
+                      <Globe size={13} color="var(--accent-aicte-blue)" />
+                      <span>Summary / Redacted Description (English)</span>
+                    </>
+                  )}
+                </div>
+
+                {caseData.original_description && caseData.original_language && caseData.original_language !== "en" && (
+                  <div style={{ display: "flex", gap: "0.25rem", background: "rgba(0, 0, 0, 0.3)", padding: "0.15rem", borderRadius: "5px" }}>
+                    <button
+                      type="button"
+                      onClick={() => setEvidenceMode("TRANSLATED")}
+                      style={{
+                        background: evidenceMode === "TRANSLATED" ? "rgba(59, 130, 246, 0.25)" : "transparent",
+                        color: evidenceMode === "TRANSLATED" ? "#93C5FD" : "var(--text-muted)",
+                        border: evidenceMode === "TRANSLATED" ? "1px solid rgba(59, 130, 246, 0.4)" : "none",
+                        borderRadius: "4px",
+                        padding: "0.2rem 0.45rem",
+                        fontSize: "0.7rem",
+                        fontWeight: 600,
+                        cursor: "pointer",
+                      }}
+                    >
+                      English NMT
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setEvidenceMode("ORIGINAL")}
+                      style={{
+                        background: evidenceMode === "ORIGINAL" ? "rgba(249, 115, 22, 0.25)" : "transparent",
+                        color: evidenceMode === "ORIGINAL" ? "var(--accent-saffron-light)" : "var(--text-muted)",
+                        border: evidenceMode === "ORIGINAL" ? "1px solid rgba(249, 115, 22, 0.4)" : "none",
+                        borderRadius: "4px",
+                        padding: "0.2rem 0.45rem",
+                        fontSize: "0.7rem",
+                        fontWeight: 700,
+                        cursor: "pointer",
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: "0.25rem",
+                      }}
+                    >
+                      <Languages size={11} />
+                      Original ({caseData.original_language.toUpperCase()})
+                    </button>
+                  </div>
+                )}
               </div>
-              {caseData.description_redacted}
+
+              {evidenceMode === "ORIGINAL" && caseData.original_description ? (
+                <div>
+                  <div style={{ color: "#FFFFFF", whiteSpace: "pre-wrap", lineHeight: 1.6 }}>
+                    {caseData.original_description}
+                  </div>
+                  <div style={{ marginTop: "0.6rem", paddingTop: "0.5rem", borderTop: "1px solid rgba(249, 115, 22, 0.2)", display: "flex", justifyContent: "space-between", fontSize: "0.68rem", color: "var(--accent-saffron-light)" }}>
+                    <span>⚖️ Section 65B Indian Evidence Act Compliant</span>
+                    <span>Provider: {caseData.translation_provider || "BHASHINI_NMT_ULCA"}</span>
+                  </div>
+                </div>
+              ) : (
+                <div>{caseData.description_redacted}</div>
+              )}
             </div>
 
             {/* Confidential Complainant Statement if available */}
