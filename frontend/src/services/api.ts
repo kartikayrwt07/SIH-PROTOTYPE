@@ -83,6 +83,19 @@ class ApiService {
     });
   }
 
+  async register(payload: {
+    full_name: string;
+    email: string;
+    password: string;
+    role?: UserRole;
+    bureau_id?: string;
+  }): Promise<StandardResponse<{ access_token: string; token_type: string }>> {
+    return this.request("/auth/register", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  }
+
   async getCurrentUser(tokenOverride?: string): Promise<StandardResponse<UserProfileResponse>> {
     const headers: Record<string, string> = {};
     if (tokenOverride) {

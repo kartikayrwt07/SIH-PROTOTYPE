@@ -9,6 +9,13 @@ interface AuthContextType {
   token: string | null;
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<{ success: boolean; error?: { message: string } }>;
+  register: (payload: {
+    full_name: string;
+    email: string;
+    password: string;
+    role?: UserRole;
+    bureau_id?: string;
+  }) => Promise<{ success: boolean; error?: { message: string } }>;
   logout: () => void;
   switchRole: (role: UserRole) => void;
   hasPermission: (permission: string) => boolean;
@@ -89,6 +96,37 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return { success: false, error: res.error };
   };
 
+  const register = async (payload: {
+    full_name: string;
+    email: string;
+    password: string;
+    role?: UserRole;
+    bureau_id?: string;
+  }) => {
+    setIsLoading(true);
+    const res = await api.register(payload);
+    if (res.success && res.data?.access_token) {
+      const accessToken = res.data.access_token;
+      try {
+        const profileRes = await api.getCurrentUser(accessToken);
+        if (profileRes.success && profileRes.data) {
+          localStorage.setItem("aicte_token", accessToken);
+          localStorage.setItem("aicte_demo_role", profileRes.data.role);
+          setCurrentUser(profileRes.data);
+          setCurrentRole(profileRes.data.role);
+          setPermissions(profileRes.data.permissions || []);
+          setToken(accessToken);
+          setIsLoading(false);
+          return { success: true };
+        }
+      } catch (err) {
+        console.error("Failed loading user profile post-register", err);
+      }
+    }
+    setIsLoading(false);
+    return { success: false, error: res.error };
+  };
+
   const logout = () => {
     localStorage.removeItem("aicte_token");
     localStorage.removeItem("aicte_demo_role");
@@ -135,6 +173,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         token,
         isAuthenticated: !!token && !!currentUser,
         login,
+        register,
         logout,
         switchRole,
         hasPermission,
