@@ -18,7 +18,6 @@ import { Route as SlaRadarRouteImport } from './routes/sla-radar'
 import { Route as StateMachineRouteImport } from './routes/state-machine'
 import { Route as CasesIndexRouteImport } from './routes/cases/index'
 import { Route as CasesIdRouteImport } from './routes/cases/$id'
-import { Route as DevUiRouteImport } from './routes/dev/ui'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -65,11 +64,6 @@ const CasesIdRoute = CasesIdRouteImport.update({
   path: '/cases/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
-const DevUiRoute = DevUiRouteImport.update({
-  id: '/dev/ui',
-  path: '/dev/ui',
-  getParentRoute: () => rootRouteImport,
-} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -80,7 +74,6 @@ export interface FileRoutesByFullPath {
   '/sla-radar': typeof SlaRadarRoute
   '/state-machine': typeof StateMachineRoute
   '/cases/$id': typeof CasesIdRoute
-  '/dev/ui': typeof DevUiRoute
   '/cases/': typeof CasesIndexRoute
 }
 export interface FileRoutesByTo {
@@ -92,7 +85,6 @@ export interface FileRoutesByTo {
   '/sla-radar': typeof SlaRadarRoute
   '/state-machine': typeof StateMachineRoute
   '/cases/$id': typeof CasesIdRoute
-  '/dev/ui': typeof DevUiRoute
   '/cases': typeof CasesIndexRoute
 }
 export interface FileRoutesById {
@@ -105,7 +97,6 @@ export interface FileRoutesById {
   '/sla-radar': typeof SlaRadarRoute
   '/state-machine': typeof StateMachineRoute
   '/cases/$id': typeof CasesIdRoute
-  '/dev/ui': typeof DevUiRoute
   '/cases/': typeof CasesIndexRoute
 }
 export interface FileRouteTypes {
@@ -119,7 +110,6 @@ export interface FileRouteTypes {
     | '/sla-radar'
     | '/state-machine'
     | '/cases/$id'
-    | '/dev/ui'
     | '/cases/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -131,7 +121,6 @@ export interface FileRouteTypes {
     | '/sla-radar'
     | '/state-machine'
     | '/cases/$id'
-    | '/dev/ui'
     | '/cases'
   id:
     | '__root__'
@@ -143,7 +132,6 @@ export interface FileRouteTypes {
     | '/sla-radar'
     | '/state-machine'
     | '/cases/$id'
-    | '/dev/ui'
     | '/cases/'
   fileRoutesById: FileRoutesById
 }
@@ -156,7 +144,6 @@ export interface RootRouteChildren {
   SlaRadarRoute: typeof SlaRadarRoute
   StateMachineRoute: typeof StateMachineRoute
   CasesIdRoute: typeof CasesIdRoute
-  DevUiRoute: typeof DevUiRoute
   CasesIndexRoute: typeof CasesIndexRoute
 }
 
@@ -225,13 +212,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CasesIdRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/dev/ui': {
-      id: '/dev/ui'
-      path: '/dev/ui'
-      fullPath: '/dev/ui'
-      preLoaderRoute: typeof DevUiRouteImport
-      parentRoute: typeof rootRouteImport
-    }
   }
 }
 
@@ -244,7 +224,6 @@ const rootRouteChildren: RootRouteChildren = {
   SlaRadarRoute: SlaRadarRoute,
   StateMachineRoute: StateMachineRoute,
   CasesIdRoute: CasesIdRoute,
-  DevUiRoute: DevUiRoute,
   CasesIndexRoute: CasesIndexRoute,
 }
 export const routeTree = rootRouteImport

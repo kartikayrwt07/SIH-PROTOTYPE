@@ -3,16 +3,8 @@ import { useQuery } from "@tanstack/react-query";
 import { getAssignmentHistory } from "@/api/index";
 import type { AssignmentHistoryEntry } from "@/types/ui";
 import { formatIST } from "@/lib/dateUtils";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  UserCheck,
-  ArrowRight,
-  Shield,
-  Clock,
-  Inbox,
-} from "lucide-react";
 
 interface AssignmentHistoryTabProps {
   caseRef: string;
@@ -27,9 +19,9 @@ export function AssignmentHistoryTab({ caseRef }: AssignmentHistoryTabProps) {
 
   if (isLoading) {
     return (
-      <div className="space-y-3 p-4">
+      <div className="space-y-2 py-4">
         {Array.from({ length: 2 }).map((_, i) => (
-          <Skeleton key={i} className="h-20 w-full rounded-md" />
+          <Skeleton key={i} className="h-10 w-full rounded-[4px]" />
         ))}
       </div>
     );
@@ -37,10 +29,10 @@ export function AssignmentHistoryTab({ caseRef }: AssignmentHistoryTabProps) {
 
   if (isError) {
     return (
-      <div className="p-6 text-center text-xs text-destructive space-y-2">
+      <div className="py-6 text-xs text-[var(--sla-overdue-text)] space-y-2">
         <p>Failed to retrieve assignment history: {(error as Error)?.message || "Unknown error"}</p>
-        <Button variant="outline" size="sm" onClick={() => refetch()} className="text-xs h-7">
-          Retry
+        <Button variant="outline" size="sm" onClick={() => refetch()} className="text-xs h-7 border-[var(--color-rule)]">
+          Try again
         </Button>
       </div>
     );
@@ -48,64 +40,47 @@ export function AssignmentHistoryTab({ caseRef }: AssignmentHistoryTabProps) {
 
   if (history.length === 0) {
     return (
-      <div className="p-8 text-center text-xs text-muted-foreground space-y-1">
-        <Inbox className="h-8 w-8 mx-auto text-muted-foreground/60 mb-2 stroke-1" />
-        <p className="font-medium text-foreground">No jurisdiction transfers recorded</p>
-        <p>Case remains within its initial intake bureau allocation.</p>
+      <div className="py-8 text-xs text-[var(--color-text-secondary)] space-y-1">
+        <p className="font-medium text-[var(--color-text-primary)]">No jurisdiction transfers recorded</p>
+        <p>Case remains assigned to its initial intake bureau allocation.</p>
       </div>
     );
   }
 
   return (
-    <div className="p-4 space-y-4">
-      <div className="text-[11px] text-muted-foreground flex items-center justify-between border-b border-border pb-2">
-        <span>Delegation and jurisdictional transfer logs ({history.length} records)</span>
-        <span>Times shown in IST</span>
-      </div>
-
-      <div className="space-y-3">
-        {history.map((entry) => (
-          <div
-            key={entry.id}
-            className="p-3.5 bg-card rounded-lg border border-border/60 shadow-none text-xs space-y-2"
-          >
-            {/* Header: From -> To + Date */}
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <div className="flex items-center gap-2 font-medium">
-                <span className="text-muted-foreground">
-                  {entry.from_bureau_name ?? "Initial Registry Allocation"}
-                </span>
-                <ArrowRight className="h-3.5 w-3.5 text-muted-foreground" />
-                <Badge variant="outline" className="text-xs font-semibold bg-primary/5 text-primary border-primary/30">
-                  <Shield className="h-3 w-3 mr-1" />
-                  {entry.to_bureau_name ?? entry.to_bureau_id}
-                </Badge>
-              </div>
-
-              <time className="text-[10px] text-muted-foreground flex items-center gap-1 tabular-nums">
-                <Clock className="h-3 w-3" />
+    <div className="py-3 overflow-x-auto">
+      <table className="w-full text-left text-xs border-collapse">
+        <thead>
+          <tr className="border-b border-[var(--color-rule)] text-[var(--color-text-muted)]">
+            <th className="py-2 pr-4 font-medium">From</th>
+            <th className="py-2 px-4 font-medium">To</th>
+            <th className="py-2 px-4 font-medium">Transfer justification</th>
+            <th className="py-2 px-4 font-medium">Assigned by</th>
+            <th className="py-2 pl-4 text-right font-medium">Date</th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-[var(--color-rule)]">
+          {history.map((entry) => (
+            <tr key={entry.id} className="text-[var(--color-text-primary)]">
+              <td className="py-2.5 pr-4 text-[var(--color-text-secondary)]">
+                {entry.from_bureau_name || "Initial Intake"}
+              </td>
+              <td className="py-2.5 px-4 font-medium">
+                {entry.to_bureau_name || entry.to_bureau_id}
+              </td>
+              <td className="py-2.5 px-4 text-[var(--color-text-secondary)] max-w-xs">
+                {entry.transfer_reason}
+              </td>
+              <td className="py-2.5 px-4 text-[var(--color-text-secondary)]">
+                {entry.assigned_by_name || "—"}
+              </td>
+              <td className="py-2.5 pl-4 text-right font-mono text-[11px] text-[var(--color-text-muted)] tabular-nums whitespace-nowrap">
                 {formatIST(entry.created_at)}
-              </time>
-            </div>
-
-            {/* Transfer Reason */}
-            <div className="p-2.5 rounded bg-muted/40 border border-border/60 text-foreground leading-relaxed">
-              <span className="font-semibold text-muted-foreground block text-[10px] uppercase tracking-wider mb-0.5">
-                Transfer Justification
-              </span>
-              {entry.transfer_reason}
-            </div>
-
-            {/* Assigned by */}
-            {entry.assigned_by_name && (
-              <div className="text-[11px] text-muted-foreground flex items-center gap-1">
-                <UserCheck className="h-3 w-3 text-muted-foreground" />
-                <span>Authorized by <strong>{entry.assigned_by_name}</strong></span>
-              </div>
-            )}
-          </div>
-        ))}
-      </div>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }

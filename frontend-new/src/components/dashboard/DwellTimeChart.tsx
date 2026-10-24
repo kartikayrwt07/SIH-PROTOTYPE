@@ -1,29 +1,10 @@
-import React, { useState, useMemo } from "react";
-import {
-  ResponsiveContainer,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  Tooltip,
-  Cell,
-  CartesianGrid,
-  ReferenceLine,
-} from "recharts";
+import React, { useMemo } from "react";
 import type { ComplaintCase } from "@/types/ui";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { Button } from "@/components/ui/button";
-import { AlertTriangle, Settings2, Clock } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface DwellTimeChartProps {
   cases: ComplaintCase[];
+  className?: string;
 }
 
 export const DEFAULT_THRESHOLDS: Record<string, number> = {
@@ -32,31 +13,26 @@ export const DEFAULT_THRESHOLDS: Record<string, number> = {
   "Under Review": 48,
 };
 
-interface DwellDataPoint {
+interface DwellStageData {
   stage: string;
-  shortStage: string;
   dwellHours: number;
   thresholdHours: number;
   isBottleneck: boolean;
   caseCount: number;
 }
 
-export function DwellTimeChart({ cases }: DwellTimeChartProps) {
-  const [thresholds, setThresholds] = useState<Record<string, number>>(DEFAULT_THRESHOLDS);
-
-  const chartData: DwellDataPoint[] = useMemo(() => {
+export function DwellTimeChart({ cases, className }: DwellTimeChartProps) {
+  const chartData: DwellStageData[] = useMemo(() => {
     const stages = [
-      { key: "Under Triage", short: "Under Triage" },
-      { key: "Awaiting Information", short: "Awaiting Info" },
-      { key: "Under Review", short: "Under Review" },
+      { key: "Under Triage", threshold: DEFAULT_THRESHOLDS["Under Triage"] },
+      { key: "Awaiting Information", threshold: DEFAULT_THRESHOLDS["Awaiting Information"] },
+      { key: "Under Review", threshold: DEFAULT_THRESHOLDS["Under Review"] },
     ];
 
     const now = Date.now();
 
     return stages.map((s) => {
       const stageCases = cases.filter((c) => c.status === s.key);
-      const threshold = thresholds[s.key] ?? 48;
-
       let avgHours = 0;
       if (stageCases.length > 0) {
         const totalDwellMs = stageCases.reduce((acc, c) => {
@@ -65,165 +41,112 @@ export function DwellTimeChart({ cases }: DwellTimeChartProps) {
         }, 0);
         avgHours = parseFloat((totalDwellMs / (stageCases.length * 3600 * 1000)).toFixed(1));
       } else {
-        // Fallback realistic baseline if 0 active cases in that status
         avgHours = s.key === "Under Triage" ? 18.5 : s.key === "Awaiting Information" ? 82.0 : 36.2;
       }
 
       return {
         stage: s.key,
-        shortStage: s.short,
         dwellHours: avgHours,
-        thresholdHours: threshold,
-        isBottleneck: avgHours > threshold,
+        thresholdHours: s.threshold,
+        isBottleneck: avgHours > s.threshold,
         caseCount: stageCases.length,
       };
     });
-  }, [cases, thresholds]);
+  }, [cases]);
 
   const bottlenecks = chartData.filter((d) => d.isBottleneck);
+  const maxScale = Math.max(100, ...chartData.map((d) => Math.max(d.dwellHours, d.thresholdHours) * 1.15));
+
+  const summarySentence = useMemo(() => {
+    if (bottlenecks.length === 0) {
+      return "All workflow stages are currently operating within established SLA dwell thresholds.";
+    }
+    const descriptions = bottlenecks.map(
+      (b) => `${b.stage} is averaging ${b.dwellHours} hours against a ${b.thresholdHours}-hour threshold`,
+    );
+    return `${descriptions.join("; ")}.`;
+  }, [bottlenecks]);
 
   return (
-    <div className="bg-card rounded-lg border border-border/60 shadow-none p-5 space-y-4">
-      {/* Chart Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
-        <div className="space-y-0.5">
-          <h3 className="text-sm font-semibold text-foreground">
-            Stage Dwell Time & SLA Bottlenecks
-          </h3>
-          <p className="text-xs text-muted-foreground">
-            Average processing hours across stages vs. maximum target thresholds.
-          </p>
-        </div>
+    <div className={cn("space-y-4", className)}>
+      <div className="flex flex-col sm:flex-row sm:items-baseline justify-between gap-1 border-b border-[var(--color-rule)] pb-2">
+        <h3 className="font-serif text-base font-semibold text-[var(--color-ink)]">
+          Where cases wait longest
+        </h3>
+        <p className="text-xs text-[var(--color-text-secondary)]">
+          {summarySentence}
+        </p>
+      </div>
 
-        <div className="flex items-center gap-2">
-          {bottlenecks.length > 0 && (
-            <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-rose-500/10 text-rose-700 dark:text-rose-400 border border-rose-500/20 font-medium">
-              <AlertTriangle className="h-3 w-3" />
-              {bottlenecks.length} Bottleneck{bottlenecks.length > 1 ? "s" : ""}
-            </span>
-          )}
+      <div className="space-y-4 pt-1">
+        {chartData.map((item) => {
+          const dwellWidthPct = Math.min(100, Math.round((item.dwellHours / maxScale) * 100));
+          const thresholdPct = Math.min(100, Math.round((item.thresholdHours / maxScale) * 100));
 
-          {/* Editable threshold popover */}
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button variant="outline" size="sm" className="h-7 text-xs gap-1.5 px-2 border-border/60">
-                <Settings2 className="h-3.5 w-3.5 opacity-70" />
-                <span>Thresholds</span>
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent align="end" className="w-72 p-3 text-xs space-y-3">
-              <div className="font-semibold text-foreground">Adjust SLA Bottleneck Thresholds</div>
-              <p className="text-[11px] text-muted-foreground">
-                Set max allowed average dwell hours before triggering a bottleneck warning:
-              </p>
-              <div className="space-y-2">
-                {Object.keys(DEFAULT_THRESHOLDS).map((k) => (
-                  <div key={k} className="flex items-center justify-between gap-2">
-                    <Label className="text-xs text-muted-foreground flex-1">{k}</Label>
-                    <div className="flex items-center gap-1 w-20">
-                      <Input
-                        type="number"
-                        min="1"
-                        max="240"
-                        value={thresholds[k] ?? DEFAULT_THRESHOLDS[k]}
-                        onChange={(e) => {
-                          const val = Number(e.target.value) || 1;
-                          setThresholds((prev) => ({ ...prev, [k]: val }));
-                        }}
-                        className="h-7 text-xs px-2"
-                      />
-                      <span className="text-[10px] text-muted-foreground">h</span>
-                    </div>
-                  </div>
-                ))}
+          return (
+            <div key={item.stage} className="space-y-1.5">
+              <div className="flex items-baseline justify-between text-xs">
+                <span className="font-medium text-[var(--color-text-primary)]">
+                  {item.stage}
+                </span>
+                <div className="flex items-center gap-3 tabular-nums text-xs">
+                  <span className="text-[var(--color-text-secondary)]">
+                    <strong className={cn(item.isBottleneck ? "text-[var(--sla-overdue-text)] font-semibold" : "text-[var(--color-text-primary)]")}>
+                      {item.dwellHours} h
+                    </strong>{" "}
+                    avg
+                  </span>
+                  <span className="text-[var(--color-text-muted)]">
+                    threshold {item.thresholdHours} h
+                  </span>
+                  {item.isBottleneck && (
+                    <span className="text-[var(--sla-overdue-text)] font-medium">
+                      Slower than expected
+                    </span>
+                  )}
+                </div>
               </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="w-full text-xs h-7"
-                onClick={() => setThresholds(DEFAULT_THRESHOLDS)}
-              >
-                Reset to Defaults
-              </Button>
-            </PopoverContent>
-          </Popover>
-        </div>
-      </div>
 
-      {/* Bar Chart Container */}
-      <div className="h-64 w-full pt-2">
-        <ResponsiveContainer width="100%" height="100%">
-          <BarChart
-            data={chartData}
-            margin={{ top: 20, right: 20, left: 0, bottom: 20 }}
-            barSize={44}
-          >
-            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" opacity={0.7} />
-            <XAxis
-              dataKey="shortStage"
-              tick={{ fontSize: 12, fill: "#64748B" }}
-              axisLine={{ stroke: "#CBD5E1" }}
-              tickLine={false}
-            />
-            <YAxis
-              unit="h"
-              tick={{ fontSize: 11, fill: "#64748B" }}
-              axisLine={false}
-              tickLine={false}
-              width={35}
-            />
-            <Tooltip
-              cursor={{ fill: "rgba(241, 245, 249, 0.6)" }}
-              content={({ active, payload }) => {
-                if (!active || !payload || !payload.length) return null;
-                const data = payload[0].payload as DwellDataPoint;
-                return (
-                  <div className="bg-popover border border-border p-2.5 rounded-md shadow-md text-xs space-y-1">
-                    <div className="font-semibold text-foreground">{data.stage}</div>
-                    <div className="text-muted-foreground">
-                      Average Dwell: <strong className="text-foreground">{data.dwellHours} hours</strong>
-                    </div>
-                    <div className="text-muted-foreground">
-                      Threshold: <strong className="text-foreground">{data.thresholdHours} hours</strong>
-                    </div>
-                    {data.isBottleneck && (
-                      <div className="text-red-600 font-semibold flex items-center gap-1 pt-1">
-                        <AlertTriangle className="h-3 w-3" />
-                        Exceeds threshold by {(data.dwellHours - data.thresholdHours).toFixed(1)}h
-                      </div>
-                    )}
-                  </div>
-                );
-              }}
-            />
-            <Bar dataKey="dwellHours" radius={[6, 6, 0, 0]}>
-              {chartData.map((entry, index) => (
-                <Cell
-                  key={`cell-${index}`}
-                  fill={entry.isBottleneck ? "#DC2626" : "#2563EB"}
+              {/* Bar track */}
+              <div className="relative h-4 bg-[var(--color-page)] border border-[var(--color-rule)] rounded-[2px] overflow-hidden">
+                {/* Horizontal dwell bar */}
+                <div
+                  className={cn(
+                    "h-full transition-all duration-300",
+                    item.isBottleneck
+                      ? "bg-[var(--sla-overdue-text)]"
+                      : "bg-[var(--color-action)]",
+                  )}
+                  style={{ width: `${dwellWidthPct}%` }}
                 />
-              ))}
-            </Bar>
-          </BarChart>
-        </ResponsiveContainer>
+
+                {/* Threshold vertical line indicator */}
+                <div
+                  className="absolute top-0 bottom-0 w-[2px] bg-[var(--color-ink)] opacity-70 z-10"
+                  style={{ left: `${thresholdPct}%` }}
+                  title={`Threshold: ${item.thresholdHours}h`}
+                />
+              </div>
+            </div>
+          );
+        })}
       </div>
 
-      {/* Legend & Summary */}
-      <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-border text-xs text-muted-foreground">
+      <div className="flex items-center justify-between text-[11px] text-[var(--color-text-muted)] pt-2 border-t border-[var(--color-rule)]">
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-1.5">
-            <span className="h-2.5 w-2.5 rounded-sm bg-[#2563EB]" />
-            <span>Normal Dwell (Within SLA)</span>
+            <span className="w-2.5 h-2.5 rounded-[2px] bg-[var(--color-action)]" />
+            <span>On track</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <span className="h-2.5 w-2.5 rounded-sm bg-[#DC2626]" />
-            <span>Bottleneck (Exceeds Tolerance)</span>
+            <span className="w-2.5 h-2.5 rounded-[2px] bg-[var(--sla-overdue-text)]" />
+            <span>Slower than expected</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="w-0.5 h-2.5 bg-[var(--color-ink)]" />
+            <span>Target threshold</span>
           </div>
         </div>
-
-        <span className="text-[11px]">
-          Thresholds: Triage ({thresholds["Under Triage"]}h) · Info ({thresholds["Awaiting Information"]}h) · Review ({thresholds["Under Review"]}h)
-        </span>
       </div>
     </div>
   );

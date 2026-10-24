@@ -1,32 +1,18 @@
 import React from "react";
 import { Link } from "@tanstack/react-router";
 import type { ComplaintCase } from "@/types/ui";
-import { useRole } from "@/contexts/RoleContext";
 import {
   Sheet,
   SheetContent,
   SheetHeader,
   SheetTitle,
   SheetDescription,
-  SheetFooter,
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import { StatusChip } from "./StatusChip";
-import { SlaPill } from "./SlaPill";
-import { PriorityBadge } from "./PriorityBadge";
+import { SlaPill } from "@/components/shared/SlaPill";
+import { StatusMark } from "@/components/shared/StatusMark";
+import { PriorityMark } from "@/components/shared/PriorityMark";
 import { formatIST } from "@/lib/dateUtils";
-import {
-  Building2,
-  Calendar,
-  User,
-  Shield,
-  Lock,
-  ExternalLink,
-  Tag,
-  AlertTriangle,
-} from "lucide-react";
 
 interface CasePreviewDrawerProps {
   caseItem: ComplaintCase | null;
@@ -39,9 +25,6 @@ export function CasePreviewDrawer({
   open,
   onOpenChange,
 }: CasePreviewDrawerProps) {
-  const { role } = useRole();
-  const isAuditor = role === "AUDITOR";
-
   if (!caseItem) return null;
 
   const isResolvedOrClosed =
@@ -51,170 +34,101 @@ export function CasePreviewDrawer({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
         side="right"
-        className="w-full sm:max-w-lg overflow-y-auto flex flex-col justify-between p-6 gap-6"
+        className="w-full sm:max-w-md bg-[var(--color-surface)] border-l border-[var(--color-rule)] rounded-l-[8px] shadow-2xl p-6 flex flex-col justify-between overflow-y-auto"
       >
-        <div className="space-y-6">
+        <div className="space-y-5">
           {/* Header */}
-          <SheetHeader className="space-y-2 text-left">
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <span className="font-mono text-xs font-bold tracking-tight text-primary bg-primary/10 px-2 py-0.5 rounded-md">
+          <SheetHeader className="space-y-2 text-left p-0">
+            <div className="flex items-center justify-between gap-2">
+              <span className="font-mono text-xs text-[var(--color-text-secondary)]">
                 {caseItem.case_reference_id}
               </span>
-              <div className="flex items-center gap-2">
-                <PriorityBadge priority={caseItem.priority} />
-                <StatusChip status={caseItem.status} />
+              <div className="flex items-center gap-3">
+                <PriorityMark priority={caseItem.priority} />
+                <StatusMark status={caseItem.status} />
               </div>
             </div>
-            <SheetTitle className="text-base font-semibold text-foreground leading-snug">
+
+            <SheetTitle className="font-serif text-lg font-semibold text-[var(--color-ink)] leading-snug pt-1">
               {caseItem.subject}
             </SheetTitle>
-            <div className="flex items-center gap-2 pt-1">
+
+            <SheetDescription className="sr-only">
+              Quick preview of case {caseItem.case_reference_id}
+            </SheetDescription>
+
+            <div className="pt-1">
               <SlaPill
                 dueDate={caseItem.due_date}
                 isResolved={isResolvedOrClosed}
               />
-              {caseItem.escalation_level > 0 && (
-                <Badge
-                  variant="outline"
-                  className="text-xs bg-red-50 text-red-700 border-red-200 font-semibold gap-1"
-                >
-                  <AlertTriangle className="h-3 w-3" />
-                  Tier {caseItem.escalation_level} Escalated
-                </Badge>
-              )}
             </div>
-            <SheetDescription className="sr-only">
-              Quick preview of case {caseItem.case_reference_id}
-            </SheetDescription>
           </SheetHeader>
 
-          <Separator />
+          {/* Ruled separator */}
+          <div className="border-t border-[var(--color-rule)]" />
 
-          {/* Metadata Grid */}
-          <div className="grid grid-cols-2 gap-4 text-xs">
-            <div className="space-y-1">
-              <span className="text-muted-foreground flex items-center gap-1 font-medium">
-                <Building2 className="h-3.5 w-3.5" /> Institution
-              </span>
-              <div className="font-medium text-foreground leading-tight">
+          {/* Details list */}
+          <dl className="space-y-3.5 text-xs">
+            <div>
+              <dt className="text-[var(--color-text-muted)] text-[11px] mb-0.5">Institution</dt>
+              <dd className="font-medium text-[var(--color-text-primary)]">
                 {caseItem.institution_name}
-              </div>
-              <div className="font-mono text-[10px] text-muted-foreground">
-                AICTE ID: {caseItem.aicte_permanent_id || "N/A"}
-              </div>
+              </dd>
+              {caseItem.aicte_permanent_id && (
+                <dd className="font-mono text-[10px] text-[var(--color-text-muted)]">
+                  Permanent ID: {caseItem.aicte_permanent_id}
+                </dd>
+              )}
             </div>
 
-            <div className="space-y-1">
-              <span className="text-muted-foreground flex items-center gap-1 font-medium">
-                <Shield className="h-3.5 w-3.5" /> Bureau Jurisdiction
-              </span>
-              <div className="font-medium text-foreground leading-tight">
-                {caseItem.bureau_name}
-              </div>
-              <div className="font-mono text-[10px] text-muted-foreground">
-                Code: {caseItem.bureau_code}
-              </div>
+            <div>
+              <dt className="text-[var(--color-text-muted)] text-[11px] mb-0.5">Bureau</dt>
+              <dd className="text-[var(--color-text-primary)] font-medium">
+                {caseItem.bureau_name} ({caseItem.bureau_code})
+              </dd>
             </div>
 
-            <div className="space-y-1">
-              <span className="text-muted-foreground flex items-center gap-1 font-medium">
-                <Tag className="h-3.5 w-3.5" /> Category
-              </span>
-              <div className="font-medium text-foreground">
-                {caseItem.category || "General"}
-              </div>
+            <div>
+              <dt className="text-[var(--color-text-muted)] text-[11px] mb-0.5">Category</dt>
+              <dd className="text-[var(--color-text-primary)]">
+                {caseItem.category || "General Grievance"}
+              </dd>
             </div>
 
-            <div className="space-y-1">
-              <span className="text-muted-foreground flex items-center gap-1 font-medium">
-                <Calendar className="h-3.5 w-3.5" /> Registered Date
-              </span>
-              <div className="font-medium text-foreground">
+            <div>
+              <dt className="text-[var(--color-text-muted)] text-[11px] mb-0.5">Created date</dt>
+              <dd className="font-mono text-[var(--color-text-secondary)] tabular-nums">
                 {formatIST(caseItem.created_at)}
-              </div>
+              </dd>
             </div>
 
-            <div className="col-span-2 space-y-1">
-              <span className="text-muted-foreground flex items-center gap-1 font-medium">
-                <User className="h-3.5 w-3.5" /> Assigned Officer
-              </span>
-              <div className="font-medium text-foreground">
-                {caseItem.assigned_officer_name ?? "Unassigned (Pending Allocation)"}
+            {caseItem.assigned_officer_name && (
+              <div>
+                <dt className="text-[var(--color-text-muted)] text-[11px] mb-0.5">Assigned officer</dt>
+                <dd className="text-[var(--color-text-primary)]">
+                  {caseItem.assigned_officer_name}
+                </dd>
               </div>
-            </div>
-          </div>
-
-          <Separator />
-
-          {/* Description Section */}
-          <div className="space-y-2">
-            <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Redacted Public Grievance Summary
-            </h4>
-            <div className="text-xs leading-relaxed text-foreground bg-muted/40 p-3 rounded-md border border-border">
-              {caseItem.description_redacted}
-            </div>
-          </div>
-
-          {/* Confidential Section */}
-          {isAuditor ? (
-            <div className="rounded-md border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900 space-y-1">
-              <div className="flex items-center gap-1.5 font-semibold text-amber-800">
-                <Lock className="h-3.5 w-3.5" />
-                <span>Auditor Redaction Notice</span>
-              </div>
-              <p className="text-[11px] leading-tight text-amber-700">
-                🔒 Confidential Complainant Statement Redacted under Data Governance Policy.
-              </p>
-            </div>
-          ) : (
-            caseItem.description_confidential && (
-              <div className="space-y-2">
-                <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1">
-                  <Lock className="h-3 w-3" /> Confidential Complainant Statement
-                </h4>
-                <div className="text-xs leading-relaxed text-foreground bg-amber-50/50 p-3 rounded-md border border-amber-200">
-                  {caseItem.description_confidential}
-                </div>
-              </div>
-            )
-          )}
-
-          {/* Closure Remarks */}
-          {caseItem.closure_remarks && (
-            <div className="space-y-2">
-              <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Final Resolution Remarks
-              </h4>
-              <div className="text-xs leading-relaxed text-foreground bg-green-50 p-3 rounded-md border border-green-200">
-                {caseItem.closure_remarks}
-              </div>
-            </div>
-          )}
+            )}
+          </dl>
         </div>
 
-        {/* Footer Actions */}
-        <SheetFooter className="pt-4 border-t border-border flex flex-row items-center justify-between sm:justify-between w-full">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => onOpenChange(false)}
-            className="text-xs"
-          >
-            Close
-          </Button>
+        {/* Footer with primary action */}
+        <div className="pt-6 border-t border-[var(--color-rule)] mt-6">
           <Button
             asChild
-            size="sm"
-            className="text-xs font-medium gap-1.5"
-            onClick={() => onOpenChange(false)}
+            className="w-full bg-[var(--color-action)] text-white hover:bg-[var(--color-action)]/90 h-9 text-xs font-medium rounded-[6px]"
           >
-            <Link to="/cases/$id" params={{ id: caseItem.case_reference_id }}>
-              <ExternalLink className="h-3.5 w-3.5" />
-              Open Dossier
+            <Link
+              to="/cases/$id"
+              params={{ id: caseItem.case_reference_id }}
+              onClick={() => onOpenChange(false)}
+            >
+              Open case file
             </Link>
           </Button>
-        </SheetFooter>
+        </div>
       </SheetContent>
     </Sheet>
   );

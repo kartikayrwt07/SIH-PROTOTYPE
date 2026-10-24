@@ -1,7 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { escalateCase } from "@/api/index";
-import type { ComplaintCase } from "@/types/ui";
 import {
   Dialog,
   DialogContent,
@@ -13,9 +12,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { AlertCircle, AlertTriangle, ArrowRight, Loader2, ShieldAlert } from "lucide-react";
 
 interface EscalateModalProps {
   caseItem: { case_reference_id: string; escalation_level?: number };
@@ -36,31 +33,38 @@ export function EscalateModal({
   const [reason, setReason] = useState("");
   const [validationError, setValidationError] = useState<string | null>(null);
 
+  useEffect(() => {
+    if (open) {
+      setReason("");
+      setValidationError(null);
+    }
+  }, [open]);
+
   const mutation = useMutation({
     mutationFn: escalateCase,
-    onSuccess: (updated) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["case", caseItem.case_reference_id] });
       queryClient.invalidateQueries({ queryKey: ["cases"] });
       queryClient.invalidateQueries({ queryKey: ["dashboardStats"] });
       queryClient.invalidateQueries({ queryKey: ["timeline", caseItem.case_reference_id] });
       queryClient.invalidateQueries({ queryKey: ["slaRadar"] });
-      toast.success(`Case escalated to Tier ${updated.escalation_level} surveillance.`);
+      toast.success("Case escalated");
       setReason("");
       onOpenChange(false);
     },
     onError: (err: any) => {
-      setValidationError(err?.message || "Failed to escalate complaint.");
+      setValidationError(err?.message || "Failed to escalate case.");
     },
   });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (isMaxTier) {
-      setValidationError("This case is already at maximum escalation Tier 2.");
+      setValidationError("This case is already at maximum escalation level 2.");
       return;
     }
     if (!reason.trim() || reason.trim().length < 3) {
-      setValidationError("Mandatory escalation reason must be at least 3 characters long.");
+      setValidationError("Remarks must be at least 3 characters.");
       return;
     }
 
@@ -73,92 +77,60 @@ export function EscalateModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md bg-[var(--color-surface)] border border-[var(--color-rule)] rounded-[8px] p-6 shadow-2xl">
         <form onSubmit={handleSubmit} className="space-y-4">
-          <DialogHeader>
-            <DialogTitle className="text-base font-semibold flex items-center gap-2">
-              <ShieldAlert className="h-5 w-5 text-red-600" />
-              <span>Escalate Supervisory Surveillance</span>
+          <DialogHeader className="p-0 text-left space-y-1">
+            <DialogTitle className="font-serif text-base font-semibold text-[var(--color-ink)]">
+              Escalate case to level {nextTier}
             </DialogTitle>
-            <DialogDescription className="text-xs">
-              Advance surveillance tier for case <span className="font-mono font-bold text-foreground">{caseItem.case_reference_id}</span>.
+            <DialogDescription className="text-xs text-[var(--color-text-secondary)]">
+              Case <span className="font-mono text-[var(--color-text-primary)]">{caseItem.case_reference_id}</span> is currently at escalation level {currentTier}.
             </DialogDescription>
           </DialogHeader>
 
-          {/* Current Tier vs Next Tier */}
-          <div className="bg-red-50/50 border border-red-200/80 p-3 rounded-lg flex items-center justify-between text-xs">
-            <div>
-              <span className="text-muted-foreground block text-[11px] mb-1">Current Tier</span>
-              <Badge variant="outline" className="text-xs font-semibold bg-background">
-                {currentTier === 0 ? "Normal (Tier 0)" : `Tier ${currentTier} Surveillance`}
-              </Badge>
+          {/* Remarks textarea */}
+          <div className="space-y-1.5">
+            <div className="flex items-baseline justify-between">
+              <Label htmlFor="escalate-reason" className="text-xs font-medium text-[var(--color-text-primary)]">
+                Remarks
+              </Label>
+              <span className="text-[11px] text-[var(--color-text-muted)]">
+                Required for the audit trail
+              </span>
             </div>
-            <ArrowRight className="h-4 w-4 text-red-400" />
-            <div>
-              <span className="text-muted-foreground block text-[11px] mb-1">Target Tier</span>
-              {isMaxTier ? (
-                <Badge variant="destructive" className="text-xs">
-                  Max Tier 2 Reached
-                </Badge>
-              ) : (
-                <Badge variant="destructive" className="text-xs">
-                  Tier {nextTier} Supervisory Alert
-                </Badge>
-              )}
-            </div>
+            <Textarea
+              id="escalate-reason"
+              placeholder="State the justification for elevating supervisory surveillance..."
+              value={reason}
+              onChange={(e) => {
+                setReason(e.target.value);
+                if (validationError) setValidationError(null);
+              }}
+              rows={3}
+              className="text-xs bg-surface border-[var(--color-rule)] rounded-[6px]"
+            />
+            {validationError && (
+              <p className="text-xs text-[var(--sla-overdue-text)]">{validationError}</p>
+            )}
           </div>
 
-          {isMaxTier ? (
-            <div className="p-3 bg-muted rounded-md text-xs text-muted-foreground">
-              This case has already reached the maximum supervisory tier (Tier 2: Overdue / Emergency Surveillance). Further tier advancement is locked.
-            </div>
-          ) : (
-            <div className="space-y-1.5">
-              <Label htmlFor="escalate-reason" className="text-xs font-medium">
-                Mandatory Escalation Justification <span className="text-destructive">*</span>
-              </Label>
-              <Textarea
-                id="escalate-reason"
-                placeholder="State why this grievance requires elevated supervisory oversight (e.g. repeated SLA breach, high institutional impact)..."
-                value={reason}
-                onChange={(e) => {
-                  setReason(e.target.value);
-                  if (validationError) setValidationError(null);
-                }}
-                rows={3}
-                className="text-xs"
-                disabled={mutation.isPending}
-              />
-            </div>
-          )}
-
-          {validationError && (
-            <div className="p-2.5 rounded-md bg-destructive/10 border border-destructive/20 text-destructive text-xs flex items-center gap-2">
-              <AlertCircle className="h-4 w-4 flex-shrink-0" />
-              <span>{validationError}</span>
-            </div>
-          )}
-
-          <DialogFooter className="pt-2 flex items-center justify-end gap-2">
+          <DialogFooter className="pt-2 border-t border-[var(--color-rule)] gap-2">
             <Button
               type="button"
               variant="outline"
               size="sm"
               onClick={() => onOpenChange(false)}
-              disabled={mutation.isPending}
-              className="text-xs"
+              className="h-8 text-xs border-[var(--color-rule)] rounded-[6px]"
             >
               Cancel
             </Button>
             <Button
               type="submit"
-              variant="destructive"
               size="sm"
               disabled={mutation.isPending || isMaxTier}
-              className="text-xs gap-1.5 font-medium"
+              className="h-8 text-xs font-medium bg-[var(--sla-overdue-text)] text-white hover:bg-[var(--sla-overdue-text)]/90 rounded-[6px]"
             >
-              {mutation.isPending && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
-              <span>Confirm Escalation</span>
+              {mutation.isPending ? "Escalating..." : "Escalate case"}
             </Button>
           </DialogFooter>
         </form>

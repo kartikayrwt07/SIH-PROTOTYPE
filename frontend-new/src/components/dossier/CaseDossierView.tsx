@@ -1,62 +1,59 @@
 import React, { useState } from "react";
-import { Link, useRouter } from "@tanstack/react-router";
+import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { getCase } from "@/api/index";
 import { useRole } from "@/contexts/RoleContext";
-import type { ComplaintCase } from "@/types/ui";
-import { StatusChip } from "@/components/cases/StatusChip";
-import { SlaPill } from "@/components/cases/SlaPill";
-import { PriorityBadge } from "@/components/cases/PriorityBadge";
-import { StatusTracker } from "./StatusTracker";
-import { ChangeStatusModal } from "./ChangeStatusModal";
-import { ReassignModal } from "./ReassignModal";
-import { EscalateModal } from "./EscalateModal";
+import type { ComplaintCase, CaseStatus } from "@/types/ui";
+import { getAllowedTransitions } from "@/lib/stateMachine";
+import {
+  StatusMark,
+  PriorityMark,
+  SlaPill,
+  LifecycleStrip,
+  RedactionBar,
+} from "@/components/shared";
 import { AuditTimelineTab } from "./AuditTimelineTab";
 import { InternalNotesTab } from "./InternalNotesTab";
 import { AssignmentHistoryTab } from "./AssignmentHistoryTab";
-import { formatIST } from "@/lib/dateUtils";
-
+import { ChangeStatusModal } from "./ChangeStatusModal";
+import { ReassignModal } from "./ReassignModal";
+import { EscalateModal } from "./EscalateModal";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  ChevronLeft,
-  Building2,
-  Calendar,
-  User,
-  Shield,
-  Lock,
-  ArrowRightLeft,
-  ShieldAlert,
-  GitCommit,
-  FileText,
-  History,
-  AlertCircle,
-  Copy,
-  Check,
-  Tag,
-  AlertTriangle,
-} from "lucide-react";
+import { AlertCircle, ChevronLeft } from "lucide-react";
 
 interface CaseDossierViewProps {
   caseRef: string;
 }
 
-export function CaseDossierView({ caseRef }: CaseDossierViewProps) {
-  const router = useRouter();
-  const { role, user } = useRole();
-  const isAuditor = role === "AUDITOR";
-  const isOfficer = role === "OFFICER";
+const INSTITUTION_METADATA: Record<string, { state: string; district: string; type: string }> = {
+  "inst-01": { state: "Rajasthan", district: "Kota", type: "State University" },
+  "inst-02": { state: "Maharashtra", district: "Pune", type: "Deemed University" },
+  "inst-03": { state: "Uttar Pradesh", district: "Noida", type: "Private University" },
+  "inst-04": { state: "Punjab", district: "Mohali", type: "Private University" },
+  "inst-05": { state: "Tamil Nadu", district: "Chennai", type: "Deemed University" },
+  "inst-06": { state: "Maharashtra", district: "Mumbai", type: "Deemed University" },
+  "inst-07": { state: "Karnataka", district: "Udupi", type: "Deemed University" },
+  "inst-08": { state: "Punjab", district: "Phagwara", type: "Private University" },
+  "inst-09": { state: "Tamil Nadu", district: "Kancheepuram", type: "Deemed University" },
+  "inst-10": { state: "Karnataka", district: "Bengaluru", type: "Private University" },
+  "inst-11": { state: "Tamil Nadu", district: "Coimbatore", type: "Government-Aided College" },
+  "inst-12": { state: "Odisha", district: "Bhubaneswar", type: "Deemed University" },
+  "inst-13": { state: "Karnataka", district: "Bengaluru", type: "Autonomous College" },
+  "inst-14": { state: "Karnataka", district: "Bengaluru", type: "Affiliated Institute" },
+  "inst-15": { state: "Karnataka", district: "Hubballi", type: "State Technological University" },
+};
 
-  const [copied, setCopied] = useState(false);
+export function CaseDossierView({ caseRef }: CaseDossierViewProps) {
+  const { role } = useRole();
+  const isAuditor = role === "AUDITOR";
+
   const [changeStatusOpen, setChangeStatusOpen] = useState(false);
+  const [targetStatusOverride, setTargetStatusOverride] = useState<CaseStatus | undefined>(undefined);
   const [reassignOpen, setReassignOpen] = useState(false);
   const [escalateOpen, setEscalateOpen] = useState(false);
 
-  // Fetch case dossier
   const {
     data: caseItem,
     isLoading,
@@ -69,22 +66,14 @@ export function CaseDossierView({ caseRef }: CaseDossierViewProps) {
     staleTime: 30 * 1000,
   });
 
-  const handleCopyRef = () => {
-    if (caseItem?.case_reference_id) {
-      navigator.clipboard.writeText(caseItem.case_reference_id);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    }
-  };
-
   if (isLoading) {
     return (
-      <div className="container max-w-7xl mx-auto py-6 px-4 space-y-6">
-        <Skeleton className="h-6 w-48" />
-        <Skeleton className="h-24 w-full rounded-lg" />
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <Skeleton className="lg:col-span-2 h-96 rounded-lg" />
-          <Skeleton className="h-96 rounded-lg" />
+      <div className="py-6 px-6 lg:px-8 max-w-7xl mx-auto space-y-6">
+        <Skeleton className="h-4 w-32" />
+        <Skeleton className="h-10 w-3/4" />
+        <Skeleton className="h-6 w-1/2" />
+        <div className="border-t border-[var(--color-rule)] pt-6 space-y-4">
+          <Skeleton className="h-48 w-full" />
         </div>
       </div>
     );
@@ -92,19 +81,21 @@ export function CaseDossierView({ caseRef }: CaseDossierViewProps) {
 
   if (isError || !caseItem) {
     return (
-      <div className="container max-w-4xl mx-auto py-12 px-4 text-center space-y-4">
-        <div className="p-8 bg-card rounded-lg border border-border shadow-2xs space-y-3">
-          <AlertCircle className="h-10 w-10 text-destructive mx-auto" />
-          <h2 className="text-base font-semibold text-foreground">Complaint Record Not Found</h2>
-          <p className="text-xs text-muted-foreground">
-            {(error as Error)?.message || `Case '${caseRef}' could not be retrieved.`}
+      <div className="py-12 px-6 max-w-xl mx-auto text-center space-y-4">
+        <div className="p-6 bg-surface border border-[var(--color-rule)] rounded-[4px] space-y-3">
+          <AlertCircle className="h-8 w-8 text-[var(--sla-overdue-text)] mx-auto" />
+          <h2 className="font-serif text-lg font-semibold text-[var(--color-ink)]">
+            Case record not found
+          </h2>
+          <p className="text-xs text-[var(--color-text-secondary)]">
+            {(error as Error)?.message || `Case file '${caseRef}' could not be retrieved.`}
           </p>
           <div className="flex items-center justify-center gap-2 pt-2">
-            <Button size="sm" variant="outline" onClick={() => refetch()} className="text-xs">
-              Retry
+            <Button size="sm" variant="outline" onClick={() => refetch()} className="text-xs h-8 border-[var(--color-rule)]">
+              Try again
             </Button>
-            <Button asChild size="sm" className="text-xs">
-              <Link to="/cases">Return to Case Register</Link>
+            <Button asChild size="sm" className="text-xs h-8 bg-[var(--color-action)] text-white hover:bg-[var(--color-action)]/90">
+              <Link to="/cases">Return to case register</Link>
             </Button>
           </div>
         </div>
@@ -114,220 +105,209 @@ export function CaseDossierView({ caseRef }: CaseDossierViewProps) {
 
   const isResolvedOrClosed = caseItem.status === "Resolved" || caseItem.status === "Closed";
   const isClosed = caseItem.status === "Closed";
+  const isResolved = caseItem.status === "Resolved";
+  const allowedTransitions = getAllowedTransitions(caseItem.status);
 
-  // Role permissions for actions:
-  // Auditor cannot perform any mutation (SPEC §5)
-  // Officer can change status in own bureau, but cannot reassign or escalate (SPEC §5)
-  // Admin & Supervisor can do all 3
-  const canChangeStatus = !isAuditor && !isClosed;
+  // Role gating
+  const canChangeStatus = !isAuditor && !isClosed && allowedTransitions.length > 0;
   const canReassign = (role === "ADMIN" || role === "SUPERVISOR") && !isClosed;
   const canEscalate = (role === "ADMIN" || role === "SUPERVISOR") && !isClosed && (caseItem.escalation_level ?? 0) < 2;
+  const canReopen = !isAuditor && isResolved && allowedTransitions.includes("In Progress");
+
+  // Metadata resolution
+  const instMeta = INSTITUTION_METADATA[caseItem.institution_id] || {
+    state: "Karnataka",
+    district: "Bengaluru",
+    type: "Technical Institute",
+  };
+
+  const handleOpenStatusModal = (target?: CaseStatus) => {
+    setTargetStatusOverride(target);
+    setChangeStatusOpen(true);
+  };
 
   return (
-    <div className="container max-w-7xl mx-auto py-6 px-6 space-y-6">
-      {/* Breadcrumbs & Navigation */}
-      <div className="flex items-center gap-2 text-xs text-muted-foreground">
-        <Link to="/dashboard" className="hover:text-foreground transition-colors">
-          Dashboard
+    <div className="py-6 px-6 lg:px-8 max-w-7xl mx-auto space-y-6">
+      {/* Back button */}
+      <div>
+        <Link
+          to="/cases"
+          className="inline-flex items-center gap-1 text-xs text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]"
+        >
+          <ChevronLeft className="h-3.5 w-3.5" />
+          <span>Case register</span>
         </Link>
-        <span>/</span>
-        <Link to="/cases" className="hover:text-foreground transition-colors">
-          Case Register
-        </Link>
-        <span>/</span>
-        <span className="font-mono text-foreground font-semibold">
-          {caseItem.case_reference_id}
-        </span>
       </div>
 
-      {/* Dossier Header Card */}
-      <div className="bg-card rounded-lg border border-border/60 p-5 shadow-none space-y-3">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          {/* Left: Ref, Status, Priority */}
-          <div className="space-y-1.5">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="font-mono text-xs font-semibold text-foreground bg-muted px-2 py-0.5 rounded flex items-center gap-1.5">
-                {caseItem.case_reference_id}
-                <button
-                  onClick={handleCopyRef}
-                  className="hover:text-foreground transition-colors cursor-pointer opacity-70 hover:opacity-100"
-                  title="Copy reference ID"
-                >
-                  {copied ? <Check className="h-3 w-3 text-emerald-600" /> : <Copy className="h-3 w-3" />}
-                </button>
-              </span>
-              <StatusChip status={caseItem.status} />
-              <PriorityBadge priority={caseItem.priority} />
-              <SlaPill dueDate={caseItem.due_date} isResolved={isResolvedOrClosed} />
-              {caseItem.escalation_level > 0 && (
-                <span className="text-xs px-2 py-0.5 rounded-full bg-rose-500/10 text-rose-700 dark:text-rose-400 border border-rose-500/20 font-medium inline-flex items-center gap-1">
-                  <AlertTriangle className="h-3 w-3" />
-                  Tier {caseItem.escalation_level} Escalated
-                </span>
+      {/* Header: reference ID (mono, secondary), SUBJECT as serif page title, StatusMark, PriorityMark, SlaPill, escalation note */}
+      <header className="space-y-3">
+        <div className="space-y-1">
+          <div className="font-mono text-xs text-[var(--color-text-secondary)]">
+            {caseItem.case_reference_id}
+          </div>
+          <h1 className="font-serif text-2xl font-semibold text-[var(--color-ink)] leading-tight max-w-4xl">
+            {caseItem.subject}
+          </h1>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-3 pt-1">
+          <StatusMark status={caseItem.status} />
+          <PriorityMark priority={caseItem.priority} />
+          <SlaPill dueDate={caseItem.due_date} isResolved={isResolvedOrClosed} />
+          {caseItem.escalation_level > 0 && (
+            <span className="text-xs text-[var(--color-text-secondary)] font-medium">
+              Escalation level {caseItem.escalation_level}
+            </span>
+          )}
+        </div>
+
+        {/* Full LifecycleStrip directly under header */}
+        <div className="pt-2">
+          <LifecycleStrip
+            currentStatus={caseItem.status}
+            dueDate={caseItem.due_date}
+            isResolved={isResolvedOrClosed}
+            variant="full"
+          />
+        </div>
+      </header>
+
+      {/* Main Two Columns: Left (65% case file), Right (35% action rail). On mobile: action rail first */}
+      <div className="flex flex-col-reverse lg:grid lg:grid-cols-[1fr_320px] gap-8 items-start pt-2">
+        {/* Left Column: Continuous document with 1px rules between sections */}
+        <div className="w-full space-y-6">
+          {/* Section 1: Institution plain term/value list */}
+          <section className="space-y-3">
+            <h2 className="font-serif text-base font-semibold text-[var(--color-ink)]">
+              Institution
+            </h2>
+            <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3 text-xs">
+              <div>
+                <dt className="text-[var(--color-text-muted)] text-[11px]">Name</dt>
+                <dd className="font-medium text-[var(--color-text-primary)] mt-0.5">
+                  {caseItem.institution_name}
+                </dd>
+              </div>
+
+              <div>
+                <dt className="text-[var(--color-text-muted)] text-[11px]">AICTE ID</dt>
+                <dd className="font-mono text-[var(--color-text-secondary)] mt-0.5">
+                  {caseItem.aicte_permanent_id || "—"}
+                </dd>
+              </div>
+
+              <div>
+                <dt className="text-[var(--color-text-muted)] text-[11px]">State</dt>
+                <dd className="text-[var(--color-text-primary)] mt-0.5">
+                  {instMeta.state}
+                </dd>
+              </div>
+
+              <div>
+                <dt className="text-[var(--color-text-muted)] text-[11px]">District</dt>
+                <dd className="text-[var(--color-text-primary)] mt-0.5">
+                  {instMeta.district}
+                </dd>
+              </div>
+
+              <div>
+                <dt className="text-[var(--color-text-muted)] text-[11px]">Type</dt>
+                <dd className="text-[var(--color-text-primary)] mt-0.5">
+                  {instMeta.type}
+                </dd>
+              </div>
+
+              <div>
+                <dt className="text-[var(--color-text-muted)] text-[11px]">Bureau</dt>
+                <dd className="text-[var(--color-text-primary)] mt-0.5">
+                  {caseItem.bureau_name} ({caseItem.bureau_code})
+                </dd>
+              </div>
+
+              <div>
+                <dt className="text-[var(--color-text-muted)] text-[11px]">Assigned officer</dt>
+                <dd className="text-[var(--color-text-primary)] mt-0.5">
+                  {caseItem.assigned_officer_name || "Unassigned"}
+                </dd>
+              </div>
+
+              <div>
+                <dt className="text-[var(--color-text-muted)] text-[11px]">Category</dt>
+                <dd className="text-[var(--color-text-primary)] mt-0.5">
+                  {caseItem.category || "General Grievance"}
+                </dd>
+              </div>
+            </dl>
+          </section>
+
+          {/* 1px rule divider */}
+          <div className="border-t border-[var(--color-rule)]" />
+
+          {/* Section 2: Description and Confidential statement */}
+          <section className="space-y-4">
+            <h2 className="font-serif text-base font-semibold text-[var(--color-ink)]">
+              Description
+            </h2>
+
+            <div className="text-xs text-[var(--color-text-primary)] leading-relaxed max-w-3xl whitespace-pre-wrap">
+              {caseItem.description_redacted}
+            </div>
+
+            <div className="space-y-2 pt-2">
+              <div className="text-xs font-medium text-[var(--color-text-primary)]">
+                Confidential statement
+              </div>
+
+              {isAuditor ? (
+                <RedactionBar />
+              ) : caseItem.description_confidential ? (
+                <div className="text-xs text-[var(--color-text-secondary)] bg-[var(--color-page)] border border-[var(--color-rule)] rounded-[4px] p-3 leading-relaxed max-w-3xl whitespace-pre-wrap">
+                  {caseItem.description_confidential}
+                </div>
+              ) : (
+                <p className="text-xs text-[var(--color-text-muted)]">
+                  No confidential complainant statement attached to this grievance.
+                </p>
               )}
             </div>
 
-            <h1 className="text-lg font-semibold tracking-tight text-foreground leading-snug">
-              {caseItem.subject}
-            </h1>
-          </div>
-
-          {/* Right: Back button */}
-          <Button asChild variant="outline" size="sm" className="self-start md:self-auto text-xs h-8 gap-1.5 border-border/60">
-            <Link to="/cases">
-              <ChevronLeft className="h-3.5 w-3.5 opacity-70" />
-              <span>Back</span>
-            </Link>
-          </Button>
-        </div>
-      </div>
-
-      {/* Full-width Horizontal Lifecycle Progression Tracker */}
-      <StatusTracker currentStatus={caseItem.status} variant="banner" />
-
-      {/* Main Two-Column Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-        {/* Left Column (2 cols): Institution/Category Panel, Description, Tabs */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* Institution & Jurisdiction Card */}
-          <Card className="border border-border/60 shadow-none">
-            <CardHeader className="pb-3 border-b border-border/40">
-              <CardTitle className="text-xs font-medium uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
-                <Building2 className="h-3.5 w-3.5 opacity-70" />
-                Institutional Information
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="pt-4 space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-                <div className="space-y-1">
-                  <span className="text-muted-foreground font-medium">Institution Name</span>
-                  <div className="font-semibold text-foreground text-sm">
-                    {caseItem.institution_name}
-                  </div>
-                  <div className="font-mono text-[11px] text-muted-foreground">
-                    AICTE Permanent ID: <strong>{caseItem.aicte_permanent_id || "N/A"}</strong>
-                  </div>
+            {caseItem.closure_remarks && (
+              <div className="space-y-1.5 pt-2">
+                <div className="text-xs font-medium text-[var(--color-text-primary)]">
+                  Closure remarks
                 </div>
-
-                <div className="space-y-1">
-                  <span className="text-muted-foreground font-medium">Bureau Jurisdiction</span>
-                  <div className="font-semibold text-foreground text-sm flex items-center gap-1.5">
-                    <Shield className="h-3.5 w-3.5 text-primary" />
-                    <span>{caseItem.bureau_name}</span>
-                  </div>
-                  <div className="font-mono text-[11px] text-muted-foreground">
-                    Bureau Code: <strong>{caseItem.bureau_code}</strong>
-                  </div>
-                </div>
-
-                <div className="space-y-1">
-                  <span className="text-muted-foreground font-medium">Complaint Category</span>
-                  <div className="font-medium text-foreground flex items-center gap-1.5">
-                    <Tag className="h-3 w-3 text-muted-foreground" />
-                    <span>{caseItem.category || "General Technical Education"}</span>
-                  </div>
-                </div>
-
-                <div className="space-y-1">
-                  <span className="text-muted-foreground font-medium">Assigned Officer</span>
-                  <div className="font-medium text-foreground flex items-center gap-1.5">
-                    <User className="h-3 w-3 text-muted-foreground" />
-                    <span>{caseItem.assigned_officer_name ?? "Unassigned (Queue)"}</span>
-                  </div>
-                </div>
-
-                <div className="space-y-1">
-                  <span className="text-muted-foreground font-medium">Registration Date</span>
-                  <div className="font-medium text-foreground flex items-center gap-1.5">
-                    <Calendar className="h-3 w-3 text-muted-foreground" />
-                    <span>{formatIST(caseItem.created_at)}</span>
-                  </div>
-                </div>
-
-                <div className="space-y-1">
-                  <span className="text-muted-foreground font-medium">SLA Resolution Due</span>
-                  <div className="font-medium text-foreground flex items-center gap-1.5">
-                    <Calendar className="h-3 w-3 text-muted-foreground" />
-                    <span>{formatIST(caseItem.due_date)}</span>
-                  </div>
+                <div className="text-xs text-[var(--color-text-secondary)] bg-[var(--color-page)] border border-[var(--color-rule)] rounded-[4px] p-3 leading-relaxed max-w-3xl">
+                  {caseItem.closure_remarks}
                 </div>
               </div>
+            )}
+          </section>
 
-              <Separator />
+          {/* 1px rule divider */}
+          <div className="border-t border-[var(--color-rule)]" />
 
-              {/* Redacted Description */}
-              <div className="space-y-1.5">
-                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block">
-                  Public Statement Summary
-                </span>
-                <div className="text-xs text-foreground bg-muted/40 p-3.5 rounded-md border border-border leading-relaxed">
-                  {caseItem.description_redacted}
-                </div>
-              </div>
-
-              {/* Confidential Description / Auditor Redaction Notice */}
-              {isAuditor ? (
-                <div className="rounded-md border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900 space-y-1">
-                  <div className="flex items-center gap-1.5 font-semibold text-amber-800">
-                    <Lock className="h-3.5 w-3.5" />
-                    <span>Auditor Redaction Notice</span>
-                  </div>
-                  <p className="text-[11px] leading-tight text-amber-700">
-                    🔒 Confidential Complainant Statement Redacted under Data Governance Policy.
-                  </p>
-                </div>
-              ) : (
-                caseItem.description_confidential && (
-                  <div className="space-y-1.5">
-                    <span className="text-xs font-semibold text-amber-800 uppercase tracking-wider flex items-center gap-1">
-                      <Lock className="h-3 w-3" /> Confidential Complainant Statement
-                    </span>
-                    <div className="text-xs text-foreground bg-amber-50/50 p-3.5 rounded-md border border-amber-200 leading-relaxed">
-                      {caseItem.description_confidential}
-                    </div>
-                  </div>
-                )
-              )}
-
-              {/* Closure remarks */}
-              {caseItem.closure_remarks && (
-                <div className="space-y-1.5">
-                  <span className="text-xs font-semibold text-green-800 uppercase tracking-wider block">
-                    Permanent Closure Record
-                  </span>
-                  <div className="text-xs text-foreground bg-green-50 p-3.5 rounded-md border border-green-200 leading-relaxed">
-                    {caseItem.closure_remarks}
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Three Tabs: Audit Timeline, Internal Notes, Assignment History */}
-          <div className="bg-card rounded-lg border border-border/60 shadow-none overflow-hidden">
+          {/* Section 3: Tabs "Timeline", "Notes", "Assignment history" */}
+          <section className="space-y-3">
             <Tabs defaultValue="timeline" className="w-full">
-              <div className="border-b border-border/40 px-4 pt-1 bg-muted/10">
-                <TabsList className="bg-transparent p-0 h-auto gap-4">
+              <div className="border-b border-[var(--color-rule)]">
+                <TabsList className="bg-transparent p-0 h-auto gap-6 border-0">
                   <TabsTrigger
                     value="timeline"
-                    className="data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none border-b-2 border-transparent rounded-none px-2 py-2 text-xs font-medium gap-1.5"
+                    className="border-b-2 border-transparent data-[state=active]:border-[var(--color-action)] data-[state=active]:text-[var(--color-ink)] data-[state=active]:shadow-none rounded-none px-0 py-2 text-xs font-medium text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-none"
                   >
-                    <GitCommit className="h-3.5 w-3.5" />
-                    Audit Timeline
+                    Timeline
                   </TabsTrigger>
                   <TabsTrigger
                     value="notes"
-                    className="data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none border-b-2 border-transparent rounded-none px-2 py-2 text-xs font-medium gap-1.5"
+                    className="border-b-2 border-transparent data-[state=active]:border-[var(--color-action)] data-[state=active]:text-[var(--color-ink)] data-[state=active]:shadow-none rounded-none px-0 py-2 text-xs font-medium text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-none"
                   >
-                    <FileText className="h-3.5 w-3.5" />
-                    Internal Notes
+                    Notes
                   </TabsTrigger>
                   <TabsTrigger
                     value="history"
-                    className="data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none border-b-2 border-transparent rounded-none px-2 py-2 text-xs font-medium gap-1.5"
+                    className="border-b-2 border-transparent data-[state=active]:border-[var(--color-action)] data-[state=active]:text-[var(--color-ink)] data-[state=active]:shadow-none rounded-none px-0 py-2 text-xs font-medium text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-none"
                   >
-                    <History className="h-3.5 w-3.5" />
-                    Assignment History
+                    Assignment history
                   </TabsTrigger>
                 </TabsList>
               </div>
@@ -344,93 +324,74 @@ export function CaseDossierView({ caseRef }: CaseDossierViewProps) {
                 <AssignmentHistoryTab caseRef={caseItem.case_reference_id} />
               </TabsContent>
             </Tabs>
+          </section>
+        </div>
+
+        {/* Right Column: Sticky Action Rail (1px rule separating from case file, no cards) */}
+        <aside className="w-full lg:sticky lg:top-6 lg:border-l border-[var(--color-rule)] lg:pl-6 space-y-4">
+          <div className="border-b border-[var(--color-rule)] pb-2">
+            <h2 className="font-serif text-sm font-semibold text-[var(--color-ink)]">
+              Actions
+            </h2>
           </div>
-        </div>
 
-        {/* Right Column (1 col, Sticky): Action Controls */}
-        <div className="space-y-4 lg:sticky lg:top-4">
-          {/* Action Controls Card (Role-Gated) */}
-          <Card className="border border-border/60 shadow-none">
-            <CardHeader className="pb-3 border-b border-border/40">
-              <CardTitle className="text-xs font-medium uppercase tracking-wider text-muted-foreground flex items-center justify-between">
-                <span>Actions</span>
-                <span className="text-[11px] font-mono text-muted-foreground">
-                  Role: {role}
-                </span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="pt-4 space-y-3">
-              {isAuditor ? (
-                <div className="p-3 bg-muted rounded-md text-xs text-muted-foreground leading-tight space-y-1">
-                  <div className="font-semibold text-foreground flex items-center gap-1">
-                    <Lock className="h-3.5 w-3.5" />
-                    <span>Auditor Access Locked</span>
-                  </div>
-                  <p>Lifecycle state advancement, bureau reassignment, and escalation controls are disabled for independent compliance auditors.</p>
-                </div>
-              ) : isClosed ? (
-                <div className="p-3 bg-slate-100 rounded-md text-xs text-slate-700 leading-tight space-y-1 border border-slate-200">
-                  <div className="font-semibold text-slate-900 flex items-center gap-1">
-                    <ShieldAlert className="h-3.5 w-3.5 text-slate-700" />
-                    <span>Case is Formally Closed</span>
-                  </div>
-                  <p>This complaint has completed its resolution lifecycle and is in a terminal state. Further modifications are locked.</p>
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  {/* Change Status Button */}
-                  <Button
-                    onClick={() => setChangeStatusOpen(true)}
-                    disabled={!canChangeStatus}
-                    className="w-full justify-between text-xs h-9 font-medium"
-                  >
-                    <span>Change Lifecycle Status</span>
-                    <GitCommit className="h-3.5 w-3.5 ml-2" />
-                  </Button>
+          <div className="space-y-2">
+            {/* Primary button: Change status */}
+            <Button
+              onClick={() => handleOpenStatusModal()}
+              disabled={!canChangeStatus}
+              className="w-full bg-[var(--color-action)] text-white hover:bg-[var(--color-action)]/90 h-9 text-xs font-medium rounded-[6px]"
+            >
+              Change status
+            </Button>
 
-                  {/* Reassign Button (ADMIN / SUPERVISOR) */}
-                  <Button
-                    onClick={() => setReassignOpen(true)}
-                    disabled={!canReassign}
-                    variant="outline"
-                    className="w-full justify-between text-xs h-9 font-medium"
-                  >
-                    <span>Reassign Jurisdiction / Officer</span>
-                    <ArrowRightLeft className="h-3.5 w-3.5 ml-2" />
-                  </Button>
+            {/* Reassign case button */}
+            {canReassign && (
+              <Button
+                variant="outline"
+                onClick={() => setReassignOpen(true)}
+                className="w-full text-xs h-8 font-normal text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] border-[var(--color-rule)] rounded-[6px]"
+              >
+                Reassign case
+              </Button>
+            )}
 
-                  {/* Escalate Button (ADMIN / SUPERVISOR) */}
-                  <Button
-                    onClick={() => setEscalateOpen(true)}
-                    disabled={!canEscalate}
-                    variant="destructive"
-                    className="w-full justify-between text-xs h-9 font-medium"
-                  >
-                    <span>
-                      {caseItem.escalation_level >= 2
-                        ? "Maximum Tier 2 Escalated"
-                        : "Escalate Surveillance Tier"}
-                    </span>
-                    <ShieldAlert className="h-3.5 w-3.5 ml-2" />
-                  </Button>
-                </div>
-              )}
+            {/* Escalate case button */}
+            {canEscalate && (
+              <Button
+                variant="outline"
+                onClick={() => setEscalateOpen(true)}
+                className="w-full text-xs h-8 font-normal text-[var(--sla-overdue-text)] hover:text-[var(--sla-overdue-text)] border-[var(--color-rule)] rounded-[6px]"
+              >
+                Escalate case
+              </Button>
+            )}
 
-              {/* Action Policy Explainer */}
-              <div className="pt-2 text-[10px] text-muted-foreground leading-normal border-t border-border/60 space-y-1">
-                <div>
-                  • <strong>Status changes:</strong> Governed by AICTE state machine guards with mandatory audit remarks.
-                </div>
-                <div>
-                  • <strong>Reassignment:</strong> Logs formal transfer reason and notifies target bureau queue.
-                </div>
-                <div>
-                  • <strong>Escalation:</strong> Elevates surveillance tier (max 2) and triggers supervisory SLA alerts.
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+            {/* Reopen case button */}
+            {canReopen && (
+              <Button
+                variant="outline"
+                onClick={() => handleOpenStatusModal("In Progress")}
+                className="w-full text-xs h-8 font-normal text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] border-[var(--color-rule)] rounded-[6px]"
+              >
+                Reopen case
+              </Button>
+            )}
+
+            {/* Status notices for special states */}
+            {isAuditor && (
+              <p className="text-[11px] text-[var(--color-text-muted)] pt-2 leading-relaxed">
+                Auditor access is strictly read-only. Status advancement, reassignment, and escalation controls are disabled.
+              </p>
+            )}
+
+            {isClosed && (
+              <p className="text-[11px] text-[var(--color-text-muted)] pt-2 leading-relaxed">
+                This case is closed. The lifecycle has terminated and further status transitions are locked.
+              </p>
+            )}
+          </div>
+        </aside>
       </div>
 
       {/* Action Modals */}
@@ -438,6 +399,7 @@ export function CaseDossierView({ caseRef }: CaseDossierViewProps) {
         caseItem={caseItem}
         open={changeStatusOpen}
         onOpenChange={setChangeStatusOpen}
+        initialTargetStatus={targetStatusOverride}
       />
 
       <ReassignModal

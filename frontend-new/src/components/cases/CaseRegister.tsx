@@ -7,19 +7,23 @@ import type {
   ComplaintCase,
   CasePriority,
   CaseStatus,
-  SlaStatus,
   ListCasesParams,
 } from "@/types/ui";
 import { ALL_STATUSES } from "@/lib/stateMachine";
-import { StatusChip } from "./StatusChip";
-import { SlaPill, deriveSlaStatus } from "./SlaPill";
-import { PriorityBadge } from "./PriorityBadge";
+import {
+  PageHeader,
+  DataTable,
+  type Column,
+  LifecycleStrip,
+  PriorityMark,
+  SlaPill,
+} from "@/components/shared";
+import { deriveSlaStatus } from "@/components/cases/SlaPill";
 import { CasePreviewDrawer } from "./CasePreviewDrawer";
 import { exportCasesClientCsv } from "@/lib/csvExport";
 
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import {
   Select,
   SelectContent,
@@ -27,27 +31,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Search,
-  Filter,
-  Download,
-  Upload,
-  ChevronRight,
-  ChevronLeft,
-  RotateCcw,
-  AlertCircle,
-  Inbox,
-  Building,
-} from "lucide-react";
+import { Search, ChevronLeft, ChevronRight } from "lucide-react";
 
 interface CaseRegisterProps {
   initialBureauId?: string;
@@ -65,7 +49,7 @@ export function CaseRegister({ initialBureauId }: CaseRegisterProps) {
   const [priorityFilter, setPriorityFilter] = useState<string>("ALL");
   const [slaFilter, setSlaFilter] = useState<string>("ALL");
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const [pageSize, setPageSize] = useState(25);
 
   // Preview drawer state
   const [previewCase, setPreviewCase] = useState<ComplaintCase | null>(null);
@@ -104,7 +88,7 @@ export function CaseRegister({ initialBureauId }: CaseRegisterProps) {
     staleTime: 30 * 1000,
   });
 
-  // Additional client-side SLA filtering if requested
+  // Additional client-side SLA filtering
   const displayedCases = useMemo(() => {
     if (!casesResponse?.items) return [];
     if (slaFilter === "ALL") return casesResponse.items;
@@ -145,357 +129,290 @@ export function CaseRegister({ initialBureauId }: CaseRegisterProps) {
 
   const totalPages = casesResponse?.total_pages ?? 1;
   const totalCount = casesResponse?.total ?? 0;
+  const startIndex = totalCount === 0 ? 0 : (page - 1) * pageSize + 1;
+  const endIndex = Math.min(page * pageSize, totalCount);
+
+  // Table columns definition
+  const columns: Column<ComplaintCase>[] = [
+    {
+      key: "case_reference_id",
+      header: "Case",
+      width: "140px",
+      cell: (c) => (
+        <span className="font-mono text-xs text-[var(--color-text-secondary)]">
+          {c.case_reference_id}
+        </span>
+      ),
+    },
+    {
+      key: "institution_name",
+      header: "Institution",
+      cell: (c) => (
+        <div>
+          <div className="font-medium text-[var(--color-text-primary)] text-xs line-clamp-1">
+            {c.institution_name}
+          </div>
+          <div className="font-mono text-[10px] text-[var(--color-text-muted)]">
+            {c.aicte_permanent_id ? c.aicte_permanent_id : "—"}
+          </div>
+        </div>
+      ),
+    },
+    {
+      key: "bureau",
+      header: "Bureau",
+      width: "100px",
+      cell: (c) => (
+        <span className="text-xs text-[var(--color-text-secondary)]" title={c.bureau_name}>
+          {c.bureau_code}
+        </span>
+      ),
+    },
+    {
+      key: "stage",
+      header: "Stage",
+      width: "220px",
+      cell: (c) => (
+        <div className="flex items-center">
+          <LifecycleStrip currentStatus={c.status} variant="compact" />
+        </div>
+      ),
+    },
+    {
+      key: "priority",
+      header: "Priority",
+      width: "110px",
+      cell: (c) => <PriorityMark priority={c.priority} />,
+    },
+    {
+      key: "due",
+      header: "Due",
+      width: "150px",
+      align: "right",
+      cell: (c) => {
+        const isResolved = c.status === "Resolved" || c.status === "Closed";
+        return <SlaPill dueDate={c.due_date} isResolved={isResolved} />;
+      },
+    },
+  ];
 
   return (
     <div className="space-y-4">
-      {/* Officer Jurisdiction Warning Notice if scoped */}
-      {role === "OFFICER" && user?.bureau_name && (
-        <div className="flex items-center gap-2 px-3 py-2 text-xs bg-muted/50 border border-border/60 text-muted-foreground rounded-lg">
-          <Building className="h-3.5 w-3.5 text-foreground flex-shrink-0" />
-          <span>
-            Jurisdiction: <strong className="text-foreground">{user.bureau_name} ({user.bureau_code})</strong>
-          </span>
-        </div>
-      )}
-
-      {/* Toolbar */}
-      <div className="bg-card p-3.5 rounded-lg border border-border/60 shadow-none space-y-3">
-        <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
-          {/* Search bar */}
-          <div className="relative flex-1 min-w-[240px]">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground/70" />
-            <Input
-              type="text"
-              placeholder="Search reference ID, institution, subject..."
-              value={search}
-              onChange={(e) => {
-                setSearch(e.target.value);
-                setPage(1);
-              }}
-              className="pl-8 text-xs h-8.5 bg-background border-border/60"
-            />
-          </div>
-
-          {/* Action buttons */}
-          <div className="flex items-center gap-2 self-end md:self-auto">
-            {canImport && (
-              <Button asChild size="sm" variant="outline" className="text-xs h-8.5 gap-1.5 border-border/60">
-                <Link to="/ingest">
-                  <Upload className="h-3.5 w-3.5 opacity-70" />
-                  <span>Ingest CSV</span>
-                </Link>
-              </Button>
-            )}
-
+      {/* Page Header */}
+      <PageHeader
+        title="Case register"
+        description="Search, filter and open any case you are allowed to see."
+        action={
+          <div className="flex items-center gap-2">
             <Button
-              size="sm"
               variant="outline"
+              size="sm"
               onClick={handleExportCsv}
               disabled={isLoading || displayedCases.length === 0}
-              className="text-xs h-8.5 gap-1.5 border-border/60"
+              className="h-8 text-xs font-medium border-[var(--color-rule)] bg-surface text-[var(--color-text-primary)] rounded-[6px]"
             >
-              <Download className="h-3.5 w-3.5 opacity-70" />
-              <span>Export CSV</span>
+              Export CSV
             </Button>
+            {canImport && (
+              <Button
+                asChild
+                size="sm"
+                className="h-8 text-xs font-medium bg-[var(--color-action)] text-white hover:bg-[var(--color-action)]/90 rounded-[6px]"
+              >
+                <Link to="/ingest">Ingest CSV</Link>
+              </Button>
+            )}
           </div>
+        }
+      />
+
+      {/* Quiet Toolbar Row */}
+      <div className="flex flex-wrap items-center gap-2.5 py-3 border-y border-[var(--color-rule)]">
+        {/* Search Input */}
+        <div className="relative flex-1 min-w-[220px]">
+          <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-[var(--color-text-muted)]" />
+          <Input
+            type="text"
+            placeholder="Search reference ID, institution, subject..."
+            value={search}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setPage(1);
+            }}
+            className="pl-8 text-xs h-8 bg-surface border-[var(--color-rule)] rounded-[6px]"
+          />
         </div>
 
-        {/* Filters Row */}
-        <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-border/40 text-xs">
-          {/* Bureau Filter (Hidden/Disabled for Officer if single bureau) */}
-          {role !== "OFFICER" && (
-            <Select
-              value={bureauFilter}
-              onValueChange={(v) => {
-                setBureauFilter(v);
-                setPage(1);
-              }}
-            >
-              <SelectTrigger className="h-8 w-[140px] text-xs bg-background border-border/60">
-                <SelectValue placeholder="All Bureaus" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="ALL">All Bureaus</SelectItem>
-                {bureaus.map((b) => (
-                  <SelectItem key={b.id} value={b.id}>
-                    {b.code} ({b.name.split(" ")[0]})
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          )}
-
-          {/* Status Filter */}
+        {/* Bureau Select */}
+        {role !== "OFFICER" && (
           <Select
-            value={statusFilter}
+            value={bureauFilter}
             onValueChange={(v) => {
-              setStatusFilter(v);
+              setBureauFilter(v);
               setPage(1);
             }}
           >
-            <SelectTrigger className="h-8 w-[140px] text-xs bg-background border-border/60">
-              <SelectValue placeholder="All Statuses" />
+            <SelectTrigger className="h-8 w-[140px] text-xs bg-surface border-[var(--color-rule)] rounded-[6px]">
+              <SelectValue placeholder="All bureaus" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="ALL">All Statuses</SelectItem>
-              {ALL_STATUSES.map((st) => (
-                <SelectItem key={st} value={st}>
-                  {st}
+              <SelectItem value="ALL">All bureaus</SelectItem>
+              {bureaus.map((b) => (
+                <SelectItem key={b.id} value={b.id}>
+                  {b.code} ({b.name.split(" ")[0]})
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
+        )}
 
-          {/* Priority Filter */}
-          <Select
-            value={priorityFilter}
-            onValueChange={(v) => {
-              setPriorityFilter(v);
-              setPage(1);
-            }}
+        {/* Status Select */}
+        <Select
+          value={statusFilter}
+          onValueChange={(v) => {
+            setStatusFilter(v);
+            setPage(1);
+          }}
+        >
+          <SelectTrigger className="h-8 w-[140px] text-xs bg-surface border-[var(--color-rule)] rounded-[6px]">
+            <SelectValue placeholder="All statuses" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="ALL">All statuses</SelectItem>
+            {ALL_STATUSES.map((st) => (
+              <SelectItem key={st} value={st}>
+                {st}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        {/* Priority Select */}
+        <Select
+          value={priorityFilter}
+          onValueChange={(v) => {
+            setPriorityFilter(v);
+            setPage(1);
+          }}
+        >
+          <SelectTrigger className="h-8 w-[130px] text-xs bg-surface border-[var(--color-rule)] rounded-[6px]">
+            <SelectValue placeholder="All priorities" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="ALL">All priorities</SelectItem>
+            <SelectItem value="LOW">Low</SelectItem>
+            <SelectItem value="MEDIUM">Medium</SelectItem>
+            <SelectItem value="HIGH">High</SelectItem>
+            <SelectItem value="URGENT">Urgent</SelectItem>
+          </SelectContent>
+        </Select>
+
+        {/* SLA Status Select */}
+        <Select
+          value={slaFilter}
+          onValueChange={(v) => {
+            setSlaFilter(v);
+            setPage(1);
+          }}
+        >
+          <SelectTrigger className="h-8 w-[130px] text-xs bg-surface border-[var(--color-rule)] rounded-[6px]">
+            <SelectValue placeholder="All SLA" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="ALL">All SLA</SelectItem>
+            <SelectItem value="OVERDUE">Overdue</SelectItem>
+            <SelectItem value="APPROACHING">Approaching</SelectItem>
+            <SelectItem value="ON_TRACK">On track</SelectItem>
+          </SelectContent>
+        </Select>
+
+        {/* Clear filters text button */}
+        {hasActiveFilters && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleResetFilters}
+            className="h-8 px-2 text-xs text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-transparent"
           >
-            <SelectTrigger className="h-8 w-[130px] text-xs bg-background border-border/60">
-              <SelectValue placeholder="All Priorities" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="ALL">All Priorities</SelectItem>
-              <SelectItem value="LOW">LOW</SelectItem>
-              <SelectItem value="MEDIUM">MEDIUM</SelectItem>
-              <SelectItem value="HIGH">HIGH</SelectItem>
-              <SelectItem value="URGENT">URGENT</SelectItem>
-            </SelectContent>
-          </Select>
-
-          {/* SLA Status Filter */}
-          <Select
-            value={slaFilter}
-            onValueChange={(v) => {
-              setSlaFilter(v);
-              setPage(1);
-            }}
-          >
-            <SelectTrigger className="h-8 w-[130px] text-xs bg-background border-border/60">
-              <SelectValue placeholder="All SLA" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="ALL">All SLA Tiers</SelectItem>
-              <SelectItem value="OVERDUE">Overdue Only</SelectItem>
-              <SelectItem value="APPROACHING">Approaching</SelectItem>
-              <SelectItem value="ON_TRACK">On Track</SelectItem>
-            </SelectContent>
-          </Select>
-
-          {/* Reset Filters button */}
-          {hasActiveFilters && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleResetFilters}
-              className="h-8 px-2 text-xs text-muted-foreground hover:text-foreground gap-1"
-            >
-              <RotateCcw className="h-3 w-3" />
-              Reset
-            </Button>
-          )}
-        </div>
+            Clear filters
+          </Button>
+        )}
       </div>
 
-      {/* Case Register Table */}
-      <div className="bg-card rounded-lg border border-border/60 shadow-none overflow-hidden">
-        <div className="overflow-x-auto">
-          <Table>
-            <TableHeader className="bg-muted/30 sticky top-0">
-              <TableRow className="text-xs hover:bg-transparent border-b border-border/60">
-                <TableHead className="w-[150px] font-medium text-muted-foreground">Case Reference</TableHead>
-                <TableHead className="min-w-[200px] font-medium text-muted-foreground">Institution</TableHead>
-                <TableHead className="w-[110px] font-medium text-muted-foreground">Bureau</TableHead>
-                <TableHead className="w-[110px] font-medium text-muted-foreground">Priority</TableHead>
-                <TableHead className="w-[150px] font-medium text-muted-foreground">Status</TableHead>
-                <TableHead className="w-[160px] font-medium text-muted-foreground">SLA Status</TableHead>
-                <TableHead className="w-[40px] text-right"></TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {isLoading ? (
-                // Skeletons
-                Array.from({ length: 6 }).map((_, i) => (
-                  <TableRow key={i} className="h-12">
-                    <TableCell><Skeleton className="h-4 w-28" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-44" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-16" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-16" /></TableCell>
-                    <TableCell><Skeleton className="h-5 w-24 rounded-full" /></TableCell>
-                    <TableCell><Skeleton className="h-5 w-24 rounded-full" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-4" /></TableCell>
-                  </TableRow>
-                ))
-              ) : isError ? (
-                // Error state
-                <TableRow>
-                  <TableCell colSpan={7} className="h-44 text-center">
-                    <div className="flex flex-col items-center justify-center gap-2 text-destructive">
-                      <AlertCircle className="h-6 w-6" />
-                      <p className="text-sm font-medium">Failed to load complaint records</p>
-                      <p className="text-xs text-muted-foreground">
-                        {(error as Error)?.message || "Network or server failure"}
-                      </p>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => refetch()}
-                        className="mt-2 text-xs"
-                      >
-                        Try Again
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ) : displayedCases.length === 0 ? (
-                // Empty state
-                <TableRow>
-                  <TableCell colSpan={7} className="h-44 text-center">
-                    <div className="flex flex-col items-center justify-center gap-2 text-muted-foreground">
-                      <Inbox className="h-8 w-8 stroke-1" />
-                      <p className="text-sm font-medium text-foreground">No complaints match your criteria</p>
-                      <p className="text-xs">Try clearing search terms or selecting different filters.</p>
-                      {hasActiveFilters && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={handleResetFilters}
-                          className="mt-2 text-xs"
-                        >
-                          Clear All Filters
-                        </Button>
-                      )}
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ) : (
-                // Data rows
-                displayedCases.map((c) => {
-                  const isResolved = c.status === "Resolved" || c.status === "Closed";
-                  return (
-                    <TableRow
-                      key={c.id}
-                      onClick={() => handleRowClick(c)}
-                      className="cursor-pointer hover:bg-accent/40 transition-colors h-12 text-xs group"
-                    >
-                      {/* Case Reference */}
-                      <TableCell className="font-mono font-bold text-foreground">
-                        {c.case_reference_id}
-                      </TableCell>
+      {/* Case Register Data Table */}
+      <DataTable
+        columns={columns}
+        data={displayedCases}
+        keyField={(c) => c.id}
+        onRowClick={handleRowClick}
+        isLoading={isLoading}
+        skeletonRows={pageSize > 10 ? 10 : pageSize}
+        emptyMessage="No complaint cases match your criteria."
+        emptyInstruction="Try clearing filters or adjusting your search parameters."
+        emptyAction={
+          hasActiveFilters ? (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleResetFilters}
+              className="h-7 text-xs border-[var(--color-rule)]"
+            >
+              Clear filters
+            </Button>
+          ) : undefined
+        }
+      />
 
-                      {/* Institution */}
-                      <TableCell>
-                        <div className="font-medium text-foreground line-clamp-1">
-                          {c.institution_name}
-                        </div>
-                        <div className="font-mono text-[10px] text-muted-foreground">
-                          {c.aicte_permanent_id ? `ID: ${c.aicte_permanent_id}` : "—"}
-                        </div>
-                      </TableCell>
+      {/* Pagination Controls */}
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 py-2 text-xs text-[var(--color-text-secondary)]">
+        <div className="flex items-center gap-3">
+          <span className="text-[var(--color-text-muted)]">Rows per page:</span>
+          <Select
+            value={String(pageSize)}
+            onValueChange={(val) => {
+              setPageSize(Number(val));
+              setPage(1);
+            }}
+          >
+            <SelectTrigger className="h-7 w-16 text-xs bg-surface border-[var(--color-rule)] rounded-[6px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="10">10</SelectItem>
+              <SelectItem value="25">25</SelectItem>
+              <SelectItem value="50">50</SelectItem>
+            </SelectContent>
+          </Select>
 
-                      {/* Bureau */}
-                      <TableCell>
-                        <Badge
-                          variant="outline"
-                          className="text-[10px] font-semibold px-1.5 py-0 border-border bg-muted/40"
-                          title={c.bureau_name}
-                        >
-                          {c.bureau_code}
-                        </Badge>
-                      </TableCell>
-
-                      {/* Priority */}
-                      <TableCell>
-                        <PriorityBadge priority={c.priority} />
-                      </TableCell>
-
-                      {/* Status */}
-                      <TableCell>
-                        <StatusChip status={c.status} />
-                      </TableCell>
-
-                      {/* SLA Status */}
-                      <TableCell>
-                        <SlaPill
-                          dueDate={c.due_date}
-                          isResolved={isResolved}
-                        />
-                      </TableCell>
-
-                      {/* Chevron */}
-                      <TableCell className="text-right">
-                        <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors ml-auto" />
-                      </TableCell>
-                    </TableRow>
-                  );
-                })
-              )}
-            </TableBody>
-          </Table>
+          <span className="tabular-nums">
+            Showing {startIndex} to {endIndex} of {totalCount}
+          </span>
         </div>
 
-        {/* Pagination footer */}
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-3 border-t border-border text-xs text-muted-foreground bg-muted/20">
-          <div className="flex items-center gap-2">
-            <span>Rows per page:</span>
-            <Select
-              value={String(pageSize)}
-              onValueChange={(val) => {
-                setPageSize(Number(val));
-                setPage(1);
-              }}
-            >
-              <SelectTrigger className="h-7 w-16 text-xs bg-background">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="10">10</SelectItem>
-                <SelectItem value="25">25</SelectItem>
-                <SelectItem value="50">50</SelectItem>
-              </SelectContent>
-            </Select>
-            <span className="hidden sm:inline">
-              Showing{" "}
-              {totalCount === 0
-                ? "0"
-                : `${(page - 1) * pageSize + 1}–${Math.min(page * pageSize, totalCount)}`}{" "}
-              of {totalCount} cases
-            </span>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <span className="sm:hidden text-xs">
-              Page {page} of {totalPages}
-            </span>
-            <div className="flex items-center gap-1">
-              <Button
-                variant="outline"
-                size="icon"
-                className="h-7 w-7"
-                disabled={page <= 1 || isLoading}
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
-                aria-label="Previous page"
-              >
-                <ChevronLeft className="h-3.5 w-3.5" />
-              </Button>
-              <span className="hidden sm:inline px-2 text-xs">
-                Page {page} of {totalPages}
-              </span>
-              <Button
-                variant="outline"
-                size="icon"
-                className="h-7 w-7"
-                disabled={page >= totalPages || isLoading}
-                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                aria-label="Next page"
-              >
-                <ChevronRight className="h-3.5 w-3.5" />
-              </Button>
-            </div>
-          </div>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-7 px-2.5 text-xs border-[var(--color-rule)] bg-surface rounded-[6px]"
+            disabled={page <= 1 || isLoading}
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+          >
+            <ChevronLeft className="h-3.5 w-3.5 mr-1" />
+            Previous
+          </Button>
+          <span className="tabular-nums px-1 text-[var(--color-text-muted)]">
+            Page {page} of {totalPages}
+          </span>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-7 px-2.5 text-xs border-[var(--color-rule)] bg-surface rounded-[6px]"
+            disabled={page >= totalPages || isLoading}
+            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+          >
+            Next
+            <ChevronRight className="h-3.5 w-3.5 ml-1" />
+          </Button>
         </div>
       </div>
 

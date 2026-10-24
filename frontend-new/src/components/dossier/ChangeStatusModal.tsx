@@ -1,8 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { transitionCase } from "@/api/index";
 import type { ComplaintCase, CaseStatus } from "@/types/ui";
-import { getAllowedTransitions, TRANSITION_GUARD_RULES } from "@/lib/stateMachine";
+import { getAllowedTransitions } from "@/lib/stateMachine";
 import {
   Dialog,
   DialogContent,
@@ -21,44 +21,63 @@ import {
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { StatusChip } from "@/components/cases/StatusChip";
 import { toast } from "sonner";
-import { AlertCircle, ArrowRight, Loader2, ShieldAlert } from "lucide-react";
 
 interface ChangeStatusModalProps {
   caseItem: ComplaintCase;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  initialTargetStatus?: CaseStatus;
 }
 
 export function ChangeStatusModal({
   caseItem,
   open,
   onOpenChange,
+  initialTargetStatus,
 }: ChangeStatusModalProps) {
   const queryClient = useQueryClient();
   const allowedNext = getAllowedTransitions(caseItem.status);
 
   const [toStatus, setToStatus] = useState<CaseStatus | "">(
-    allowedNext.length > 0 ? allowedNext[0] : "",
+    initialTargetStatus && allowedNext.includes(initialTargetStatus)
+      ? initialTargetStatus
+      : allowedNext.length > 0
+      ? allowedNext[0]
+      : "",
   );
   const [remarks, setRemarks] = useState("");
   const [validationError, setValidationError] = useState<string | null>(null);
 
+  useEffect(() => {
+    if (open) {
+      const valid = getAllowedTransitions(caseItem.status);
+      if (initialTargetStatus && valid.includes(initialTargetStatus)) {
+        setToStatus(initialTargetStatus);
+      } else if (valid.length > 0) {
+        setToStatus(valid[0]);
+      } else {
+        setToStatus("");
+      }
+      setRemarks("");
+      setValidationError(null);
+    }
+  }, [open, caseItem.status, initialTargetStatus]);
+
   const mutation = useMutation({
     mutationFn: transitionCase,
-    onSuccess: (updated) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["case", caseItem.case_reference_id] });
       queryClient.invalidateQueries({ queryKey: ["cases"] });
       queryClient.invalidateQueries({ queryKey: ["dashboardStats"] });
       queryClient.invalidateQueries({ queryKey: ["timeline", caseItem.case_reference_id] });
-      toast.success(`Case status advanced to '${updated.status}'`);
+      toast.success("Status changed");
       setRemarks("");
       setValidationError(null);
       onOpenChange(false);
     },
     onError: (err: any) => {
-      setValidationError(err?.message || "Failed to execute lifecycle transition.");
+      setValidationError(err?.message || "Failed to change status.");
     },
   });
 
@@ -69,7 +88,7 @@ export function ChangeStatusModal({
       return;
     }
     if (!remarks.trim() || remarks.trim().length < 3) {
-      setValidationError("Mandatory remarks must be at least 3 characters long.");
+      setValidationError("Remarks must be at least 3 characters.");
       return;
     }
 
@@ -81,118 +100,96 @@ export function ChangeStatusModal({
     });
   };
 
-  const guards = toStatus ? TRANSITION_GUARD_RULES[toStatus as CaseStatus] : [];
+  const modalTitle = toStatus ? `Change status to ${toStatus}` : "Change status";
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md bg-[var(--color-surface)] border border-[var(--color-rule)] rounded-[8px] p-6 shadow-2xl">
         <form onSubmit={handleSubmit} className="space-y-4">
-          <DialogHeader>
-            <DialogTitle className="text-base font-semibold">Advance Case Lifecycle Status</DialogTitle>
-            <DialogDescription className="text-xs">
-              Execute a formal state transition for case <span className="font-mono font-bold text-foreground">{caseItem.case_reference_id}</span>.
+          <DialogHeader className="p-0 text-left space-y-1">
+            <DialogTitle className="font-serif text-base font-semibold text-[var(--color-ink)]">
+              {modalTitle}
+            </DialogTitle>
+            <DialogDescription className="text-xs text-[var(--color-text-secondary)]">
+              Case <span className="font-mono text-[var(--color-text-primary)]">{caseItem.case_reference_id}</span> is currently at stage{" "}
+              <strong className="text-[var(--color-text-primary)]">{caseItem.status}</strong>.
             </DialogDescription>
           </DialogHeader>
 
-          {/* Current State -> Target State */}
-          <div className="bg-muted/40 p-3 rounded-lg border border-border flex items-center justify-between text-xs">
-            <div>
-              <span className="text-muted-foreground block text-[11px] mb-1">Current State</span>
-              <StatusChip status={caseItem.status} />
-            </div>
-            <ArrowRight className="h-4 w-4 text-muted-foreground" />
-            <div>
-              <span className="text-muted-foreground block text-[11px] mb-1">Target State</span>
-              {allowedNext.length === 0 ? (
-                <span className="text-xs text-muted-foreground font-semibold">No transitions (Closed)</span>
-              ) : (
-                <Select
-                  value={toStatus}
-                  onValueChange={(val) => {
-                    setToStatus(val as CaseStatus);
-                    setValidationError(null);
-                  }}
-                  disabled={mutation.isPending}
-                >
-                  <SelectTrigger className="h-8 w-36 text-xs bg-background">
-                    <SelectValue placeholder="Select target" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {allowedNext.map((st) => (
-                      <SelectItem key={st} value={st} className="text-xs">
-                        {st}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              )}
-            </div>
+          {/* Target Status Select */}
+          <div className="space-y-1.5">
+            <Label className="text-xs font-medium text-[var(--color-text-primary)]">
+              Next stage
+            </Label>
+            {allowedNext.length === 0 ? (
+              <p className="text-xs text-[var(--color-text-muted)]">
+                No further valid stage transitions available from {caseItem.status}.
+              </p>
+            ) : (
+              <Select
+                value={toStatus}
+                onValueChange={(val) => {
+                  setToStatus(val as CaseStatus);
+                  setValidationError(null);
+                }}
+              >
+                <SelectTrigger className="h-8 text-xs bg-surface border-[var(--color-rule)] rounded-[6px]">
+                  <SelectValue placeholder="Select target status" />
+                </SelectTrigger>
+                <SelectContent>
+                  {allowedNext.map((st) => (
+                    <SelectItem key={st} value={st} className="text-xs">
+                      {st}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
           </div>
 
-          {/* State Guard Rules */}
-          {guards && guards.length > 0 && (
-            <div className="text-[11px] bg-blue-50 border border-blue-200 text-blue-900 p-2.5 rounded-md space-y-1">
-              <span className="font-semibold flex items-center gap-1">
-                <ShieldAlert className="h-3 w-3 text-blue-700" />
-                Transition Guard Enforcement:
-              </span>
-              <ul className="list-disc list-inside space-y-0.5 text-blue-800">
-                {guards.map((g, i) => (
-                  <li key={i}>{g}</li>
-                ))}
-              </ul>
-            </div>
-          )}
-
-          {/* Mandatory Remarks */}
+          {/* Remarks textarea */}
           <div className="space-y-1.5">
-            <Label htmlFor="remarks" className="text-xs font-medium">
-              Mandatory Transition Remarks <span className="text-destructive">*</span>
-            </Label>
+            <div className="flex items-baseline justify-between">
+              <Label htmlFor="status-remarks" className="text-xs font-medium text-[var(--color-text-primary)]">
+                Remarks
+              </Label>
+              <span className="text-[11px] text-[var(--color-text-muted)]">
+                Required for the audit trail
+              </span>
+            </div>
             <Textarea
-              id="remarks"
-              placeholder="State clear official justification for advancing this complaint..."
+              id="status-remarks"
+              placeholder="State the justification or procedural basis for this status change..."
               value={remarks}
               onChange={(e) => {
                 setRemarks(e.target.value);
                 if (validationError) setValidationError(null);
               }}
               rows={3}
-              className="text-xs"
-              disabled={mutation.isPending || allowedNext.length === 0}
+              className="text-xs bg-surface border-[var(--color-rule)] rounded-[6px]"
             />
-            <span className="text-[10px] text-muted-foreground">
-              Remarks are permanently logged into the immutable audit trail.
-            </span>
+            {validationError && (
+              <p className="text-xs text-[var(--sla-overdue-text)]">{validationError}</p>
+            )}
           </div>
 
-          {/* Inline Error Message */}
-          {validationError && (
-            <div className="p-2.5 rounded-md bg-destructive/10 border border-destructive/20 text-destructive text-xs flex items-center gap-2">
-              <AlertCircle className="h-4 w-4 flex-shrink-0" />
-              <span>{validationError}</span>
-            </div>
-          )}
-
-          <DialogFooter className="pt-2 flex items-center justify-end gap-2">
+          <DialogFooter className="pt-2 border-t border-[var(--color-rule)] gap-2">
             <Button
               type="button"
               variant="outline"
               size="sm"
               onClick={() => onOpenChange(false)}
-              disabled={mutation.isPending}
-              className="text-xs"
+              className="h-8 text-xs border-[var(--color-rule)] rounded-[6px]"
             >
               Cancel
             </Button>
             <Button
               type="submit"
               size="sm"
-              disabled={mutation.isPending || allowedNext.length === 0}
-              className="text-xs gap-1.5 font-medium"
+              disabled={mutation.isPending || !toStatus || allowedNext.length === 0}
+              className="h-8 text-xs font-medium bg-[var(--color-action)] text-white hover:bg-[var(--color-action)]/90 rounded-[6px]"
             >
-              {mutation.isPending && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
-              <span>Execute Transition</span>
+              {mutation.isPending ? "Updating..." : "Change status"}
             </Button>
           </DialogFooter>
         </form>
