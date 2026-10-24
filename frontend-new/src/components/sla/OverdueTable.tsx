@@ -33,29 +33,20 @@ export function OverdueTable({
   const isAuditor = userRole === "AUDITOR";
 
   return (
-    <Card className="border-red-200/90 shadow-2xs overflow-hidden">
-      <CardHeader className="bg-red-50/40 border-b border-red-200/80 py-3.5 px-5">
+    <Card className="border border-border/60 shadow-none overflow-hidden bg-card">
+      <CardHeader className="border-b border-border/40 py-3.5 px-5">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-          <div className="flex items-center gap-2">
-            <div className="h-7 w-7 rounded-md bg-red-100 flex items-center justify-center text-red-600">
-              <AlertOctagon className="h-4 w-4" />
-            </div>
-            <div>
-              <CardTitle className="text-sm font-semibold text-red-950 flex items-center gap-2">
-                <span>Overdue Grievance Register</span>
-                <Badge variant="destructive" className="text-xs px-2 py-0">
-                  {items.length} {items.length === 1 ? "case" : "cases"}
-                </Badge>
-              </CardTitle>
-              <p className="text-[11px] text-red-800/80">
-                Active grievances that have exceeded statutory turnaround norms.
-              </p>
-            </div>
-          </div>
-
-          <div className="text-xs text-red-900 font-medium flex items-center gap-1.5 self-start sm:self-auto">
-            <ShieldAlert className="h-3.5 w-3.5 text-red-600" />
-            <span>Escalation Protocol Active</span>
+          <div className="space-y-0.5">
+            <CardTitle className="text-sm font-semibold text-foreground flex items-center gap-2">
+              <span className="h-2 w-2 rounded-full bg-rose-500" />
+              <span>Overdue Cases</span>
+              <span className="text-xs font-normal text-muted-foreground">
+                ({items.length})
+              </span>
+            </CardTitle>
+            <p className="text-xs text-muted-foreground">
+              Cases that have exceeded statutory turnaround norms.
+            </p>
           </div>
         </div>
       </CardHeader>

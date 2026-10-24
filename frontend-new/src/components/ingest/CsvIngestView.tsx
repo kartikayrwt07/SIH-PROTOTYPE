@@ -110,54 +110,99 @@ export function CsvIngestView() {
   }
 
   return (
-    <div className="container max-w-5xl mx-auto py-6 px-4 space-y-6">
+    <div className="container max-w-5xl mx-auto py-6 px-6 space-y-6">
       {/* Page Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-2 border-b border-border">
-        <div>
-          <div className="flex items-center gap-2">
-            <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
-              <Upload className="h-4 w-4" />
-            </div>
-            <h1 className="text-xl font-bold tracking-tight text-foreground">
-              Bulk CSV Ingestion Wizard
-            </h1>
-          </div>
-          <p className="text-xs text-muted-foreground mt-1">
-            Batch-intake complaint records, validate AICTE permanent IDs and bureau jurisdiction, and commit to the case register.
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="space-y-0.5">
+          <h1 className="text-xl font-semibold tracking-tight text-foreground">
+            CSV Ingestion
+          </h1>
+          <p className="text-xs text-muted-foreground">
+            Batch-intake and validate grievance records from CSV files.
           </p>
         </div>
-
-        <Badge variant="outline" className="text-xs font-mono self-start md:self-auto px-2.5 py-1">
-          Permission: cases:import
-        </Badge>
       </div>
 
       {/* 3-Step Wizard Navigation Stepper */}
-      <div className="bg-card border border-border rounded-lg p-3 shadow-2xs">
+      <div className="bg-card border border-border/60 rounded-lg p-2.5 shadow-none">
         <div className="grid grid-cols-3 gap-2">
           {/* Step 1 */}
           <div
             onClick={() => step > 1 && setStep(1)}
             className={`flex items-center gap-2.5 p-2 rounded-md transition-colors ${
               step === 1
-                ? "bg-primary/10 text-primary font-bold"
+                ? "bg-muted text-foreground font-semibold"
                 : step > 1
                 ? "text-foreground font-medium cursor-pointer hover:bg-muted/40"
-                : "text-muted-foreground"
+                : "text-muted-foreground/60"
             }`}
           >
             <div
-              className={`h-6 w-6 rounded-full flex items-center justify-center text-xs font-bold border shrink-0 ${
+              className={`h-5 w-5 rounded-full flex items-center justify-center text-[10px] font-medium border shrink-0 ${
                 step === 1
                   ? "bg-primary text-primary-foreground border-primary"
                   : step > 1
-                  ? "bg-emerald-600 text-white border-emerald-600"
-                  : "bg-background border-border text-muted-foreground"
+                  ? "bg-muted text-foreground border-border/60"
+                  : "bg-background border-border/60 text-muted-foreground/60"
               }`}
             >
-              {step > 1 ? <CheckCircle2 className="h-3.5 w-3.5 stroke-[3]" /> : "1"}
+              {step > 1 ? <CheckCircle2 className="h-3 w-3 stroke-[2.5]" /> : "1"}
             </div>
-            <div className="truncate">
+            <div className="truncate text-xs">
+              <span className="hidden sm:inline">1. </span>Upload
+            </div>
+          </div>
+
+          {/* Step 2 */}
+          <div
+            onClick={() => step > 2 && setStep(2)}
+            className={`flex items-center gap-2.5 p-2 rounded-md transition-colors ${
+              step === 2
+                ? "bg-muted text-foreground font-semibold"
+                : step > 2
+                ? "text-foreground font-medium cursor-pointer hover:bg-muted/40"
+                : "text-muted-foreground/60"
+            }`}
+          >
+            <div
+              className={`h-5 w-5 rounded-full flex items-center justify-center text-[10px] font-medium border shrink-0 ${
+                step === 2
+                  ? "bg-primary text-primary-foreground border-primary"
+                  : step > 2
+                  ? "bg-muted text-foreground border-border/60"
+                  : "bg-background border-border/60 text-muted-foreground/60"
+              }`}
+            >
+              {step > 2 ? <CheckCircle2 className="h-3 w-3 stroke-[2.5]" /> : "2"}
+            </div>
+            <div className="truncate text-xs">
+              <span className="hidden sm:inline">2. </span>Validate & Review
+            </div>
+          </div>
+
+          {/* Step 3 */}
+          <div
+            className={`flex items-center gap-2.5 p-2 rounded-md transition-colors ${
+              step === 3
+                ? "bg-muted text-foreground font-semibold"
+                : "text-muted-foreground/60"
+            }`}
+          >
+            <div
+              className={`h-5 w-5 rounded-full flex items-center justify-center text-[10px] font-medium border shrink-0 ${
+                step === 3
+                  ? "bg-primary text-primary-foreground border-primary"
+                  : "bg-background border-border/60 text-muted-foreground/60"
+              }`}
+            >
+              3
+            </div>
+            <div className="truncate text-xs">
+              <span className="hidden sm:inline">3. </span>Commit
+            </div>
+          </div>
+        </div>
+      </div>
               <span className="text-xs block leading-tight">Step 1</span>
               <span className="text-[11px] text-muted-foreground hidden sm:inline">Upload File</span>
             </div>

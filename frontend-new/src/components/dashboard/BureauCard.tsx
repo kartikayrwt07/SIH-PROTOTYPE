@@ -21,59 +21,49 @@ export function BureauCard({ stat }: BureauCardProps) {
       search={{ bureau_id: stat.bureau_id }}
       className="block group focus:outline-none"
     >
-      <Card className="border-border hover:border-primary/50 transition-all duration-200 hover:shadow-xs group-hover:-translate-y-0.5 cursor-pointer">
+      <Card className="border border-border/60 bg-card rounded-lg hover:border-border transition-colors shadow-none cursor-pointer">
         <CardContent className="p-4 space-y-3">
           {/* Card Top: Code + Name */}
           <div className="flex items-start justify-between gap-2">
-            <div>
-              <div className="flex items-center gap-1.5">
-                <Badge
-                  variant="outline"
-                  className="font-mono text-xs font-bold px-1.5 py-0 border-primary/40 text-primary bg-primary/5"
-                >
+            <div className="space-y-1 min-w-0">
+              <div className="flex items-center gap-2">
+                <span className="font-mono text-xs font-semibold px-1.5 py-0.5 rounded bg-muted text-foreground">
                   {stat.bureau_code}
-                </Badge>
+                </span>
                 {hasOverdue && (
-                  <Badge
-                    variant="outline"
-                    className="text-[10px] font-semibold px-1.5 py-0 bg-red-50 text-red-700 border-red-200 gap-1"
-                  >
-                    <AlertTriangle className="h-2.5 w-2.5" />
-                    {stat.overdue} Overdue
-                  </Badge>
+                  <span className="text-[11px] font-medium text-rose-600 dark:text-rose-400">
+                    {stat.overdue} overdue
+                  </span>
                 )}
               </div>
-              <h4 className="text-sm font-semibold text-foreground mt-1 line-clamp-1 group-hover:text-primary transition-colors">
+              <h4 className="text-sm font-medium text-foreground truncate group-hover:text-primary transition-colors">
                 {stat.bureau_name}
               </h4>
             </div>
 
-            <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors flex-shrink-0 mt-1" />
+            <ChevronRight className="h-4 w-4 text-muted-foreground/50 group-hover:text-foreground transition-colors flex-shrink-0 mt-0.5" />
           </div>
 
-          {/* Counts */}
-          <div className="grid grid-cols-3 gap-2 py-1 text-center bg-muted/30 rounded-md border border-border/50 text-xs">
+          {/* Clean Metric Row */}
+          <div className="flex items-center justify-between text-xs text-muted-foreground pt-1 border-t border-border/40">
             <div>
-              <div className="text-[10px] text-muted-foreground">Total</div>
-              <div className="text-sm font-bold text-foreground">{stat.total}</div>
+              <span className="text-foreground font-semibold">{stat.active}</span> active
             </div>
             <div>
-              <div className="text-[10px] text-muted-foreground">Active</div>
-              <div className="text-sm font-bold text-blue-600">{stat.active}</div>
+              <span className="text-foreground font-semibold">{stat.resolved}</span> resolved
             </div>
             <div>
-              <div className="text-[10px] text-muted-foreground">Resolved</div>
-              <div className="text-sm font-bold text-green-600">{stat.resolved}</div>
+              <span className="text-foreground font-semibold">{stat.total}</span> total
             </div>
           </div>
 
-          {/* Completion Progress Bar */}
-          <div className="space-y-1">
-            <div className="flex justify-between items-center text-[11px] text-muted-foreground">
-              <span>Resolution Rate</span>
-              <span className="font-semibold text-foreground">{completionPct}%</span>
+          {/* Minimal Progress */}
+          <div className="space-y-1 pt-0.5">
+            <div className="flex justify-between items-center text-[10px] text-muted-foreground/80">
+              <span>Resolution</span>
+              <span>{completionPct}%</span>
             </div>
-            <Progress value={completionPct} className="h-1.5 bg-muted" />
+            <Progress value={completionPct} className="h-1 bg-muted" />
           </div>
         </CardContent>
       </Card>

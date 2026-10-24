@@ -124,7 +124,7 @@ export function CaseDossierView({ caseRef }: CaseDossierViewProps) {
   const canEscalate = (role === "ADMIN" || role === "SUPERVISOR") && !isClosed && (caseItem.escalation_level ?? 0) < 2;
 
   return (
-    <div className="container max-w-7xl mx-auto py-6 px-4 space-y-6">
+    <div className="container max-w-7xl mx-auto py-6 px-6 space-y-6">
       {/* Breadcrumbs & Navigation */}
       <div className="flex items-center gap-2 text-xs text-muted-foreground">
         <Link to="/dashboard" className="hover:text-foreground transition-colors">
@@ -141,45 +141,42 @@ export function CaseDossierView({ caseRef }: CaseDossierViewProps) {
       </div>
 
       {/* Dossier Header Card */}
-      <div className="bg-card rounded-lg border border-border p-5 shadow-2xs space-y-4">
+      <div className="bg-card rounded-lg border border-border/60 p-5 shadow-none space-y-3">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           {/* Left: Ref, Status, Priority */}
           <div className="space-y-1.5">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="font-mono text-sm font-bold tracking-tight text-primary bg-primary/10 px-2.5 py-0.5 rounded-md flex items-center gap-1.5">
+              <span className="font-mono text-xs font-semibold text-foreground bg-muted px-2 py-0.5 rounded flex items-center gap-1.5">
                 {caseItem.case_reference_id}
                 <button
                   onClick={handleCopyRef}
-                  className="hover:text-foreground transition-colors cursor-pointer"
+                  className="hover:text-foreground transition-colors cursor-pointer opacity-70 hover:opacity-100"
                   title="Copy reference ID"
                 >
-                  {copied ? <Check className="h-3 w-3 text-green-600" /> : <Copy className="h-3 w-3 text-primary/70" />}
+                  {copied ? <Check className="h-3 w-3 text-emerald-600" /> : <Copy className="h-3 w-3" />}
                 </button>
               </span>
               <StatusChip status={caseItem.status} />
               <PriorityBadge priority={caseItem.priority} />
               <SlaPill dueDate={caseItem.due_date} isResolved={isResolvedOrClosed} />
               {caseItem.escalation_level > 0 && (
-                <Badge
-                  variant="outline"
-                  className="text-xs bg-red-50 text-red-700 border-red-200 font-semibold gap-1"
-                >
+                <span className="text-xs px-2 py-0.5 rounded-full bg-rose-500/10 text-rose-700 dark:text-rose-400 border border-rose-500/20 font-medium inline-flex items-center gap-1">
                   <AlertTriangle className="h-3 w-3" />
                   Tier {caseItem.escalation_level} Escalated
-                </Badge>
+                </span>
               )}
             </div>
 
-            <h1 className="text-lg sm:text-xl font-bold tracking-tight text-foreground leading-snug">
+            <h1 className="text-lg font-semibold tracking-tight text-foreground leading-snug">
               {caseItem.subject}
             </h1>
           </div>
 
           {/* Right: Back button */}
-          <Button asChild variant="outline" size="sm" className="self-start md:self-auto text-xs h-8 gap-1.5">
+          <Button asChild variant="outline" size="sm" className="self-start md:self-auto text-xs h-8 gap-1.5 border-border/60">
             <Link to="/cases">
-              <ChevronLeft className="h-3.5 w-3.5" />
-              <span>Back to Register</span>
+              <ChevronLeft className="h-3.5 w-3.5 opacity-70" />
+              <span>Back</span>
             </Link>
           </Button>
         </div>
@@ -193,11 +190,11 @@ export function CaseDossierView({ caseRef }: CaseDossierViewProps) {
         {/* Left Column (2 cols): Institution/Category Panel, Description, Tabs */}
         <div className="lg:col-span-2 space-y-6">
           {/* Institution & Jurisdiction Card */}
-          <Card className="border-border shadow-2xs">
-            <CardHeader className="pb-3 border-b border-border/60">
-              <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
-                <Building2 className="h-3.5 w-3.5" />
-                Institutional Intake Information
+          <Card className="border border-border/60 shadow-none">
+            <CardHeader className="pb-3 border-b border-border/40">
+              <CardTitle className="text-xs font-medium uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                <Building2 className="h-3.5 w-3.5 opacity-70" />
+                Institutional Information
               </CardTitle>
             </CardHeader>
             <CardContent className="pt-4 space-y-4">
@@ -307,27 +304,27 @@ export function CaseDossierView({ caseRef }: CaseDossierViewProps) {
           </Card>
 
           {/* Three Tabs: Audit Timeline, Internal Notes, Assignment History */}
-          <div className="bg-card rounded-lg border border-border shadow-2xs overflow-hidden">
+          <div className="bg-card rounded-lg border border-border/60 shadow-none overflow-hidden">
             <Tabs defaultValue="timeline" className="w-full">
-              <div className="border-b border-border px-4 pt-2 bg-muted/20">
+              <div className="border-b border-border/40 px-4 pt-1 bg-muted/10">
                 <TabsList className="bg-transparent p-0 h-auto gap-4">
                   <TabsTrigger
                     value="timeline"
-                    className="data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none border-b-2 border-transparent rounded-none px-2 py-2 text-xs font-semibold gap-1.5"
+                    className="data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none border-b-2 border-transparent rounded-none px-2 py-2 text-xs font-medium gap-1.5"
                   >
                     <GitCommit className="h-3.5 w-3.5" />
                     Audit Timeline
                   </TabsTrigger>
                   <TabsTrigger
                     value="notes"
-                    className="data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none border-b-2 border-transparent rounded-none px-2 py-2 text-xs font-semibold gap-1.5"
+                    className="data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none border-b-2 border-transparent rounded-none px-2 py-2 text-xs font-medium gap-1.5"
                   >
                     <FileText className="h-3.5 w-3.5" />
                     Internal Notes
                   </TabsTrigger>
                   <TabsTrigger
                     value="history"
-                    className="data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none border-b-2 border-transparent rounded-none px-2 py-2 text-xs font-semibold gap-1.5"
+                    className="data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none border-b-2 border-transparent rounded-none px-2 py-2 text-xs font-medium gap-1.5"
                   >
                     <History className="h-3.5 w-3.5" />
                     Assignment History
@@ -353,13 +350,13 @@ export function CaseDossierView({ caseRef }: CaseDossierViewProps) {
         {/* Right Column (1 col, Sticky): Action Controls */}
         <div className="space-y-4 lg:sticky lg:top-4">
           {/* Action Controls Card (Role-Gated) */}
-          <Card className="border-border shadow-2xs">
-            <CardHeader className="pb-3 border-b border-border/60">
-              <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center justify-between">
-                <span>Administrative Actions</span>
-                <Badge variant="outline" className="text-[10px] font-mono px-1.5 py-0">
+          <Card className="border border-border/60 shadow-none">
+            <CardHeader className="pb-3 border-b border-border/40">
+              <CardTitle className="text-xs font-medium uppercase tracking-wider text-muted-foreground flex items-center justify-between">
+                <span>Actions</span>
+                <span className="text-[11px] font-mono text-muted-foreground">
                   Role: {role}
-                </Badge>
+                </span>
               </CardTitle>
             </CardHeader>
             <CardContent className="pt-4 space-y-3">

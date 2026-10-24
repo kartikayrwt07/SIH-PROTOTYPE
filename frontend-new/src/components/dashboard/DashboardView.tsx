@@ -37,34 +37,33 @@ export function DashboardView() {
   const allCases = casesResponse?.items ?? [];
 
   return (
-    <div className="container max-w-7xl mx-auto py-6 px-4 space-y-6">
+    <div className="container max-w-7xl mx-auto py-6 px-6 space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div className="space-y-1">
-          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">
+        <div className="space-y-0.5">
+          <h1 className="text-xl font-semibold tracking-tight text-foreground">
             Complaint Surveillance Dashboard
           </h1>
           <p className="text-xs text-muted-foreground">
-            Real-time grievance lifecycle metrics, SLA monitoring, and bureau resolution throughput.
+            Overview of active grievances, SLA compliance, and bureau resolution throughput.
           </p>
         </div>
 
-        <Button asChild size="sm" className="self-start sm:self-auto text-xs gap-1.5 h-8">
+        <Button asChild size="sm" variant="outline" className="self-start sm:self-auto text-xs gap-1.5 h-8 border-border/60 hover:bg-muted/50">
           <Link to="/cases">
-            <FolderOpen className="h-3.5 w-3.5" />
-            <span>Open Case Register</span>
-            <ArrowRight className="h-3.5 w-3.5" />
+            <FolderOpen className="h-3.5 w-3.5 opacity-70" />
+            <span>Case Register</span>
+            <ArrowRight className="h-3 w-3 opacity-50" />
           </Link>
         </Button>
       </div>
 
       {/* Officer Scoping Notice if scoped */}
       {role === "OFFICER" && user?.bureau_name && (
-        <div className="flex items-center gap-2 px-3 py-2 text-xs bg-blue-50 border border-blue-200 text-blue-900 rounded-md">
-          <Building className="h-4 w-4 text-blue-600 flex-shrink-0" />
+        <div className="flex items-center gap-2 px-3 py-2 text-xs bg-muted/50 border border-border/60 text-muted-foreground rounded-lg">
+          <Building className="h-3.5 w-3.5 text-foreground flex-shrink-0" />
           <span>
-            <strong>Officer Jurisdiction:</strong> Metrics are restricted to{" "}
-            <strong>{user.bureau_name} ({user.bureau_code})</strong>.
+            Jurisdiction: <strong className="text-foreground">{user.bureau_name} ({user.bureau_code})</strong>
           </span>
         </div>
       )}
@@ -73,11 +72,11 @@ export function DashboardView() {
       {isStatsLoading ? (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
           {Array.from({ length: 6 }).map((_, i) => (
-            <Skeleton key={i} className="h-24 w-full rounded-lg" />
+            <Skeleton key={i} className="h-20 w-full rounded-lg" />
           ))}
         </div>
       ) : isStatsError || !stats ? (
-        <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-4 flex items-center justify-between text-xs text-destructive">
+        <div className="bg-destructive/5 border border-destructive/20 rounded-lg p-4 flex items-center justify-between text-xs text-destructive">
           <div className="flex items-center gap-2">
             <AlertCircle className="h-4 w-4" />
             <span>
@@ -96,10 +95,9 @@ export function DashboardView() {
       {/* 4 Bureau Overview Cards */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h3 className="text-sm font-semibold text-foreground">Bureau Jurisdictions</h3>
-          <span className="text-xs text-muted-foreground hidden sm:inline">
-            Click any bureau to view filtered complaints in Case Register
-          </span>
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            Bureau Jurisdictions
+          </h3>
         </div>
 
         {isStatsLoading ? (

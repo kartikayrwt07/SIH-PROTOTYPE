@@ -17,7 +17,7 @@ export function AppShell() {
 
   return (
     <RoleProvider>
-      <div className="flex h-screen bg-background overflow-hidden">
+      <div className="flex h-screen bg-slate-50/50 dark:bg-background overflow-hidden">
         {/* Desktop sidebar */}
         <div className="hidden md:flex flex-shrink-0">
           <Sidebar />
@@ -29,7 +29,7 @@ export function AppShell() {
             className="fixed inset-0 z-40 md:hidden"
             onClick={() => setMobileOpen(false)}
           >
-            <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" />
+            <div className="absolute inset-0 bg-black/20 backdrop-blur-xs" />
             <div
               className="absolute inset-y-0 left-0 z-50"
               onClick={(e) => e.stopPropagation()}
@@ -42,7 +42,7 @@ export function AppShell() {
         {/* Main content */}
         <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
           {/* Top bar */}
-          <header className="flex items-center justify-between h-12 px-4 border-b border-border bg-card flex-shrink-0">
+          <header className="flex items-center justify-between h-13 px-6 border-b border-border/50 bg-background/95 backdrop-blur-xs flex-shrink-0">
             <div className="flex items-center gap-2">
               {/* Mobile menu button */}
               <Button

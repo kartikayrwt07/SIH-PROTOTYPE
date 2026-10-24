@@ -64,7 +64,7 @@ export function StateDetailsPanel({
   const stepIndex = STATUS_STEP_INDEX[status] ?? 0;
 
   return (
-    <Card className="border-border shadow-2xs overflow-hidden">
+    <Card className="border border-border/60 shadow-none overflow-hidden bg-card">
       <CardHeader className="bg-muted/30 border-b border-border/60 py-3.5 px-5">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">

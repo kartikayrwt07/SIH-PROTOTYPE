@@ -39,24 +39,24 @@ export function StatusTracker({ currentStatus, variant = "banner" }: StatusTrack
   if (variant === "banner") {
     // Full-width banner layout for top of dossier (horizontal pipeline)
     return (
-      <div className="bg-card rounded-lg border border-border p-4 shadow-2xs space-y-3">
+      <div className="bg-card rounded-lg border border-border/60 p-4 shadow-none space-y-3">
         <div className="flex items-center justify-between text-xs">
           <div className="flex items-center gap-2">
-            <span className="font-semibold text-foreground uppercase tracking-wider text-[11px]">
-              Lifecycle Progression
+            <span className="font-medium text-foreground text-xs">
+              Lifecycle
             </span>
-            <span className="text-muted-foreground">·</span>
-            <span className="text-muted-foreground">
-              Current: <strong className="text-primary font-semibold">{currentStatus}</strong>
+            <span className="text-muted-foreground/60">·</span>
+            <span className="text-muted-foreground text-xs">
+              Status: <strong className="text-foreground font-semibold">{currentStatus}</strong>
             </span>
           </div>
-          <span className="text-[11px] font-mono text-muted-foreground">
+          <span className="text-[11px] text-muted-foreground">
             Stage {Math.min(currentStep + 1, 8)} of 8
           </span>
         </div>
 
         <div className="overflow-x-auto pb-1">
-          <div className="min-w-[680px] relative pt-2 pb-1">
+          <div className="min-w-[640px] relative pt-1 pb-1">
             <div className="flex items-center justify-between relative z-10">
               {DISPLAY_STAGES.map((stage) => {
                 const isCompleted = stage.step < currentStep || (stage.step === 7 && isTerminalClosed);
@@ -66,18 +66,16 @@ export function StatusTracker({ currentStatus, variant = "banner" }: StatusTrack
                   <div key={stage.label} className="flex flex-col items-center flex-1 text-center px-1">
                     <div
                       className={cn(
-                        "h-7 w-7 rounded-full flex items-center justify-center text-xs font-bold border transition-colors",
+                        "h-6 w-6 rounded-full flex items-center justify-center text-[10px] font-medium border transition-colors",
                         isCurrent
-                          ? "bg-primary text-primary-foreground border-primary ring-4 ring-primary/20 shadow-xs"
+                          ? "bg-primary text-primary-foreground border-primary"
                           : isCompleted
-                          ? "bg-green-600 text-white border-green-600"
-                          : "bg-background text-muted-foreground border-border",
+                          ? "bg-muted text-foreground border-border/60"
+                          : "bg-background text-muted-foreground/60 border-border/60",
                       )}
                     >
                       {isCompleted ? (
-                        <Check className="h-4 w-4 stroke-[3]" />
-                      ) : isCurrent ? (
-                        <Circle className="h-2.5 w-2.5 fill-current" />
+                        <Check className="h-3 w-3 stroke-[2.5]" />
                       ) : (
                         <span>{stage.step + 1}</span>
                       )}
@@ -85,12 +83,12 @@ export function StatusTracker({ currentStatus, variant = "banner" }: StatusTrack
 
                     <span
                       className={cn(
-                        "text-xs mt-2 whitespace-nowrap font-medium",
+                        "text-[11px] mt-1.5 whitespace-nowrap",
                         isCurrent
-                          ? "font-bold text-foreground"
+                          ? "font-semibold text-foreground"
                           : isCompleted
-                          ? "text-foreground"
-                          : "text-muted-foreground",
+                          ? "font-medium text-muted-foreground"
+                          : "text-muted-foreground/60",
                       )}
                     >
                       {stage.label}
@@ -99,7 +97,7 @@ export function StatusTracker({ currentStatus, variant = "banner" }: StatusTrack
                 );
               })}
             </div>
-            <div className="absolute top-[21px] left-[5%] right-[5%] h-[2px] bg-border -z-0" />
+            <div className="absolute top-[17px] left-[6%] right-[6%] h-[1px] bg-border/60 -z-0" />
           </div>
         </div>
       </div>
@@ -107,14 +105,13 @@ export function StatusTracker({ currentStatus, variant = "banner" }: StatusTrack
   }
 
   // Sidebar variant: Clean vertical timeline stepper.
-  // Guarantees zero text collision/overlap on any screen width or sidebar size.
   return (
-    <div className="bg-card rounded-lg border border-border p-4 shadow-2xs space-y-3">
+    <div className="bg-card rounded-lg border border-border/60 p-4 shadow-none space-y-3">
       <div className="flex items-center justify-between">
-        <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+        <h4 className="text-xs font-medium text-muted-foreground">
           Lifecycle Progression
         </h4>
-        <span className="text-[11px] font-mono text-primary font-medium">
+        <span className="text-[11px] text-muted-foreground">
           Stage {Math.min(currentStep + 1, 8)}/8
         </span>
       </div>

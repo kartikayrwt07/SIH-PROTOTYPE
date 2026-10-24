@@ -83,37 +83,31 @@ export function DwellTimeChart({ cases }: DwellTimeChartProps) {
   const bottlenecks = chartData.filter((d) => d.isBottleneck);
 
   return (
-    <div className="bg-card rounded-lg border border-border shadow-2xs p-5 space-y-4">
+    <div className="bg-card rounded-lg border border-border/60 shadow-none p-5 space-y-4">
       {/* Chart Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
-        <div className="space-y-1">
-          <div className="flex items-center gap-2">
-            <Clock className="h-4 w-4 text-primary" />
-            <h3 className="text-sm font-semibold text-foreground">
-              Average Stage Dwell Time & SLA Bottlenecks
-            </h3>
-          </div>
+        <div className="space-y-0.5">
+          <h3 className="text-sm font-semibold text-foreground">
+            Stage Dwell Time & SLA Bottlenecks
+          </h3>
           <p className="text-xs text-muted-foreground">
-            Mean processing duration in active review states against SLA tolerance limits.
+            Average processing hours across stages vs. maximum target thresholds.
           </p>
         </div>
 
         <div className="flex items-center gap-2">
           {bottlenecks.length > 0 && (
-            <Badge
-              variant="outline"
-              className="text-xs bg-red-50 text-red-700 border-red-200 font-semibold gap-1 py-0.5"
-            >
+            <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-rose-500/10 text-rose-700 dark:text-rose-400 border border-rose-500/20 font-medium">
               <AlertTriangle className="h-3 w-3" />
               {bottlenecks.length} Bottleneck{bottlenecks.length > 1 ? "s" : ""}
-            </Badge>
+            </span>
           )}
 
           {/* Editable threshold popover */}
           <Popover>
             <PopoverTrigger asChild>
-              <Button variant="outline" size="sm" className="h-7 text-xs gap-1.5 px-2">
-                <Settings2 className="h-3.5 w-3.5" />
+              <Button variant="outline" size="sm" className="h-7 text-xs gap-1.5 px-2 border-border/60">
+                <Settings2 className="h-3.5 w-3.5 opacity-70" />
                 <span>Thresholds</span>
               </Button>
             </PopoverTrigger>

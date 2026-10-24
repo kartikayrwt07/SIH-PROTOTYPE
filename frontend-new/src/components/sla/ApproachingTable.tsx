@@ -22,29 +22,20 @@ interface ApproachingTableProps {
 
 export function ApproachingTable({ items, isLoading }: ApproachingTableProps) {
   return (
-    <Card className="border-amber-200/90 shadow-2xs overflow-hidden">
-      <CardHeader className="bg-amber-50/40 border-b border-amber-200/80 py-3.5 px-5">
+    <Card className="border border-border/60 shadow-none overflow-hidden bg-card">
+      <CardHeader className="border-b border-border/40 py-3.5 px-5">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-          <div className="flex items-center gap-2">
-            <div className="h-7 w-7 rounded-md bg-amber-100 flex items-center justify-center text-amber-700">
-              <ClockAlert className="h-4 w-4" />
-            </div>
-            <div>
-              <CardTitle className="text-sm font-semibold text-amber-950 flex items-center gap-2">
-                <span>Breach Warning Horizon (&lt; 48 Hours)</span>
-                <Badge className="bg-amber-100 text-amber-900 border-amber-300 text-xs px-2 py-0 hover:bg-amber-100">
-                  {items.length} {items.length === 1 ? "case" : "cases"}
-                </Badge>
-              </CardTitle>
-              <p className="text-[11px] text-amber-800/80">
-                Active grievances approaching SLA target deadline within 48 hours.
-              </p>
-            </div>
-          </div>
-
-          <div className="text-xs text-amber-900 font-medium flex items-center gap-1.5 self-start sm:self-auto">
-            <span className="h-2 w-2 rounded-full bg-amber-500 animate-pulse" />
-            <span>Live Tickers (60s Refresh)</span>
+          <div className="space-y-0.5">
+            <CardTitle className="text-sm font-semibold text-foreground flex items-center gap-2">
+              <span className="h-2 w-2 rounded-full bg-amber-500" />
+              <span>Approaching SLA</span>
+              <span className="text-xs font-normal text-muted-foreground">
+                ({items.length})
+              </span>
+            </CardTitle>
+            <p className="text-xs text-muted-foreground">
+              Cases within 48 hours of their resolution target.
+            </p>
           </div>
         </div>
       </CardHeader>

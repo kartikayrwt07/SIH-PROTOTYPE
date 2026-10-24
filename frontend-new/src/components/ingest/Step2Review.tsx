@@ -37,12 +37,12 @@ export function Step2Review({ preview, onNext, onBack }: Step2ReviewProps) {
       {/* Metrics Summary Row */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {/* Total Rows */}
-        <Card className="border-border shadow-2xs">
+        <Card className="border border-border/60 shadow-none bg-card">
           <CardContent className="p-4 space-y-1">
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+            <span className="text-xs font-medium text-muted-foreground">
               Total Ingested Rows
             </span>
-            <div className="text-2xl font-extrabold text-foreground tabular-nums">
+            <div className="text-2xl font-semibold text-foreground tabular-nums">
               {total_rows}
             </div>
             <p className="text-[11px] text-muted-foreground">
@@ -52,36 +52,36 @@ export function Step2Review({ preview, onNext, onBack }: Step2ReviewProps) {
         </Card>
 
         {/* Valid Rows */}
-        <Card className="border-emerald-200 bg-emerald-50/20 shadow-2xs">
+        <Card className="border border-border/60 shadow-none bg-card">
           <CardContent className="p-4 space-y-1">
             <div className="flex items-center justify-between">
-              <span className="text-[11px] font-semibold uppercase tracking-wider text-emerald-900/80">
-                Valid Eligible Rows
+              <span className="text-xs font-medium text-muted-foreground">
+                Valid Rows
               </span>
               <CheckCircle2 className="h-4 w-4 text-emerald-600" />
             </div>
-            <div className="text-2xl font-extrabold text-emerald-600 tabular-nums">
+            <div className="text-2xl font-semibold text-emerald-600 tabular-nums">
               {valid_rows}
             </div>
-            <p className="text-[11px] text-emerald-800/80">
+            <p className="text-[11px] text-muted-foreground">
               Ready for immediate registration
             </p>
           </CardContent>
         </Card>
 
         {/* Invalid Rows */}
-        <Card className="border-red-200 bg-red-50/20 shadow-2xs">
+        <Card className="border border-border/60 shadow-none bg-card">
           <CardContent className="p-4 space-y-1">
             <div className="flex items-center justify-between">
-              <span className="text-[11px] font-semibold uppercase tracking-wider text-red-900/80">
-                Invalid Rejected Rows
+              <span className="text-xs font-medium text-muted-foreground">
+                Invalid Rows
               </span>
-              <ShieldAlert className="h-4 w-4 text-red-600" />
+              <ShieldAlert className="h-4 w-4 text-rose-600" />
             </div>
-            <div className="text-2xl font-extrabold text-red-600 tabular-nums">
+            <div className="text-2xl font-semibold text-rose-600 tabular-nums">
               {invalid_rows}
             </div>
-            <p className="text-[11px] text-red-800/80">
+            <p className="text-[11px] text-muted-foreground">
               Violate AICTE schema or registry rules
             </p>
           </CardContent>
@@ -138,7 +138,7 @@ export function Step2Review({ preview, onNext, onBack }: Step2ReviewProps) {
       </div>
 
       {/* Granular Validation Table Card */}
-      <Card className="border-border shadow-2xs overflow-hidden">
+      <Card className="border border-border/60 shadow-none overflow-hidden bg-card">
         <CardHeader className="py-3 px-5 border-b border-border/60 bg-muted/30">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <CardTitle className="text-sm font-semibold flex items-center gap-2">

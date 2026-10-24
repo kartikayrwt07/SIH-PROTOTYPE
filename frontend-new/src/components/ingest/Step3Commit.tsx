@@ -52,7 +52,7 @@ export function Step3Commit({
     <div className="space-y-6">
       {!commitResult ? (
         /* Pre-Commit Confirmation State */
-        <Card className="border-border shadow-2xs">
+        <Card className="border border-border/60 shadow-none bg-card">
           <CardHeader className="pb-3 border-b border-border/60">
             <CardTitle className="text-sm font-semibold flex items-center gap-2">
               <ShieldCheck className="h-4 w-4 text-primary" />
@@ -154,7 +154,7 @@ export function Step3Commit({
         </Card>
       ) : (
         /* Post-Commit Registered State */
-        <Card className="border-emerald-200 shadow-2xs overflow-hidden">
+        <Card className="border border-border/60 shadow-none overflow-hidden bg-card">
           <div className="bg-emerald-50/40 border-b border-emerald-200/80 p-5">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div className="flex items-center gap-3">

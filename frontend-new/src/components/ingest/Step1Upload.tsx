@@ -90,12 +90,9 @@ export function Step1Upload({
   return (
     <div className="space-y-6">
       {/* Informational Guidance Banner */}
-      <Card className="border-border bg-card shadow-2xs">
+      <Card className="border border-border/60 bg-card shadow-none">
         <CardContent className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
           <div className="flex items-center gap-2.5">
-            <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary shrink-0">
-              <FileSpreadsheet className="h-4 w-4" />
-            </div>
             <div>
               <span className="font-semibold text-foreground block">
                 Standard Ingestion CSV Schema:
@@ -110,16 +107,16 @@ export function Step1Upload({
             variant="outline"
             size="sm"
             onClick={downloadSampleCsv}
-            className="text-xs h-8 gap-1.5 shrink-0 self-start sm:self-auto hover:border-primary"
+            className="text-xs h-8 gap-1.5 shrink-0 self-start sm:self-auto border-border/60"
           >
-            <Download className="h-3.5 w-3.5 text-primary" />
-            <span>Download Sample Template</span>
+            <Download className="h-3.5 w-3.5 opacity-70" />
+            <span>Sample Template</span>
           </Button>
         </CardContent>
       </Card>
 
       {/* Drag & Drop Upload Zone */}
-      <Card className="border-border shadow-2xs">
+      <Card className="border border-border/60 shadow-none">
         <CardHeader className="pb-3 border-b border-border/60">
           <div className="flex items-center justify-between">
             <CardTitle className="text-sm font-semibold flex items-center gap-2">

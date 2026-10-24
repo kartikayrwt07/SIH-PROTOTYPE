@@ -144,25 +144,20 @@ export function BureauTriageTab() {
   return (
     <div className="space-y-6">
       {/* Grievance Intake Section */}
-      <Card className="border-border shadow-2xs">
-        <CardHeader className="pb-3 border-b border-border/60">
+      <Card className="border border-border/60 shadow-none bg-card">
+        <CardHeader className="pb-3 border-b border-border/40">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-            <div className="flex items-center gap-2">
-              <div className="h-7 w-7 rounded-md bg-primary/10 flex items-center justify-center text-primary">
-                <Sparkles className="h-4 w-4" />
-              </div>
-              <div>
-                <CardTitle className="text-sm font-semibold">
-                  Intelligent Bureau Classification & Routing
-                </CardTitle>
-                <p className="text-[11px] text-muted-foreground">
-                  Classifies raw grievance text using explainable AICTE keyword vectors into Bureau, Category, and Priority.
-                </p>
-              </div>
+            <div className="space-y-0.5">
+              <CardTitle className="text-sm font-semibold text-foreground">
+                Bureau Classification & Routing
+              </CardTitle>
+              <p className="text-xs text-muted-foreground">
+                Classify grievance text using explainable AICTE keyword vectors.
+              </p>
             </div>
 
             {selectedCaseRef && (
-              <Badge variant="outline" className="font-mono text-xs self-start sm:self-auto">
+              <Badge variant="outline" className="font-mono text-xs self-start sm:self-auto border-border/60">
                 Linked Case: {selectedCaseRef}
               </Badge>
             )}

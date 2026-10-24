@@ -174,7 +174,7 @@ export function InternalNotesTab({ caseRef }: InternalNotesTabProps) {
                 className={`p-3 rounded-lg border text-xs space-y-2 ${
                   note.is_confidential
                     ? "bg-amber-50/40 border-amber-200"
-                    : "bg-card border-border shadow-2xs"
+                    : "bg-card border-border/60 shadow-none"
                 }`}
               >
                 <div className="flex flex-wrap items-center justify-between gap-1">

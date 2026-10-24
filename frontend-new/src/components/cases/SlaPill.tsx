@@ -71,7 +71,7 @@ export function SlaPill({
     return (
       <span
         className={cn(
-          "inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-700 border border-slate-200 whitespace-nowrap",
+          "inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-muted text-muted-foreground border border-border/60 whitespace-nowrap",
           className,
         )}
       >
@@ -80,14 +80,14 @@ export function SlaPill({
     );
   }
 
-  let colorClasses = "bg-[#D1FAE5] text-[#059669] border-[#A7F3D0]"; // On Track
+  let colorClasses = "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20"; // On Track
   let label = "On Track";
 
   if (status === "OVERDUE") {
-    colorClasses = "bg-[#FEE2E2] text-[#DC2626] border-[#FECACA]";
+    colorClasses = "bg-rose-500/10 text-rose-700 dark:text-rose-400 border-rose-500/20";
     label = "Overdue";
   } else if (status === "APPROACHING") {
-    colorClasses = "bg-[#FEF3C7] text-[#B45309] border-[#FDE68A]";
+    colorClasses = "bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20";
     label = "Approaching";
   }
 
@@ -96,7 +96,7 @@ export function SlaPill({
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold border tabular-nums whitespace-nowrap",
+        "inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium border tabular-nums whitespace-nowrap",
         colorClasses,
         className,
       )}

@@ -15,11 +15,11 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Loader2 } from "lucide-react";
 
-const ROLES: { value: UserRole; label: string; badge: string }[] = [
-  { value: "ADMIN",      label: "Admin",      badge: "bg-purple-100 text-purple-800 border-purple-200" },
-  { value: "SUPERVISOR", label: "Supervisor", badge: "bg-blue-100 text-blue-800 border-blue-200" },
-  { value: "OFFICER",    label: "Officer",    badge: "bg-green-100 text-green-800 border-green-200" },
-  { value: "AUDITOR",    label: "Auditor",    badge: "bg-amber-100 text-amber-800 border-amber-200" },
+const ROLES: { value: UserRole; label: string; dot: string }[] = [
+  { value: "ADMIN",      label: "Admin",      dot: "bg-purple-500" },
+  { value: "SUPERVISOR", label: "Supervisor", dot: "bg-blue-500" },
+  { value: "OFFICER",    label: "Officer",    dot: "bg-emerald-500" },
+  { value: "AUDITOR",    label: "Auditor",    dot: "bg-amber-500" },
 ];
 
 export function RoleSwitcher() {
@@ -27,45 +27,41 @@ export function RoleSwitcher() {
   const current = ROLES.find((r) => r.value === role) ?? ROLES[1];
 
   return (
-    <div className="flex items-center gap-2">
-      <span className="text-xs text-muted-foreground hidden sm:block">Viewing as</span>
+    <div className="flex items-center gap-2.5">
+      <span className="text-xs text-muted-foreground hidden sm:inline">Role:</span>
       <Select
         value={role}
         onValueChange={(v) => changeRole(v as UserRole)}
         disabled={isLoading}
       >
-        <SelectTrigger className="h-8 w-auto gap-1.5 border-border text-xs font-medium px-2">
+        <SelectTrigger className="h-8 w-auto gap-2 border-border/60 bg-background text-xs font-medium px-2.5 shadow-none hover:bg-muted/50 transition-colors">
           {isLoading ? (
-            <Loader2 className="h-3 w-3 animate-spin" />
+            <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />
           ) : (
-            <Badge
-              variant="outline"
-              className={`text-[10px] font-semibold px-1.5 py-0 h-5 ${current.badge}`}
-            >
-              {current.label}
-            </Badge>
+            <span className="flex items-center gap-1.5">
+              <span className={`h-1.5 w-1.5 rounded-full ${current.dot}`} />
+              <span className="font-semibold text-foreground">{current.label}</span>
+            </span>
           )}
         </SelectTrigger>
-        <SelectContent align="end">
+        <SelectContent align="end" className="text-xs">
           {ROLES.map((r) => (
             <SelectItem key={r.value} value={r.value} className="text-xs">
               <span className="flex items-center gap-2">
-                <Badge
-                  variant="outline"
-                  className={`text-[10px] font-semibold px-1.5 py-0 h-5 ${r.badge}`}
-                >
-                  {r.label}
-                </Badge>
-                <span className="text-muted-foreground">
-                  {r.value === "OFFICER" ? "(Approval Bureau)" : ""}
-                </span>
+                <span className={`h-1.5 w-1.5 rounded-full ${r.dot}`} />
+                <span className="font-medium">{r.label}</span>
+                {r.value === "OFFICER" && (
+                  <span className="text-[11px] text-muted-foreground">
+                    (Approval Bureau)
+                  </span>
+                )}
               </span>
             </SelectItem>
           ))}
         </SelectContent>
       </Select>
       {user && (
-        <span className="text-xs text-muted-foreground hidden md:block truncate max-w-[140px]">
+        <span className="text-xs text-muted-foreground/80 hidden md:inline truncate max-w-[130px]">
           {user.full_name}
         </span>
       )}

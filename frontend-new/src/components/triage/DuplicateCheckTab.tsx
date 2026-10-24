@@ -105,21 +105,16 @@ export function DuplicateCheckTab() {
   return (
     <div className="space-y-6">
       {/* Input Section Card */}
-      <Card className="border-border shadow-2xs">
-        <CardHeader className="pb-3 border-b border-border/60">
+      <Card className="border border-border/60 shadow-none bg-card">
+        <CardHeader className="pb-3 border-b border-border/40">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-            <div className="flex items-center gap-2">
-              <div className="h-7 w-7 rounded-md bg-primary/10 flex items-center justify-center text-primary">
-                <Search className="h-4 w-4" />
-              </div>
-              <div>
-                <CardTitle className="text-sm font-semibold">
-                  Duplicate Grievance Intelligence
-                </CardTitle>
-                <p className="text-[11px] text-muted-foreground">
-                  Scan incoming complaints against registered repository cases using semantic token overlap.
-                </p>
-              </div>
+            <div className="space-y-0.5">
+              <CardTitle className="text-sm font-semibold text-foreground">
+                Duplicate Grievance Check
+              </CardTitle>
+              <p className="text-xs text-muted-foreground">
+                Scan complaints against registered cases using semantic token overlap.
+              </p>
             </div>
 
             <Button
@@ -128,7 +123,7 @@ export function DuplicateCheckTab() {
               onClick={handleReset}
               className="text-xs h-7 text-muted-foreground hover:text-foreground self-start sm:self-auto"
             >
-              <RefreshCw className="h-3 w-3 mr-1" />
+              <RefreshCw className="h-3 w-3 mr-1 opacity-70" />
               Reset Form
             </Button>
           </div>

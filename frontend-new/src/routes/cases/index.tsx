@@ -20,13 +20,13 @@ function CasesRoute() {
   const { bureau_id } = Route.useSearch();
 
   return (
-    <div className="container max-w-7xl mx-auto py-6 px-4 space-y-4">
-      <div className="space-y-1">
-        <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">
-          Complaint Case Register
+    <div className="container max-w-7xl mx-auto py-6 px-6 space-y-5">
+      <div className="space-y-0.5">
+        <h1 className="text-xl font-semibold tracking-tight text-foreground">
+          Case Register
         </h1>
         <p className="text-xs text-muted-foreground">
-          Central catalog of institutional grievances. Click any row to open quick preview and dossier actions.
+          Central repository of recorded grievances and institutional complaints.
         </p>
       </div>
       <CaseRegister initialBureauId={bureau_id} />

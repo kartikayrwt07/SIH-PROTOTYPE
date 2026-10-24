@@ -150,39 +150,38 @@ export function CaseRegister({ initialBureauId }: CaseRegisterProps) {
     <div className="space-y-4">
       {/* Officer Jurisdiction Warning Notice if scoped */}
       {role === "OFFICER" && user?.bureau_name && (
-        <div className="flex items-center gap-2 px-3 py-2 text-xs bg-blue-50 border border-blue-200 text-blue-900 rounded-md">
-          <Building className="h-4 w-4 text-blue-600 flex-shrink-0" />
+        <div className="flex items-center gap-2 px-3 py-2 text-xs bg-muted/50 border border-border/60 text-muted-foreground rounded-lg">
+          <Building className="h-3.5 w-3.5 text-foreground flex-shrink-0" />
           <span>
-            <strong>Officer View:</strong> Displaying cases exclusively assigned to{" "}
-            <strong>{user.bureau_name} ({user.bureau_code})</strong>.
+            Jurisdiction: <strong className="text-foreground">{user.bureau_name} ({user.bureau_code})</strong>
           </span>
         </div>
       )}
 
       {/* Toolbar */}
-      <div className="bg-card p-3 rounded-lg border border-border shadow-2xs space-y-3">
+      <div className="bg-card p-3.5 rounded-lg border border-border/60 shadow-none space-y-3">
         <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
           {/* Search bar */}
           <div className="relative flex-1 min-w-[240px]">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground/70" />
             <Input
               type="text"
-              placeholder="Search reference ID, institution name, subject..."
+              placeholder="Search reference ID, institution, subject..."
               value={search}
               onChange={(e) => {
                 setSearch(e.target.value);
                 setPage(1);
               }}
-              className="pl-8 text-xs h-9 bg-background"
+              className="pl-8 text-xs h-8.5 bg-background border-border/60"
             />
           </div>
 
           {/* Action buttons */}
           <div className="flex items-center gap-2 self-end md:self-auto">
             {canImport && (
-              <Button asChild size="sm" variant="outline" className="text-xs h-9 gap-1.5">
+              <Button asChild size="sm" variant="outline" className="text-xs h-8.5 gap-1.5 border-border/60">
                 <Link to="/ingest">
-                  <Upload className="h-3.5 w-3.5" />
+                  <Upload className="h-3.5 w-3.5 opacity-70" />
                   <span>Ingest CSV</span>
                 </Link>
               </Button>
@@ -193,20 +192,16 @@ export function CaseRegister({ initialBureauId }: CaseRegisterProps) {
               variant="outline"
               onClick={handleExportCsv}
               disabled={isLoading || displayedCases.length === 0}
-              className="text-xs h-9 gap-1.5"
+              className="text-xs h-8.5 gap-1.5 border-border/60"
             >
-              <Download className="h-3.5 w-3.5" />
+              <Download className="h-3.5 w-3.5 opacity-70" />
               <span>Export CSV</span>
             </Button>
           </div>
         </div>
 
         {/* Filters Row */}
-        <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-border/60 text-xs">
-          <span className="text-muted-foreground flex items-center gap-1 font-medium mr-1">
-            <Filter className="h-3 w-3" /> Filters:
-          </span>
-
+        <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-border/40 text-xs">
           {/* Bureau Filter (Hidden/Disabled for Officer if single bureau) */}
           {role !== "OFFICER" && (
             <Select
@@ -216,7 +211,7 @@ export function CaseRegister({ initialBureauId }: CaseRegisterProps) {
                 setPage(1);
               }}
             >
-              <SelectTrigger className="h-8 w-[150px] text-xs bg-background">
+              <SelectTrigger className="h-8 w-[140px] text-xs bg-background border-border/60">
                 <SelectValue placeholder="All Bureaus" />
               </SelectTrigger>
               <SelectContent>
@@ -238,7 +233,7 @@ export function CaseRegister({ initialBureauId }: CaseRegisterProps) {
               setPage(1);
             }}
           >
-            <SelectTrigger className="h-8 w-[140px] text-xs bg-background">
+            <SelectTrigger className="h-8 w-[140px] text-xs bg-background border-border/60">
               <SelectValue placeholder="All Statuses" />
             </SelectTrigger>
             <SelectContent>
@@ -259,7 +254,7 @@ export function CaseRegister({ initialBureauId }: CaseRegisterProps) {
               setPage(1);
             }}
           >
-            <SelectTrigger className="h-8 w-[130px] text-xs bg-background">
+            <SelectTrigger className="h-8 w-[130px] text-xs bg-background border-border/60">
               <SelectValue placeholder="All Priorities" />
             </SelectTrigger>
             <SelectContent>
@@ -279,7 +274,7 @@ export function CaseRegister({ initialBureauId }: CaseRegisterProps) {
               setPage(1);
             }}
           >
-            <SelectTrigger className="h-8 w-[130px] text-xs bg-background">
+            <SelectTrigger className="h-8 w-[130px] text-xs bg-background border-border/60">
               <SelectValue placeholder="All SLA" />
             </SelectTrigger>
             <SelectContent>
@@ -306,17 +301,17 @@ export function CaseRegister({ initialBureauId }: CaseRegisterProps) {
       </div>
 
       {/* Case Register Table */}
-      <div className="bg-card rounded-lg border border-border shadow-2xs overflow-hidden">
+      <div className="bg-card rounded-lg border border-border/60 shadow-none overflow-hidden">
         <div className="overflow-x-auto">
           <Table>
-            <TableHeader className="bg-muted/50 sticky top-0">
-              <TableRow className="text-xs hover:bg-transparent">
-                <TableHead className="w-[150px] font-semibold">Case Reference</TableHead>
-                <TableHead className="min-w-[200px] font-semibold">Institution</TableHead>
-                <TableHead className="w-[120px] font-semibold">Bureau</TableHead>
-                <TableHead className="w-[110px] font-semibold">Priority</TableHead>
-                <TableHead className="w-[150px] font-semibold">Status</TableHead>
-                <TableHead className="w-[160px] font-semibold">SLA Status</TableHead>
+            <TableHeader className="bg-muted/30 sticky top-0">
+              <TableRow className="text-xs hover:bg-transparent border-b border-border/60">
+                <TableHead className="w-[150px] font-medium text-muted-foreground">Case Reference</TableHead>
+                <TableHead className="min-w-[200px] font-medium text-muted-foreground">Institution</TableHead>
+                <TableHead className="w-[110px] font-medium text-muted-foreground">Bureau</TableHead>
+                <TableHead className="w-[110px] font-medium text-muted-foreground">Priority</TableHead>
+                <TableHead className="w-[150px] font-medium text-muted-foreground">Status</TableHead>
+                <TableHead className="w-[160px] font-medium text-muted-foreground">SLA Status</TableHead>
                 <TableHead className="w-[40px] text-right"></TableHead>
               </TableRow>
             </TableHeader>

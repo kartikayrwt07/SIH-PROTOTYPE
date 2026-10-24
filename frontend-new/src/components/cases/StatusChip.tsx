@@ -29,7 +29,7 @@ export function StatusChip({ status, className }: StatusChipProps) {
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-card border border-border text-foreground shadow-2xs whitespace-nowrap",
+        "inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-muted/30 border border-border/60 text-foreground whitespace-nowrap",
         className,
       )}
     >

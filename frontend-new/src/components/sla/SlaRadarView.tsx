@@ -54,47 +54,41 @@ export function SlaRadarView() {
   });
 
   return (
-    <div className="container max-w-7xl mx-auto py-6 px-4 space-y-6">
+    <div className="container max-w-7xl mx-auto py-6 px-6 space-y-6">
       {/* Page Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-2 border-b border-border">
-        <div>
-          <div className="flex items-center gap-2">
-            <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
-              <Timer className="h-4 w-4" />
-            </div>
-            <h1 className="text-xl font-bold tracking-tight text-foreground">
-              SLA Radar & Early Warning Surveillance
-            </h1>
-          </div>
-          <p className="text-xs text-muted-foreground mt-1">
-            Real-time surveillance of breach risks, overdue grievances, and supervisory escalation triggers.
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="space-y-0.5">
+          <h1 className="text-xl font-semibold tracking-tight text-foreground">
+            SLA Radar
+          </h1>
+          <p className="text-xs text-muted-foreground">
+            Surveillance of upcoming deadlines, breach risks, and supervisory escalations.
           </p>
         </div>
 
         {/* Bureau Filter & Refresh Toolbar */}
-        <div className="flex flex-wrap items-center gap-2.5">
-          <div className="flex items-center gap-1.5 bg-card border border-border rounded-md px-2.5 py-1 text-xs">
-            <Building2 className="h-3.5 w-3.5 text-muted-foreground" />
-            <span className="text-muted-foreground font-medium">Bureau:</span>
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="flex items-center gap-1.5 bg-background border border-border/60 rounded-md px-2.5 py-1 text-xs">
+            <span className="text-muted-foreground">Bureau:</span>
 
             {isOfficer ? (
-              <div className="flex items-center gap-1 font-semibold text-foreground pl-1">
+              <div className="flex items-center gap-1 font-medium text-foreground pl-1">
                 <span>{user?.bureau_code || "APPR"}</span>
-                <span className="text-muted-foreground font-normal text-[11px]">
+                <span className="text-muted-foreground text-[11px]">
                   ({user?.bureau_name || "Approval Bureau"})
                 </span>
-                <Lock className="h-3 w-3 text-muted-foreground ml-1" title="Locked for Officer role" />
+                <Lock className="h-3 w-3 text-muted-foreground/60 ml-0.5" title="Locked for Officer role" />
               </div>
             ) : (
               <Select
                 value={selectedBureau}
                 onValueChange={(val) => setSelectedBureau(val)}
               >
-                <SelectTrigger className="h-7 text-xs border-0 bg-transparent shadow-none px-1.5 focus:ring-0">
+                <SelectTrigger className="h-6 text-xs border-0 bg-transparent shadow-none px-1 focus:ring-0">
                   <SelectValue placeholder="All Bureaus" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="ALL">All Bureaus (Consolidated)</SelectItem>
+                  <SelectItem value="ALL">All Bureaus</SelectItem>
                   {bureaus.map((b) => (
                     <SelectItem key={b.id} value={b.id}>
                       {b.code} — {b.name}
@@ -110,10 +104,10 @@ export function SlaRadarView() {
             size="sm"
             onClick={() => refetch()}
             disabled={isFetching}
-            className="h-8 text-xs gap-1.5"
+            className="h-8 text-xs gap-1.5 border-border/60"
             title="Refresh SLA calculations"
           >
-            <RefreshCw className={`h-3.5 w-3.5 ${isFetching ? "animate-spin text-primary" : ""}`} />
+            <RefreshCw className={`h-3.5 w-3.5 opacity-70 ${isFetching ? "animate-spin text-primary" : ""}`} />
             <span>Refresh</span>
           </Button>
         </div>

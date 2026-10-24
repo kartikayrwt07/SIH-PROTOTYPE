@@ -176,7 +176,7 @@ export function IllegalMoveSimulator() {
   };
 
   return (
-    <Card className="border-border shadow-2xs">
+    <Card className="border border-border/60 shadow-none bg-card">
       <CardHeader className="pb-3 border-b border-border/60">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div className="flex items-center gap-2">

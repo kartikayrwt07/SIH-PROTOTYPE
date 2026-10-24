@@ -57,7 +57,7 @@ export function StateGraph({
   return (
     <div className="space-y-6">
       {/* Graph Visual Canvas */}
-      <div className="bg-card border border-border rounded-xl p-5 shadow-2xs relative overflow-hidden">
+      <div className="bg-card border border-border/60 rounded-xl p-5 shadow-none relative overflow-hidden">
         {/* Graph Header / Legend */}
         <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-border/80 text-xs">
           <div className="flex items-center gap-2">

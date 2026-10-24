@@ -67,7 +67,7 @@ export function AssignmentHistoryTab({ caseRef }: AssignmentHistoryTabProps) {
         {history.map((entry) => (
           <div
             key={entry.id}
-            className="p-3.5 bg-card rounded-lg border border-border shadow-2xs text-xs space-y-2"
+            className="p-3.5 bg-card rounded-lg border border-border/60 shadow-none text-xs space-y-2"
           >
             {/* Header: From -> To + Date */}
             <div className="flex flex-wrap items-center justify-between gap-2">
