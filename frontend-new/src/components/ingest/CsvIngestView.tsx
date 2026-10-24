@@ -203,63 +203,6 @@ export function CsvIngestView() {
           </div>
         </div>
       </div>
-              <span className="text-xs block leading-tight">Step 1</span>
-              <span className="text-[11px] text-muted-foreground hidden sm:inline">Upload File</span>
-            </div>
-          </div>
-
-          {/* Step 2 */}
-          <div
-            onClick={() => step > 2 && setStep(2)}
-            className={`flex items-center gap-2.5 p-2 rounded-md transition-colors ${
-              step === 2
-                ? "bg-primary/10 text-primary font-bold"
-                : step > 2
-                ? "text-foreground font-medium cursor-pointer hover:bg-muted/40"
-                : "text-muted-foreground"
-            }`}
-          >
-            <div
-              className={`h-6 w-6 rounded-full flex items-center justify-center text-xs font-bold border shrink-0 ${
-                step === 2
-                  ? "bg-primary text-primary-foreground border-primary"
-                  : step > 2
-                  ? "bg-emerald-600 text-white border-emerald-600"
-                  : "bg-background border-border text-muted-foreground"
-              }`}
-            >
-              {step > 2 ? <CheckCircle2 className="h-3.5 w-3.5 stroke-[3]" /> : "2"}
-            </div>
-            <div className="truncate">
-              <span className="text-xs block leading-tight">Step 2</span>
-              <span className="text-[11px] text-muted-foreground hidden sm:inline">Review & Validate</span>
-            </div>
-          </div>
-
-          {/* Step 3 */}
-          <div
-            className={`flex items-center gap-2.5 p-2 rounded-md transition-colors ${
-              step === 3
-                ? "bg-primary/10 text-primary font-bold"
-                : "text-muted-foreground"
-            }`}
-          >
-            <div
-              className={`h-6 w-6 rounded-full flex items-center justify-center text-xs font-bold border shrink-0 ${
-                step === 3
-                  ? "bg-primary text-primary-foreground border-primary"
-                  : "bg-background border-border text-muted-foreground"
-              }`}
-            >
-              3
-            </div>
-            <div className="truncate">
-              <span className="text-xs block leading-tight">Step 3</span>
-              <span className="text-[11px] text-muted-foreground hidden sm:inline">Commit & Register</span>
-            </div>
-          </div>
-        </div>
-      </div>
 
       {/* Step Content */}
       {step === 1 && (

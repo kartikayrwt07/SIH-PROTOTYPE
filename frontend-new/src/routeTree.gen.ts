@@ -13,10 +13,12 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AiTriageRouteImport } from './routes/ai-triage'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as IngestRouteImport } from './routes/ingest'
+import { Route as LoginRouteImport } from './routes/login'
 import { Route as SlaRadarRouteImport } from './routes/sla-radar'
 import { Route as StateMachineRouteImport } from './routes/state-machine'
 import { Route as CasesIndexRouteImport } from './routes/cases/index'
 import { Route as CasesIdRouteImport } from './routes/cases/$id'
+import { Route as DevUiRouteImport } from './routes/dev/ui'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -36,6 +38,11 @@ const DashboardRoute = DashboardRouteImport.update({
 const IngestRoute = IngestRouteImport.update({
   id: '/ingest',
   path: '/ingest',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SlaRadarRoute = SlaRadarRouteImport.update({
@@ -58,15 +65,22 @@ const CasesIdRoute = CasesIdRouteImport.update({
   path: '/cases/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DevUiRoute = DevUiRouteImport.update({
+  id: '/dev/ui',
+  path: '/dev/ui',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/ai-triage': typeof AiTriageRoute
   '/dashboard': typeof DashboardRoute
   '/ingest': typeof IngestRoute
+  '/login': typeof LoginRoute
   '/sla-radar': typeof SlaRadarRoute
   '/state-machine': typeof StateMachineRoute
   '/cases/$id': typeof CasesIdRoute
+  '/dev/ui': typeof DevUiRoute
   '/cases/': typeof CasesIndexRoute
 }
 export interface FileRoutesByTo {
@@ -74,9 +88,11 @@ export interface FileRoutesByTo {
   '/ai-triage': typeof AiTriageRoute
   '/dashboard': typeof DashboardRoute
   '/ingest': typeof IngestRoute
+  '/login': typeof LoginRoute
   '/sla-radar': typeof SlaRadarRoute
   '/state-machine': typeof StateMachineRoute
   '/cases/$id': typeof CasesIdRoute
+  '/dev/ui': typeof DevUiRoute
   '/cases': typeof CasesIndexRoute
 }
 export interface FileRoutesById {
@@ -85,9 +101,11 @@ export interface FileRoutesById {
   '/ai-triage': typeof AiTriageRoute
   '/dashboard': typeof DashboardRoute
   '/ingest': typeof IngestRoute
+  '/login': typeof LoginRoute
   '/sla-radar': typeof SlaRadarRoute
   '/state-machine': typeof StateMachineRoute
   '/cases/$id': typeof CasesIdRoute
+  '/dev/ui': typeof DevUiRoute
   '/cases/': typeof CasesIndexRoute
 }
 export interface FileRouteTypes {
@@ -97,9 +115,11 @@ export interface FileRouteTypes {
     | '/ai-triage'
     | '/dashboard'
     | '/ingest'
+    | '/login'
     | '/sla-radar'
     | '/state-machine'
     | '/cases/$id'
+    | '/dev/ui'
     | '/cases/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -107,9 +127,11 @@ export interface FileRouteTypes {
     | '/ai-triage'
     | '/dashboard'
     | '/ingest'
+    | '/login'
     | '/sla-radar'
     | '/state-machine'
     | '/cases/$id'
+    | '/dev/ui'
     | '/cases'
   id:
     | '__root__'
@@ -117,9 +139,11 @@ export interface FileRouteTypes {
     | '/ai-triage'
     | '/dashboard'
     | '/ingest'
+    | '/login'
     | '/sla-radar'
     | '/state-machine'
     | '/cases/$id'
+    | '/dev/ui'
     | '/cases/'
   fileRoutesById: FileRoutesById
 }
@@ -128,9 +152,11 @@ export interface RootRouteChildren {
   AiTriageRoute: typeof AiTriageRoute
   DashboardRoute: typeof DashboardRoute
   IngestRoute: typeof IngestRoute
+  LoginRoute: typeof LoginRoute
   SlaRadarRoute: typeof SlaRadarRoute
   StateMachineRoute: typeof StateMachineRoute
   CasesIdRoute: typeof CasesIdRoute
+  DevUiRoute: typeof DevUiRoute
   CasesIndexRoute: typeof CasesIndexRoute
 }
 
@@ -164,6 +190,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IngestRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/sla-radar': {
       id: '/sla-radar'
       path: '/sla-radar'
@@ -192,6 +225,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CasesIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/dev/ui': {
+      id: '/dev/ui'
+      path: '/dev/ui'
+      fullPath: '/dev/ui'
+      preLoaderRoute: typeof DevUiRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -200,9 +240,11 @@ const rootRouteChildren: RootRouteChildren = {
   AiTriageRoute: AiTriageRoute,
   DashboardRoute: DashboardRoute,
   IngestRoute: IngestRoute,
+  LoginRoute: LoginRoute,
   SlaRadarRoute: SlaRadarRoute,
   StateMachineRoute: StateMachineRoute,
   CasesIdRoute: CasesIdRoute,
+  DevUiRoute: DevUiRoute,
   CasesIndexRoute: CasesIndexRoute,
 }
 export const routeTree = rootRouteImport
