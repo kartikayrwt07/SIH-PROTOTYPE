@@ -220,38 +220,54 @@ class ApiService {
     });
   }
 
-  async exportCasesCsv(params?: CaseFilterParams): Promise<Blob | null> {
-    try {
+  async exportCasesCsv(params?: CaseFilterParams): Promise<{ blob: Blob; filename: string }> {
+    const token = localStorage.getItem("aicte_token");
+    const headers: Record<string, string> = {};
+    if (token) {
+      headers["Authorization"] = `Bearer ${token}`;
+    } else {
       const activeRole = localStorage.getItem("aicte_demo_role") || "SUPERVISOR";
-      const headers: Record<string, string> = {
-        "X-Demo-Role": activeRole,
-      };
-      const token = localStorage.getItem("aicte_token");
-      if (token) {
-        headers["Authorization"] = `Bearer ${token}`;
-      }
-
-      const query = new URLSearchParams();
-      if (params) {
-        Object.entries(params).forEach(([key, val]) => {
-          if (val !== undefined && val !== null && val !== "" && key !== "page" && key !== "page_size") {
-            query.append(key, String(val));
-          }
-        });
-      }
-      const qs = query.toString() ? `?${query.toString()}` : "";
-
-      const response = await fetch(`${API_BASE}/cases/export/csv${qs}`, {
-        headers,
-      });
-
-      if (!response.ok) {
-        return null;
-      }
-      return await response.blob();
-    } catch {
-      return null;
+      headers["X-Demo-Role"] = activeRole;
     }
+
+    const query = new URLSearchParams();
+    if (params) {
+      Object.entries(params).forEach(([key, val]) => {
+        if (val !== undefined && val !== null && val !== "" && key !== "page" && key !== "page_size") {
+          query.append(key, String(val));
+        }
+      });
+    }
+    const qs = query.toString() ? `?${query.toString()}` : "";
+
+    const response = await fetch(`${API_BASE}/cases/export/csv${qs}`, {
+      headers,
+    });
+
+    if (!response.ok) {
+      let errorMsg = `Export failed with status ${response.status}`;
+      try {
+        const errData = await response.json();
+        if (errData?.error?.message) {
+          errorMsg = errData.error.message;
+        }
+      } catch {
+        // Response wasn't JSON
+      }
+      throw new Error(errorMsg);
+    }
+
+    let filename = `aicte_complaints_${new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19)}.csv`;
+    const disposition = response.headers.get("content-disposition");
+    if (disposition && disposition.includes("filename=")) {
+      const match = disposition.match(/filename=["']?([^"';]+)["']?/);
+      if (match && match[1]) {
+        filename = match[1].trim();
+      }
+    }
+
+    const blob = await response.blob();
+    return { blob, filename };
   }
 
   // -------------------------------------------------------------
