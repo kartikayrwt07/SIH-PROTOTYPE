@@ -214,7 +214,7 @@ export function DashboardView() {
         {isStatsLoading ? (
           <Skeleton className="h-6 w-96 rounded" />
         ) : isStatsError || !stats ? (
-          <div className="flex items-center justify-between p-4 text-xs bg-[var(--sla-overdue-bg)] text-[var(--sla-overdue-text)] border border-[var(--sla-overdue-text)]/20 rounded-[6px]">
+          <div className="flex items-center justify-between p-4 text-xs bg-[var(--sla-overdue-bg)] dark:bg-[#2B1015]/50 text-[var(--sla-overdue-text)] dark:text-[#F87171] border border-[var(--sla-overdue-text)]/20 dark:border-[#F87171]/35 rounded-[6px]">
             <div className="flex items-center gap-2">
               <AlertCircle className="h-4 w-4" />
               <span>Failed to load summary statistics: {(statsError as Error)?.message || "Unknown error"}</span>
@@ -224,7 +224,7 @@ export function DashboardView() {
             </Button>
           </div>
         ) : (
-          <div className="py-4 px-5 bg-white/80 backdrop-blur-md border border-[#ECE6F4] rounded-[10px] text-sm text-[var(--color-text-secondary)] flex items-center justify-between shadow-[0_4px_20px_rgba(112,82,200,0.03)]">
+          <div className="py-4 px-5 bg-white/80 dark:bg-[#0B0813]/90 backdrop-blur-md border border-[#ECE6F4] dark:border-[#201533] rounded-[10px] text-sm text-[var(--color-text-secondary)] dark:text-[#A396BE] flex items-center justify-between shadow-[0_4px_20px_rgba(112,82,200,0.03)]">
             <p>
               <span className="font-semibold text-[var(--sla-overdue-text)] tabular-nums">
                 {stats.overdue_cases}

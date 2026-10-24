@@ -172,7 +172,7 @@ export function SmartTriageView() {
                 Classification result
               </h3>
 
-              <div className="p-6 bg-white/85 backdrop-blur-md border border-[#ECE6F4] rounded-[12px] space-y-5 shadow-[0_4px_24px_rgba(112,82,200,0.04)]">
+              <div className="p-6 bg-white/85 dark:bg-[#0B0813]/90 backdrop-blur-md border border-[#ECE6F4] dark:border-[#201533] rounded-[12px] space-y-5 shadow-[0_4px_24px_rgba(112,82,200,0.04)]">
                 {/* Recommended Bureau */}
                 <div className="flex flex-wrap items-baseline justify-between gap-2 pb-3 border-b border-[var(--color-rule)]">
                   <div>
@@ -183,7 +183,7 @@ export function SmartTriageView() {
                       {triageResult.recommended_bureau_name}
                     </div>
                   </div>
-                  <div className="text-xs font-semibold text-[var(--color-action)] bg-gradient-to-r from-[var(--color-page)] to-surface px-3 py-1 border border-[var(--color-rule)] rounded-[6px] tabular-nums shadow-xs">
+                  <div className="text-xs font-semibold text-[var(--color-action)] bg-gradient-to-r from-[var(--color-page)] to-surface dark:from-[#05040A] dark:to-[#0B0813] px-3 py-1 border border-[var(--color-rule)] dark:border-[#201533] rounded-[6px] tabular-nums shadow-xs">
                     {Math.round(triageResult.confidence * 100)}% confidence
                   </div>
                 </div>

@@ -213,8 +213,8 @@ export function IllegalMoveSimulator() {
                 onClick={() => handleApplyPreset(p)}
                 className={`text-xs font-medium border rounded-md px-2.5 py-1 text-left transition-colors cursor-pointer flex items-center gap-1.5 ${
                   p.isExpectedValid
-                    ? "bg-[var(--sla-ontrack-bg)] hover:bg-[var(--sla-ontrack-bg)]/80 border-[var(--sla-ontrack-text)]/25 text-[var(--color-text-primary)]"
-                    : "bg-[var(--sla-overdue-bg)] hover:bg-[var(--sla-overdue-bg)]/80 border-[var(--sla-overdue-text)]/25 text-[var(--color-text-primary)]"
+                    ? "bg-[var(--sla-ontrack-bg)] dark:bg-[#102B1D]/40 hover:bg-[var(--sla-ontrack-bg)]/80 dark:hover:bg-[#102B1D]/70 border-[var(--sla-ontrack-text)]/25 dark:border-[#34D399]/30 text-[var(--color-text-primary)] dark:text-[#F2EEFA]"
+                    : "bg-[var(--sla-overdue-bg)] dark:bg-[#2B1015]/40 hover:bg-[var(--sla-overdue-bg)]/80 dark:hover:bg-[#2B1015]/70 border-[var(--sla-overdue-text)]/25 dark:border-[#F87171]/30 text-[var(--color-text-primary)] dark:text-[#F2EEFA]"
                 }`}
               >
                 {p.isExpectedValid ? (
@@ -300,7 +300,7 @@ export function IllegalMoveSimulator() {
           <div className="pt-2">
             {result.isValid ? (
               /* Valid Transition Result */
-              <div className="bg-[var(--sla-ontrack-bg)] border border-[var(--sla-ontrack-text)]/25 rounded-lg p-4 space-y-2 text-xs">
+              <div className="bg-[var(--sla-ontrack-bg)] dark:bg-[#102B1D]/50 border border-[var(--sla-ontrack-text)]/25 dark:border-[#34D399]/35 rounded-lg p-4 space-y-2 text-xs text-[var(--color-text-primary)] dark:text-[#F2EEFA]">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2 font-bold text-[var(--color-text-primary)]">
                     <CheckCircle2 className="h-5 w-5 text-[var(--sla-ontrack-text)]" />
@@ -315,7 +315,7 @@ export function IllegalMoveSimulator() {
                   {result.message}
                 </p>
 
-                <div className="bg-white/70 p-2.5 rounded border border-[var(--sla-ontrack-text)]/20 text-[11px] text-[var(--color-text-secondary)] flex items-center gap-2">
+                <div className="bg-white/70 dark:bg-[#0B0813]/80 p-2.5 rounded border border-[var(--sla-ontrack-text)]/20 dark:border-[var(--sla-ontrack-text)]/40 text-[11px] text-[var(--color-text-secondary)] flex items-center gap-2">
                   <span className="font-semibold text-[var(--color-text-primary)]">Workflow Rule:</span>
                   <span>
                     Moving from <strong>{result.from}</strong> to <strong>{result.to}</strong> is legally recognized in the AICTE finite state machine.
@@ -324,7 +324,7 @@ export function IllegalMoveSimulator() {
               </div>
             ) : (
               /* Illegal Transition Blocked Result */
-              <div className="bg-[var(--sla-overdue-bg)] border border-[var(--sla-overdue-text)]/25 rounded-lg p-4 space-y-2 text-xs">
+              <div className="bg-[var(--sla-overdue-bg)] dark:bg-[#2B1015]/50 border border-[var(--sla-overdue-text)]/25 dark:border-[#F87171]/35 rounded-lg p-4 space-y-2 text-xs text-[var(--color-text-primary)] dark:text-[#F2EEFA]">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2 font-bold text-[var(--color-text-primary)]">
                     <XCircle className="h-5 w-5 text-[var(--sla-overdue-text)]" />
@@ -335,7 +335,7 @@ export function IllegalMoveSimulator() {
                   </Badge>
                 </div>
 
-                <div className="bg-white/70 p-2.5 rounded border border-[var(--sla-overdue-text)]/20 font-mono text-[11px] text-[var(--color-text-primary)] space-y-1">
+                <div className="bg-white/70 dark:bg-[#0B0813]/80 p-2.5 rounded border border-[var(--sla-overdue-text)]/20 dark:border-[var(--sla-overdue-text)]/40 font-mono text-[11px] text-[var(--color-text-primary)] space-y-1">
                   <div className="font-bold text-[var(--sla-overdue-text)]">
                     Error Code: {result.errorCode}
                   </div>

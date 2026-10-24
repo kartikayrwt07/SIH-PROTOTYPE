@@ -190,7 +190,7 @@ export function StateMachineView() {
             <div className="space-y-3 pt-2">
               {checkedResult.isLegal ? (
                 /* Legal green alert */
-                <div className="p-4 bg-[var(--sla-ontrack-bg)] border border-[var(--sla-ontrack-text)]/30 rounded-[6px] text-xs text-[var(--sla-ontrack-text)] space-y-2">
+                <div className="p-4 bg-[var(--sla-ontrack-bg)] dark:bg-[#102B1D]/50 border border-[var(--sla-ontrack-text)]/30 dark:border-[#34D399]/35 rounded-[6px] text-xs text-[var(--sla-ontrack-text)] dark:text-[#34D399] space-y-2">
                   <div className="flex items-center gap-2 font-semibold">
                     <CheckCircle2 className="h-4 w-4 shrink-0" />
                     <span>Permitted transition</span>
@@ -209,7 +209,7 @@ export function StateMachineView() {
                 </div>
               ) : (
                 /* Illegal red alert */
-                <div className="p-4 bg-[var(--sla-overdue-bg)] border border-[var(--sla-overdue-text)]/30 rounded-[4px] text-xs text-[var(--sla-overdue-text)] space-y-3">
+                <div className="p-4 bg-[var(--sla-overdue-bg)] dark:bg-[#2B1015]/50 border border-[var(--sla-overdue-text)]/30 dark:border-[#F87171]/35 rounded-[6px] text-xs text-[var(--sla-overdue-text)] dark:text-[#F87171] space-y-3">
                   <div className="flex items-center gap-2 font-semibold">
                     <AlertCircle className="h-4 w-4 shrink-0" />
                     <span>Transition blocked</span>
@@ -227,7 +227,7 @@ export function StateMachineView() {
                       variant="outline"
                       size="sm"
                       onClick={handleTryItAnyway}
-                      className="h-7 text-xs border-[var(--sla-overdue-text)]/40 text-[var(--sla-overdue-text)] hover:bg-[var(--sla-overdue-bg)] rounded-[6px]"
+                      className="h-7 text-xs border-[var(--sla-overdue-text)]/40 dark:border-[#F87171]/40 text-[var(--sla-overdue-text)] dark:text-[#F87171] hover:bg-[var(--sla-overdue-bg)] dark:hover:bg-rose-950/30 rounded-[6px]"
                     >
                       Try it anyway
                     </Button>

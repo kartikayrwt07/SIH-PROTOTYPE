@@ -10,6 +10,7 @@ import { Menu, X, ChevronRight } from "lucide-react";
 import { Sidebar } from "./Sidebar";
 import { RoleSwitcher } from "./RoleSwitcher";
 import { ThemeToggle } from "./ThemeToggle";
+import { CursorSpotlight } from "./CursorSpotlight";
 import { Button } from "@/components/ui/button";
 import { Toaster } from "@/components/ui/sonner";
 import { RoleProvider } from "@/contexts/RoleContext";
@@ -69,7 +70,8 @@ export function AppShell() {
 
   return (
     <RoleProvider>
-      <div className="flex h-screen bg-gradient-to-br from-[#FCFBFE] via-[#FAF8FD] to-[#F5F2FA] dark:from-[#0E0B16] dark:via-[#120D1D] dark:to-[#171124] text-ink overflow-hidden">
+      <div className="flex h-screen bg-gradient-to-br from-[#FCFBFE] via-[#FAF8FD] to-[#F5F2FA] dark:from-[#05040A] dark:via-[#07050E] dark:to-[#0A0714] text-ink overflow-hidden relative">
+        <CursorSpotlight />
         {/* Desktop sidebar */}
         <div className="hidden md:flex shrink-0">
           <Sidebar
@@ -97,7 +99,7 @@ export function AppShell() {
         {/* Main content area */}
         <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
           {/* Top bar: Frosted glass header with subtle ambient glow */}
-          <header className="flex items-center justify-between h-12 px-6 lg:px-8 border-b border-[#ECE6F4] dark:border-[#2C233E] bg-white/75 dark:bg-[#151022]/85 backdrop-blur-md shadow-[0_1px_12px_rgba(112,82,200,0.02)] shrink-0">
+          <header className="flex items-center justify-between h-12 px-6 lg:px-8 border-b border-[#ECE6F4] dark:border-[#201533] bg-white/75 dark:bg-[#07050E]/90 dark:border-[#201533] backdrop-blur-md shadow-[0_1px_12px_rgba(112,82,200,0.02)] shrink-0">
             <div className="flex items-center gap-3">
               {/* Mobile menu button */}
               <Button

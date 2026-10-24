@@ -70,13 +70,13 @@ export function StateGraph({
   return (
     <div className="space-y-6">
       {/* Interactive Topology Canvas */}
-      <div className="bg-white/85 dark:bg-[#171226]/85 backdrop-blur-md border border-[#ECE6F4] dark:border-[#2C233E] rounded-[12px] p-6 space-y-6 shadow-[0_4px_24px_rgba(112,82,200,0.03)]">
+      <div className="bg-white/85 dark:bg-[#0B0813]/90 backdrop-blur-md border border-[#ECE6F4] dark:border-[#201533] rounded-[12px] p-6 space-y-6 shadow-[0_4px_24px_rgba(112,82,200,0.03)]">
         {/* Canvas Header & Legend */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#ECE6F4] dark:border-[#2C233E]">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#ECE6F4] dark:border-[#201533]">
           <div>
             <h3 className="font-serif text-base font-semibold text-[var(--color-ink)] flex items-center gap-2">
               <span>Interactive state topology</span>
-              <span className="text-[10px] font-sans font-medium px-2 py-0.5 rounded-full bg-[#FAF8FE] dark:bg-[#1F1833] border border-[#ECE6F4] dark:border-[#2C233E] text-[var(--color-action)] shadow-xs">
+              <span className="text-[10px] font-sans font-medium px-2 py-0.5 rounded-full bg-[#FAF8FE] dark:bg-[#05040A] border border-[#ECE6F4] dark:border-[#201533] text-[var(--color-action)] shadow-xs">
                 9 Stages
               </span>
             </h3>
@@ -102,7 +102,7 @@ export function StateGraph({
         </div>
 
         {/* Intuitive Active State Banner */}
-        <div className="p-4 bg-white/70 dark:bg-[#1A1428]/70 backdrop-blur-sm border border-[#ECE6F4] dark:border-[#2C233E] rounded-[8px] flex flex-wrap items-center justify-between gap-4 text-xs shadow-xs">
+        <div className="p-4 bg-white/70 dark:bg-[#0B0813]/80 backdrop-blur-sm border border-[#ECE6F4] dark:border-[#201533] rounded-[8px] flex flex-wrap items-center justify-between gap-4 text-xs shadow-xs">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-[6px] bg-[var(--color-action)] text-white flex items-center justify-center font-mono font-bold text-xs shadow-[0_0_8px_rgba(112,82,200,0.35)]">
               {STAGE_NUMBERS[selectedStatus]}
@@ -131,7 +131,7 @@ export function StateGraph({
                     key={next}
                     type="button"
                     onClick={() => onSelectStatus(next)}
-                    className="px-2.5 py-1 bg-[#F0F9F4] border border-[#257D4E]/30 text-[#257D4E] rounded-[4px] text-xs font-semibold hover:bg-[#E6F5EC] flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs"
+                    className="px-2.5 py-1 bg-[#F0F9F4] dark:bg-[#163824]/40 border border-[#257D4E]/30 dark:border-[#34D399]/40 text-[#257D4E] dark:text-[#34D399] rounded-[4px] text-xs font-semibold hover:bg-[#E6F5EC] dark:hover:bg-[#163824]/70 flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs"
                     title={`Click to inspect transition to ${next}`}
                   >
                     <span>{STAGE_NUMBERS[next]}. {next}</span>
@@ -177,8 +177,8 @@ export function StateGraph({
                       isSelected
                         ? "bg-gradient-to-br from-[#7052C8] to-[#5939A7] text-white border-[#7052C8] shadow-[0_4px_16px_rgba(112,82,200,0.25)] ring-2 ring-[#7052C8]/30"
                         : isNext
-                        ? "bg-[#F0F9F4] border-[#257D4E]/30 shadow-xs hover:bg-[#E6F5EC]"
-                        : "bg-white/60 border-[#ECE6F4] hover:border-[#7052C8]/40 hover:bg-white/90 shadow-xs"
+                        ? "bg-[#F0F9F4] dark:bg-[#143322]/40 border-[#257D4E]/30 dark:border-[#34D399]/40 shadow-xs hover:bg-[#E6F5EC] dark:hover:bg-[#143322]/70 text-[#257D4E] dark:text-[#34D399]"
+                        : "bg-white/60 dark:bg-[#0B0813]/90 border-[#ECE6F4] dark:border-[#201533] hover:border-[#7052C8]/40 dark:hover:border-[#9333EA]/50 hover:bg-white/90 dark:hover:bg-[#120D20] shadow-xs"
                     }`}
                   >
                     {/* Top Row: Icon + Stage Name + Step Number */}
@@ -190,7 +190,7 @@ export function StateGraph({
                               ? "bg-white/20 text-white"
                               : isNext
                               ? "bg-[#F0F9F4] text-[#257D4E] border border-[#257D4E]/30"
-                              : "bg-[var(--color-page)] text-[var(--color-text-secondary)] border border-[var(--color-rule)] group-hover:text-[var(--color-action)]"
+                              : "bg-[var(--color-page)] dark:bg-[#05040A] text-[var(--color-text-secondary)] dark:text-[#A396BE] border border-[var(--color-rule)] dark:border-[#201533] group-hover:text-[var(--color-action)] dark:group-hover:text-[#C084FC]"
                           }`}
                         >
                           <Icon className="h-4 w-4" />
@@ -231,7 +231,7 @@ export function StateGraph({
                           className={`font-mono text-[10px] px-2 py-0.5 rounded tabular-nums font-medium ${
                             isSelected
                               ? "bg-white/20 text-white border border-white/20"
-                              : "bg-[var(--color-page)] border border-[var(--color-rule)] text-[var(--color-text-secondary)]"
+                              : "bg-[var(--color-page)] dark:bg-[#05040A] border border-[var(--color-rule)] dark:border-[#201533] text-[var(--color-text-secondary)] dark:text-[#A396BE]"
                           }`}
                           title={`${count} active cases`}
                         >
@@ -277,7 +277,7 @@ export function StateGraph({
                 <span>·</span>
                 <span>Assignment & Active Investigation</span>
               </div>
-              <span className="inline-flex items-center gap-1 text-[11px] text-[var(--color-action)] font-medium bg-[var(--color-page)] px-2 py-0.5 rounded border border-[var(--color-rule)]">
+              <span className="inline-flex items-center gap-1 text-[11px] text-[var(--color-action)] font-medium bg-[var(--color-page)] dark:bg-[#0B0813] px-2 py-0.5 rounded border border-[var(--color-rule)] dark:border-[#201533] dark:text-[#C084FC]">
                 <Repeat2 className="h-3 w-3" />
                 Evidence Clarification Loop
               </span>
@@ -301,8 +301,8 @@ export function StateGraph({
                         isSelected
                           ? "bg-gradient-to-br from-[#7052C8] to-[#5939A7] text-white border-[#7052C8] shadow-[0_4px_16px_rgba(112,82,200,0.25)] ring-2 ring-[#7052C8]/30"
                           : isNext
-                          ? "bg-[#F0F9F4] border-[#257D4E]/30 shadow-xs hover:bg-[#E6F5EC]"
-                          : "bg-white/60 border-[#ECE6F4] hover:border-[#7052C8]/40 hover:bg-white/90 shadow-xs"
+                          ? "bg-[#F0F9F4] dark:bg-[#143322]/40 border-[#257D4E]/30 dark:border-[#34D399]/40 shadow-xs hover:bg-[#E6F5EC] dark:hover:bg-[#143322]/70 text-[#257D4E] dark:text-[#34D399]"
+                          : "bg-white/60 dark:bg-[#0B0813]/90 border-[#ECE6F4] dark:border-[#201533] hover:border-[#7052C8]/40 dark:hover:border-[#9333EA]/50 hover:bg-white/90 dark:hover:bg-[#120D20] shadow-xs"
                       }`}
                     >
                       {/* Top Row: Icon + Stage Name */}
@@ -314,7 +314,7 @@ export function StateGraph({
                                 ? "bg-white/20 text-white"
                                 : isNext
                                 ? "bg-[#F0F9F4] text-[#257D4E] border border-[#257D4E]/30"
-                                : "bg-[var(--color-page)] text-[var(--color-text-secondary)] border border-[var(--color-rule)] group-hover:text-[var(--color-action)]"
+                                : "bg-[var(--color-page)] dark:bg-[#05040A] text-[var(--color-text-secondary)] dark:text-[#A396BE] border border-[var(--color-rule)] dark:border-[#201533] group-hover:text-[var(--color-action)] dark:group-hover:text-[#C084FC]"
                             }`}
                           >
                             <Icon className="h-4 w-4" />
@@ -355,7 +355,7 @@ export function StateGraph({
                             className={`font-mono text-[10px] px-2 py-0.5 rounded tabular-nums font-medium ${
                               isSelected
                                 ? "bg-white/20 text-white border border-white/20"
-                                : "bg-[var(--color-page)] border border-[var(--color-rule)] text-[var(--color-text-secondary)]"
+                                : "bg-[var(--color-page)] dark:bg-[#05040A] border border-[var(--color-rule)] dark:border-[#201533] text-[var(--color-text-secondary)] dark:text-[#A396BE]"
                             }`}
                             title={`${count} active cases`}
                           >
@@ -433,8 +433,8 @@ export function StateGraph({
                       isSelected
                         ? "bg-gradient-to-br from-[#7052C8] to-[#5939A7] text-white border-[#7052C8] shadow-[0_4px_16px_rgba(112,82,200,0.25)] ring-2 ring-[#7052C8]/30"
                         : isNext
-                        ? "bg-[#F0F9F4] border-[#257D4E]/30 shadow-xs hover:bg-[#E6F5EC]"
-                        : "bg-white/60 border-[#ECE6F4] hover:border-[#7052C8]/40 hover:bg-white/90 shadow-xs"
+                        ? "bg-[#F0F9F4] dark:bg-[#143322]/40 border-[#257D4E]/30 dark:border-[#34D399]/40 shadow-xs hover:bg-[#E6F5EC] dark:hover:bg-[#143322]/70 text-[#257D4E] dark:text-[#34D399]"
+                        : "bg-white/60 dark:bg-[#0B0813]/90 border-[#ECE6F4] dark:border-[#201533] hover:border-[#7052C8]/40 dark:hover:border-[#9333EA]/50 hover:bg-white/90 dark:hover:bg-[#120D20] shadow-xs"
                     }`}
                   >
                     {/* Top Row: Icon + Stage Name */}
@@ -489,7 +489,7 @@ export function StateGraph({
                           className={`font-mono text-[10px] px-2 py-0.5 rounded tabular-nums font-medium ${
                             isSelected
                               ? "bg-white/20 text-white border border-white/20"
-                              : "bg-[var(--color-page)] border border-[var(--color-rule)] text-[var(--color-text-secondary)]"
+                              : "bg-[var(--color-page)] dark:bg-[#05040A] border border-[var(--color-rule)] dark:border-[#201533] text-[var(--color-text-secondary)] dark:text-[#A396BE]"
                           }`}
                           title={`${count} cases`}
                         >

@@ -45,7 +45,7 @@ function LoginPage() {
   };
 
   return (
-    <div className="min-h-[calc(100vh-3rem)] flex flex-col items-center justify-center py-12 px-4 bg-gradient-to-br from-[#FCFBFE] via-[#FAF8FD] to-[#F5F2FA] dark:from-[#0E0B16] dark:via-[#120D1D] dark:to-[#171124]">
+    <div className="min-h-[calc(100vh-3rem)] flex flex-col items-center justify-center py-12 px-4 bg-gradient-to-br from-[#FCFBFE] via-[#FAF8FD] to-[#F5F2FA] dark:from-[#05040A] dark:via-[#07050E] dark:to-[#0A0714]">
       <div className="w-full max-w-sm space-y-6">
         {/* Wordmark Above */}
         <div className="flex items-center justify-center gap-2.5 select-none">
@@ -56,7 +56,7 @@ function LoginPage() {
         </div>
 
         {/* Centered Form — Modern Frosted Glass Card with Subtle Glow */}
-        <div className="bg-white/85 dark:bg-[#171226]/85 backdrop-blur-xl border border-[#ECE6F4] dark:border-[#2C233E] p-8 rounded-[12px] space-y-5 shadow-[0_8px_32px_rgba(112,82,200,0.06)]">
+        <div className="bg-white/85 dark:bg-[#0B0813]/90 backdrop-blur-xl border border-[#ECE6F4] dark:border-[#201533] p-8 rounded-[12px] space-y-5 shadow-[0_8px_32px_rgba(112,82,200,0.06)]">
           <div className="space-y-1">
             <h2 className="text-base font-semibold text-ink">Sign in to your account</h2>
             <p className="text-xs text-text-secondary leading-normal">
@@ -85,7 +85,7 @@ function LoginPage() {
                 value={identifier}
                 onChange={(e) => setIdentifier(e.target.value)}
                 placeholder="officer@aicte-india.org"
-                className="h-9 text-xs bg-white/70 border-[#ECE6F4] rounded-[6px] focus:border-[#7052C8] focus:ring-1 focus:ring-[#7052C8]/30"
+                className="h-9 text-xs bg-white/70 dark:bg-[#05040A] border-[#ECE6F4] dark:border-[#201533] text-ink dark:text-[#F2EEFA] rounded-[6px] focus:border-[#7052C8] dark:focus:border-[#9333EA] focus:ring-1 focus:ring-[#7052C8]/30 dark:focus:ring-[#9333EA]/30"
               />
             </div>
 
@@ -100,7 +100,7 @@ function LoginPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="h-9 text-xs bg-white/70 border-[#ECE6F4] rounded-[6px] focus:border-[#7052C8] focus:ring-1 focus:ring-[#7052C8]/30"
+                className="h-9 text-xs bg-white/70 dark:bg-[#05040A] border-[#ECE6F4] dark:border-[#201533] text-ink dark:text-[#F2EEFA] rounded-[6px] focus:border-[#7052C8] dark:focus:border-[#9333EA] focus:ring-1 focus:ring-[#7052C8]/30 dark:focus:ring-[#9333EA]/30"
               />
             </div>
 
@@ -114,7 +114,7 @@ function LoginPage() {
           </form>
 
           {/* Quick Demo Switcher */}
-          <div className="pt-4 border-t border-[#ECE6F4] space-y-2">
+          <div className="pt-4 border-t border-[#ECE6F4] dark:border-[#201533] space-y-2">
             <span className="text-[11px] text-text-muted block">
               Quick access demo roles:
             </span>
@@ -122,28 +122,28 @@ function LoginPage() {
               <button
                 type="button"
                 onClick={() => handleQuickRole("ADMIN")}
-                className="py-1.5 px-2 border border-[#ECE6F4] rounded-[6px] bg-white/60 hover:bg-white hover:border-[#7052C8]/30 text-ink text-left text-[11px] cursor-pointer transition-colors"
+                className="py-1.5 px-2 border border-[#ECE6F4] dark:border-[#201533] rounded-[6px] bg-white/60 dark:bg-[#05040A] hover:bg-white dark:hover:bg-[#120D20] hover:border-[#7052C8]/30 dark:hover:border-[#9333EA]/40 text-ink dark:text-[#F2EEFA] text-left text-[11px] cursor-pointer transition-colors"
               >
                 Admin
               </button>
               <button
                 type="button"
                 onClick={() => handleQuickRole("SUPERVISOR")}
-                className="py-1.5 px-2 border border-[#ECE6F4] rounded-[6px] bg-white/60 hover:bg-white hover:border-[#7052C8]/30 text-ink text-left text-[11px] cursor-pointer transition-colors"
+                className="py-1.5 px-2 border border-[#ECE6F4] dark:border-[#201533] rounded-[6px] bg-white/60 dark:bg-[#05040A] hover:bg-white dark:hover:bg-[#120D20] hover:border-[#7052C8]/30 dark:hover:border-[#9333EA]/40 text-ink dark:text-[#F2EEFA] text-left text-[11px] cursor-pointer transition-colors"
               >
                 Supervisor
               </button>
               <button
                 type="button"
                 onClick={() => handleQuickRole("OFFICER")}
-                className="py-1.5 px-2 border border-[#ECE6F4] rounded-[6px] bg-white/60 hover:bg-white hover:border-[#7052C8]/30 text-ink text-left text-[11px] cursor-pointer transition-colors"
+                className="py-1.5 px-2 border border-[#ECE6F4] dark:border-[#201533] rounded-[6px] bg-white/60 dark:bg-[#05040A] hover:bg-white dark:hover:bg-[#120D20] hover:border-[#7052C8]/30 dark:hover:border-[#9333EA]/40 text-ink dark:text-[#F2EEFA] text-left text-[11px] cursor-pointer transition-colors"
               >
                 Officer (Approval)
               </button>
               <button
                 type="button"
                 onClick={() => handleQuickRole("AUDITOR")}
-                className="py-1.5 px-2 border border-[#ECE6F4] rounded-[6px] bg-white/60 hover:bg-white hover:border-[#7052C8]/30 text-ink text-left text-[11px] cursor-pointer transition-colors"
+                className="py-1.5 px-2 border border-[#ECE6F4] dark:border-[#201533] rounded-[6px] bg-white/60 dark:bg-[#05040A] hover:bg-white dark:hover:bg-[#120D20] hover:border-[#7052C8]/30 dark:hover:border-[#9333EA]/40 text-ink dark:text-[#F2EEFA] text-left text-[11px] cursor-pointer transition-colors"
               >
                 Auditor
               </button>

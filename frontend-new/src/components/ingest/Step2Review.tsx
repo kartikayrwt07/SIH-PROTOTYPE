@@ -92,8 +92,8 @@ export function Step2Review({ preview, onNext, onBack }: Step2ReviewProps) {
       <div
         className={`p-4 rounded-lg border text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
           invalid_rows > 0
-            ? "bg-amber-50/70 border-amber-200 text-amber-950"
-            : "bg-emerald-50/70 border-emerald-200 text-emerald-950"
+            ? "bg-amber-50/70 dark:bg-amber-950/25 border-amber-200 dark:border-amber-900/40 text-amber-950 dark:text-amber-200"
+            : "bg-emerald-50/70 dark:bg-emerald-950/25 border-emerald-200 dark:border-emerald-900/40 text-emerald-950 dark:text-emerald-200"
         }`}
       >
         <div className="flex items-center gap-2.5">

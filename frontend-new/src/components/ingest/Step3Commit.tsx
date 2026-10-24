@@ -110,7 +110,7 @@ export function Step3Commit({
             </div>
 
             {invalid_rows > 0 && (
-              <div className="p-3 bg-amber-50/80 border border-amber-200 text-amber-900 text-xs rounded-lg flex items-center gap-2.5">
+              <div className="p-3 bg-amber-50/80 dark:bg-amber-950/25 border border-amber-200 dark:border-amber-900/40 text-amber-900 dark:text-amber-200 text-xs rounded-lg flex items-center gap-2.5">
                 <AlertTriangle className="h-4 w-4 text-amber-600 shrink-0" />
                 <span>
                   <strong>Notice:</strong> The {invalid_rows} invalid rows violating AICTE permanent ID format or bureau jurisdiction will not be created. You can download and correct those rows separately.

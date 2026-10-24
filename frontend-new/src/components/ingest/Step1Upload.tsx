@@ -178,9 +178,9 @@ export function Step1Upload({
 
           {/* Uploaded File Confirmation */}
           {csvContent && (
-            <div className="bg-muted/40 border border-border rounded-lg p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+            <div className="bg-muted/40 dark:bg-[#0B0813]/80 border border-border dark:border-[#201533] rounded-lg p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
               <div className="flex items-center gap-3">
-                <div className="h-9 w-9 rounded-md bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
+                <div className="h-9 w-9 rounded-md bg-emerald-100 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 flex items-center justify-center shrink-0">
                   <CheckCircle2 className="h-5 w-5" />
                 </div>
                 <div>

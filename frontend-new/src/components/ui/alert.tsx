@@ -4,13 +4,20 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const alertVariants = cva(
-  "relative w-full rounded-lg border px-4 py-3 text-sm [&>svg+div]:translate-y-[-3px] [&>svg]:absolute [&>svg]:left-4 [&>svg]:top-4 [&>svg]:text-foreground [&>svg~*]:pl-7",
+  "relative w-full rounded-lg border px-4 py-3 text-sm transition-colors [&>svg+div]:translate-y-[-3px] [&>svg]:absolute [&>svg]:left-4 [&>svg]:top-4 [&>svg]:text-foreground [&>svg~*]:pl-7",
   {
     variants: {
       variant: {
-        default: "bg-background text-foreground",
+        default:
+          "bg-background dark:bg-[#0B0813] text-foreground dark:text-[#F2EEFA] border-border dark:border-[#201533]",
         destructive:
-          "border-destructive/50 text-destructive dark:border-destructive [&>svg]:text-destructive",
+          "border-rose-500/30 bg-rose-500/10 dark:bg-rose-950/25 dark:border-rose-900/40 text-rose-700 dark:text-rose-400 [&>svg]:text-rose-600 dark:[&>svg]:text-rose-400",
+        warning:
+          "border-amber-500/30 bg-amber-500/10 dark:bg-amber-950/25 dark:border-amber-900/40 text-amber-800 dark:text-amber-300 [&>svg]:text-amber-600 dark:[&>svg]:text-amber-400",
+        success:
+          "border-emerald-500/30 bg-emerald-500/10 dark:bg-emerald-950/25 dark:border-emerald-900/40 text-emerald-800 dark:text-emerald-300 [&>svg]:text-emerald-600 dark:[&>svg]:text-emerald-400",
+        purple:
+          "border-[#9333EA]/30 bg-[#9333EA]/10 dark:bg-[#9333EA]/15 dark:border-[#9333EA]/40 text-[#7052C8] dark:text-[#C084FC] [&>svg]:text-[#9333EA] dark:[&>svg]:text-[#C084FC]",
       },
     },
     defaultVariants: {

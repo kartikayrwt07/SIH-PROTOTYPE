@@ -21,7 +21,7 @@ export function ErrorState({
   return (
     <div
       className={cn(
-        "py-8 px-6 text-center max-w-md mx-auto space-y-2 border border-rule bg-surface rounded",
+        "py-8 px-6 text-center max-w-md mx-auto space-y-2 border border-rule dark:border-[#201533] bg-surface dark:bg-[#0B0813] rounded",
         className,
       )}
       role="alert"
