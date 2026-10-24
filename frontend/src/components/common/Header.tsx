@@ -74,23 +74,26 @@ export const Header: React.FC<HeaderProps> = ({ serviceStatus }) => {
           </div>
         )}
 
-        {/* Quick Role Switcher for Evaluation */}
+        {/* Evaluator Role Persona Simulator */}
         <div
           style={{
             display: "flex",
             alignItems: "center",
-            gap: "0.4rem",
-            background: "rgba(18, 28, 56, 0.8)",
-            border: "1px solid var(--border-subtle)",
-            padding: "0.25rem 0.6rem",
+            gap: "0.5rem",
+            background: "rgba(18, 28, 56, 0.9)",
+            border: "1px solid rgba(59, 130, 246, 0.3)",
+            padding: "0.3rem 0.75rem",
             borderRadius: "8px",
-            fontSize: "0.8rem",
+            fontSize: "0.78rem",
+            boxShadow: "0 2px 8px rgba(0, 0, 0, 0.2)",
           }}
         >
-          <UserCheck size={14} color="var(--accent-saffron)" />
-          <label htmlFor="quick-role-select" style={{ color: "var(--text-muted)", fontSize: "0.75rem", fontWeight: 600 }}>
-            Switch:
-          </label>
+          <div style={{ display: "flex", alignItems: "center", gap: "0.35rem" }}>
+            <UserCheck size={14} color="var(--accent-saffron)" />
+            <span style={{ color: "var(--text-muted)", fontSize: "0.72rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.03em" }}>
+              Persona:
+            </span>
+          </div>
           <select
             id="quick-role-select"
             className="role-select"
@@ -99,21 +102,22 @@ export const Header: React.FC<HeaderProps> = ({ serviceStatus }) => {
             style={{
               background: "transparent",
               border: "none",
-              color: "var(--text-primary)",
+              color: "#FFFFFF",
               fontSize: "0.78rem",
-              fontWeight: 600,
-              padding: "0.15rem 0.3rem",
+              fontWeight: 700,
+              padding: "0.15rem 0.2rem",
               cursor: "pointer",
+              outline: "none",
             }}
           >
-            <option value="ADMIN">Platform Admin</option>
-            <option value="SUPERVISOR">Central Supervisor</option>
-            <option value="OFFICER">Approval Officer</option>
-            <option value="AUDITOR">Read-Only Auditor</option>
+            <option value="ADMIN" style={{ background: "#121C38", color: "#FFFFFF" }}>Platform Administrator</option>
+            <option value="SUPERVISOR" style={{ background: "#121C38", color: "#FFFFFF" }}>Central Supervisor</option>
+            <option value="OFFICER" style={{ background: "#121C38", color: "#FFFFFF" }}>Approval Bureau Officer (APPR)</option>
+            <option value="AUDITOR" style={{ background: "#121C38", color: "#FFFFFF" }}>Read-Only Auditor</option>
           </select>
         </div>
 
-        {/* Real Logout Action */}
+        {/* Official Sign Out Action */}
         <button
           onClick={logout}
           title="Sign out of AICTE Portal"
@@ -125,7 +129,7 @@ export const Header: React.FC<HeaderProps> = ({ serviceStatus }) => {
             border: "1px solid rgba(239, 68, 68, 0.3)",
             color: "#FCA5A5",
             borderRadius: "8px",
-            padding: "0.45rem 0.8rem",
+            padding: "0.45rem 0.85rem",
             fontSize: "0.8rem",
             fontWeight: 600,
             cursor: "pointer",

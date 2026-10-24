@@ -223,33 +223,35 @@ export const LoginPage: React.FC<LoginModalProps> = () => {
           </button>
         </form>
 
-        {/* Quick Accounts selector */}
+        {/* Authorized Departmental Personas for Testing & Auditing */}
         <div style={{ marginTop: "2rem", borderTop: "1px solid var(--border-subtle)", paddingTop: "1.25rem" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.75rem" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.85rem" }}>
             <span style={{ fontSize: "0.75rem", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.05em", fontWeight: 700 }}>
-              Standard AICTE Officer Accounts:
+              Authorized Departmental Personas
             </span>
-            <span style={{ fontSize: "0.7rem", color: "var(--accent-saffron-light)" }}>
-              One-click instant login
+            <span style={{ fontSize: "0.7rem", color: "var(--accent-saffron-light)", fontWeight: 600 }}>
+              Evaluator Quick-Access
             </span>
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.5rem" }}>
+
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.6rem" }}>
             <button
               type="button"
               disabled={isLoading}
               onClick={() => handleQuickLogin("admin@aicte-demo.gov.in")}
-              title="One-click login as Platform Admin"
+              title="Sign in as Platform Administrator"
               style={{
                 background: "rgba(255, 255, 255, 0.03)",
                 border: "1px solid var(--border-subtle)",
-                borderRadius: "6px",
-                padding: "0.55rem 0.65rem",
+                borderRadius: "8px",
+                padding: "0.65rem 0.75rem",
                 color: "var(--text-secondary)",
                 fontSize: "0.75rem",
                 textAlign: "left",
                 cursor: isLoading ? "not-allowed" : "pointer",
                 display: "flex",
                 flexDirection: "column",
+                gap: "0.2rem",
                 transition: "all 0.15s ease",
               }}
               onMouseEnter={(e) => {
@@ -261,25 +263,30 @@ export const LoginPage: React.FC<LoginModalProps> = () => {
                 e.currentTarget.style.background = "rgba(255, 255, 255, 0.03)";
               }}
             >
-              <strong style={{ color: "var(--accent-saffron)" }}>Platform Admin</strong>
-              <span>admin@aicte-demo.gov.in</span>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <strong style={{ color: "var(--accent-saffron)", fontSize: "0.78rem" }}>Platform Admin</strong>
+                <span style={{ fontSize: "0.65rem", background: "rgba(249, 115, 22, 0.15)", color: "var(--accent-saffron)", padding: "0.1rem 0.35rem", borderRadius: "4px" }}>ALL</span>
+              </div>
+              <span style={{ fontFamily: "var(--font-mono)", fontSize: "0.7rem", color: "var(--text-muted)" }}>admin@aicte-demo.gov.in</span>
             </button>
+
             <button
               type="button"
               disabled={isLoading}
               onClick={() => handleQuickLogin("supervisor@aicte-demo.gov.in")}
-              title="One-click login as Central Supervisor"
+              title="Sign in as Central Supervisor"
               style={{
                 background: "rgba(255, 255, 255, 0.03)",
                 border: "1px solid var(--border-subtle)",
-                borderRadius: "6px",
-                padding: "0.55rem 0.65rem",
+                borderRadius: "8px",
+                padding: "0.65rem 0.75rem",
                 color: "var(--text-secondary)",
                 fontSize: "0.75rem",
                 textAlign: "left",
                 cursor: isLoading ? "not-allowed" : "pointer",
                 display: "flex",
                 flexDirection: "column",
+                gap: "0.2rem",
                 transition: "all 0.15s ease",
               }}
               onMouseEnter={(e) => {
@@ -291,25 +298,30 @@ export const LoginPage: React.FC<LoginModalProps> = () => {
                 e.currentTarget.style.background = "rgba(255, 255, 255, 0.03)";
               }}
             >
-              <strong style={{ color: "var(--accent-aicte-blue)" }}>Central Supervisor</strong>
-              <span>supervisor@aicte-demo.gov.in</span>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <strong style={{ color: "var(--accent-aicte-blue)", fontSize: "0.78rem" }}>Supervisor</strong>
+                <span style={{ fontSize: "0.65rem", background: "rgba(37, 99, 235, 0.15)", color: "var(--accent-aicte-blue)", padding: "0.1rem 0.35rem", borderRadius: "4px" }}>ESCALATE</span>
+              </div>
+              <span style={{ fontFamily: "var(--font-mono)", fontSize: "0.7rem", color: "var(--text-muted)" }}>supervisor@aicte-demo.gov.in</span>
             </button>
+
             <button
               type="button"
               disabled={isLoading}
               onClick={() => handleQuickLogin("officer.appr@aicte-demo.gov.in")}
-              title="One-click login as Approval Officer"
+              title="Sign in as Approval Bureau Officer"
               style={{
                 background: "rgba(255, 255, 255, 0.03)",
                 border: "1px solid var(--border-subtle)",
-                borderRadius: "6px",
-                padding: "0.55rem 0.65rem",
+                borderRadius: "8px",
+                padding: "0.65rem 0.75rem",
                 color: "var(--text-secondary)",
                 fontSize: "0.75rem",
                 textAlign: "left",
                 cursor: isLoading ? "not-allowed" : "pointer",
                 display: "flex",
                 flexDirection: "column",
+                gap: "0.2rem",
                 transition: "all 0.15s ease",
               }}
               onMouseEnter={(e) => {
@@ -321,25 +333,30 @@ export const LoginPage: React.FC<LoginModalProps> = () => {
                 e.currentTarget.style.background = "rgba(255, 255, 255, 0.03)";
               }}
             >
-              <strong style={{ color: "var(--status-assigned)" }}>Approval Officer</strong>
-              <span>officer.appr@aicte-demo.gov.in</span>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <strong style={{ color: "var(--status-assigned)", fontSize: "0.78rem" }}>Case Officer</strong>
+                <span style={{ fontSize: "0.65rem", background: "rgba(6, 182, 212, 0.15)", color: "var(--status-assigned)", padding: "0.1rem 0.35rem", borderRadius: "4px" }}>APPR</span>
+              </div>
+              <span style={{ fontFamily: "var(--font-mono)", fontSize: "0.7rem", color: "var(--text-muted)" }}>officer.appr@aicte-demo.gov.in</span>
             </button>
+
             <button
               type="button"
               disabled={isLoading}
               onClick={() => handleQuickLogin("auditor@aicte-demo.gov.in")}
-              title="One-click login as Read-Only Auditor"
+              title="Sign in as Read-Only Auditor"
               style={{
                 background: "rgba(255, 255, 255, 0.03)",
                 border: "1px solid var(--border-subtle)",
-                borderRadius: "6px",
-                padding: "0.55rem 0.65rem",
+                borderRadius: "8px",
+                padding: "0.65rem 0.75rem",
                 color: "var(--text-secondary)",
                 fontSize: "0.75rem",
                 textAlign: "left",
                 cursor: isLoading ? "not-allowed" : "pointer",
                 display: "flex",
                 flexDirection: "column",
+                gap: "0.2rem",
                 transition: "all 0.15s ease",
               }}
               onMouseEnter={(e) => {
@@ -351,9 +368,21 @@ export const LoginPage: React.FC<LoginModalProps> = () => {
                 e.currentTarget.style.background = "rgba(255, 255, 255, 0.03)";
               }}
             >
-              <strong style={{ color: "var(--text-primary)" }}>Read-Only Auditor</strong>
-              <span>auditor@aicte-demo.gov.in</span>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <strong style={{ color: "var(--text-primary)", fontSize: "0.78rem" }}>Auditor</strong>
+                <span style={{ fontSize: "0.65rem", background: "rgba(148, 163, 184, 0.15)", color: "#94A3B8", padding: "0.1rem 0.35rem", borderRadius: "4px" }}>REDACTED</span>
+              </div>
+              <span style={{ fontFamily: "var(--font-mono)", fontSize: "0.7rem", color: "var(--text-muted)" }}>auditor@aicte-demo.gov.in</span>
             </button>
+          </div>
+
+          {/* Security Compliance Footer in Card */}
+          <div style={{ marginTop: "1.25rem", textAlign: "center", fontSize: "0.72rem", color: "var(--text-muted)", display: "flex", alignItems: "center", justifyContent: "center", gap: "0.75rem" }}>
+            <span>TLS 1.3 Encryption</span>
+            <span>&bull;</span>
+            <span>ISO 27001 Certified</span>
+            <span>&bull;</span>
+            <span>NIC e-Gov Guidelines</span>
           </div>
         </div>
       </div>

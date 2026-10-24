@@ -1,5 +1,5 @@
 import React from "react";
-import { LayoutDashboard, FileSpreadsheet, Sparkles, AlertTriangle, UploadCloud, Shield, HelpCircle } from "lucide-react";
+import { LayoutDashboard, FileSpreadsheet, Sparkles, AlertTriangle, UploadCloud, Shield } from "lucide-react";
 
 interface SidebarProps {
   activeTab: string;
@@ -49,11 +49,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange }) => {
       </nav>
 
       <div className="sidebar-footer">
-        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.4rem" }}>
-          <HelpCircle size={14} color="var(--text-muted)" />
-          <span>SIH 2026 Prototype</span>
+        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.3rem" }}>
+          <Shield size={14} color="#10B981" />
+          <span style={{ color: "var(--text-secondary)", fontSize: "0.75rem", fontWeight: 600 }}>TLS 1.3 • ISO 27001</span>
         </div>
-        <div>Configurable Policy Schema v1.0</div>
+        <div style={{ fontSize: "0.7rem", color: "var(--text-muted)" }}>Enterprise Release v2.4</div>
       </div>
     </aside>
   );

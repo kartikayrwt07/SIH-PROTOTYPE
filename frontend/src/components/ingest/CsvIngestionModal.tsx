@@ -200,7 +200,7 @@ export const CsvIngestionModal: React.FC<CsvIngestionModalProps> = ({
         </div>
       )}
 
-      {/* Main Instructions & Fast Demo Bar */}
+      {/* Ingestion Workflow & Template Bar */}
       <div
         style={{
           background: "rgba(18, 28, 56, 0.7)",
@@ -230,7 +230,7 @@ export const CsvIngestionModal: React.FC<CsvIngestionModalProps> = ({
             onClick={handleLoadSample}
             style={{ fontSize: "0.75rem", display: "inline-flex", alignItems: "center", gap: "0.3rem" }}
           >
-            <Sparkles size={14} /> Load Demo Batch (5 Cases)
+            <Sparkles size={14} /> Load Verification Sample (5 Cases)
           </button>
         </div>
       </div>
