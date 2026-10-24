@@ -14,7 +14,13 @@ from backend.app.models import (
     CasePriority,
     AuditEventType,
 )
-from backend.app.services.lifecycle import execute_transition, reopen_case, can_transition, get_allowed_transitions
+from backend.app.services.lifecycle import (
+    execute_transition,
+    reopen_case,
+    reject_case,
+    can_transition,
+    get_allowed_transitions,
+)
 
 TEST_DB_URL = "sqlite:///:memory:"
 test_engine = create_engine(TEST_DB_URL, connect_args={"check_same_thread": False})
@@ -205,3 +211,102 @@ def test_bureau_jurisdiction_in_transition(db_session):
         )
     assert exc_info.value.status_code == 403
     assert exc_info.value.detail["code"] == "INSUFFICIENT_BUREAU_PERMISSIONS"
+
+
+def test_rejection_from_registered_leaves_resolved_at_none(db_session):
+    """Verify malformed or spam tickets are routed to REJECTED with resolved_at remaining None."""
+    bureau = db_session.query(Bureau).filter_by(code="APPR").first()
+    inst = db_session.query(Institution).first()
+    supervisor = db_session.query(User).filter_by(role=UserRole.SUPERVISOR).first()
+
+    case = ComplaintCase(
+        case_reference_id="AICTE-2026-SPAM-001",
+        institution_id=inst.id,
+        bureau_id=bureau.id,
+        subject="Win a free iPhone survey spam",
+        description_redacted="Automated bot promotional spam submission",
+        category="Spam",
+        priority=CasePriority.LOW,
+        status=CaseStatus.REGISTERED
+    )
+    db_session.add(case)
+    db_session.commit()
+
+    # Reject as spam
+    rejected = reject_case(
+        db=db_session,
+        case=case,
+        actor=supervisor,
+        rejection_reason="Automated promotional spam with invalid complainant details."
+    )
+
+    assert rejected.status == CaseStatus.REJECTED
+    # CRITICAL: resolved_at must remain None to prevent corrupting Average Resolution Time
+    assert rejected.resolved_at is None
+    assert rejected.closed_at is not None
+    assert "[REJECTED / SPAM]" in rejected.closure_remarks
+    assert len(rejected.audit_events) == 1
+    assert rejected.audit_events[0].event_type == AuditEventType.REJECTED
+
+
+def test_rejected_case_is_terminal(db_session):
+    """Verify rejected tickets cannot transition further into active investigation states."""
+    bureau = db_session.query(Bureau).filter_by(code="APPR").first()
+    inst = db_session.query(Institution).first()
+    supervisor = db_session.query(User).filter_by(role=UserRole.SUPERVISOR).first()
+
+    case = ComplaintCase(
+        case_reference_id="AICTE-2026-REJECTED-TERM",
+        institution_id=inst.id,
+        bureau_id=bureau.id,
+        subject="Malformed ticket",
+        description_redacted="Empty payload",
+        category="Malformed",
+        priority=CasePriority.LOW,
+        status=CaseStatus.REJECTED,
+        closure_remarks="Rejected at registration"
+    )
+    db_session.add(case)
+    db_session.commit()
+
+    with pytest.raises(HTTPException) as exc_info:
+        execute_transition(
+            db=db_session,
+            case=case,
+            to_status=CaseStatus.IN_PROGRESS,
+            actor=supervisor,
+            remarks="Attempt to resuscitate rejected ticket"
+        )
+    assert exc_info.value.status_code == 422
+    assert exc_info.value.detail["code"] == "CASE_IS_REJECTED"
+
+
+def test_reopen_rejected_case_blocked(db_session):
+    """Verify only legitimately 'Resolved' cases can be reopened, not rejected spam."""
+    bureau = db_session.query(Bureau).filter_by(code="APPR").first()
+    inst = db_session.query(Institution).first()
+    supervisor = db_session.query(User).filter_by(role=UserRole.SUPERVISOR).first()
+
+    case = ComplaintCase(
+        case_reference_id="AICTE-2026-REJECTED-REOPEN",
+        institution_id=inst.id,
+        bureau_id=bureau.id,
+        subject="Spam ticket",
+        description_redacted="Spam",
+        category="Spam",
+        priority=CasePriority.LOW,
+        status=CaseStatus.REJECTED
+    )
+    db_session.add(case)
+    db_session.commit()
+
+    with pytest.raises(HTTPException) as exc_info:
+        reopen_case(
+            db=db_session,
+            case=case,
+            actor=supervisor,
+            reopen_reason="Attempt to appeal rejected spam"
+        )
+    assert exc_info.value.status_code == 422
+    assert exc_info.value.detail["code"] == "CANNOT_REOPEN"
+

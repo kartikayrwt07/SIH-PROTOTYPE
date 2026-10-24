@@ -9,15 +9,16 @@ from backend.app.services.audit import log_case_event
 from backend.app.core.auth import assert_bureau_access
 
 ALLOWED_TRANSITIONS: Dict[CaseStatus, List[CaseStatus]] = {
-    CaseStatus.RECEIVED: [CaseStatus.REGISTERED],
-    CaseStatus.REGISTERED: [CaseStatus.UNDER_TRIAGE],
-    CaseStatus.UNDER_TRIAGE: [CaseStatus.ASSIGNED],
-    CaseStatus.ASSIGNED: [CaseStatus.IN_PROGRESS],
-    CaseStatus.IN_PROGRESS: [CaseStatus.AWAITING_INFORMATION, CaseStatus.UNDER_REVIEW],
-    CaseStatus.AWAITING_INFORMATION: [CaseStatus.IN_PROGRESS],
-    CaseStatus.UNDER_REVIEW: [CaseStatus.IN_PROGRESS, CaseStatus.RESOLVED],
+    CaseStatus.RECEIVED: [CaseStatus.REGISTERED, CaseStatus.REJECTED],
+    CaseStatus.REGISTERED: [CaseStatus.UNDER_TRIAGE, CaseStatus.REJECTED],
+    CaseStatus.UNDER_TRIAGE: [CaseStatus.ASSIGNED, CaseStatus.REJECTED],
+    CaseStatus.ASSIGNED: [CaseStatus.IN_PROGRESS, CaseStatus.REJECTED],
+    CaseStatus.IN_PROGRESS: [CaseStatus.AWAITING_INFORMATION, CaseStatus.UNDER_REVIEW, CaseStatus.REJECTED],
+    CaseStatus.AWAITING_INFORMATION: [CaseStatus.IN_PROGRESS, CaseStatus.REJECTED],
+    CaseStatus.UNDER_REVIEW: [CaseStatus.IN_PROGRESS, CaseStatus.RESOLVED, CaseStatus.REJECTED],
     CaseStatus.RESOLVED: [CaseStatus.CLOSED, CaseStatus.IN_PROGRESS],  # Reopen path
     CaseStatus.CLOSED: [],  # Terminal state
+    CaseStatus.REJECTED: [],  # Dedicated terminal state for malformed, spam, or out-of-jurisdiction complaints
 }
 
 
@@ -49,6 +50,15 @@ def execute_transition(
             detail={
                 "code": "CASE_IS_CLOSED",
                 "message": f"Case {case.case_reference_id} is formally Closed and cannot transition further.",
+                "allowed_transitions": []
+            }
+        )
+    if case.status == CaseStatus.REJECTED:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail={
+                "code": "CASE_IS_REJECTED",
+                "message": f"Case {case.case_reference_id} has been formally Rejected / Marked as Spam and cannot transition further.",
                 "allowed_transitions": []
             }
         )
@@ -91,6 +101,11 @@ def execute_transition(
         if not case.closure_remarks:
             case.closure_remarks = remarks
         event_type = AuditEventType.CLOSED
+    elif to_status == CaseStatus.REJECTED:
+        case.closed_at = now
+        case.resolved_at = None  # Critical: Never set resolved_at on rejected/spam cases to prevent metrics corruption
+        case.closure_remarks = f"[REJECTED / SPAM]: {remarks.strip()}"
+        event_type = AuditEventType.REJECTED
     elif previous_state == CaseStatus.RESOLVED and to_status == CaseStatus.IN_PROGRESS:
         # Reopening workflow
         case.resolved_at = None
@@ -147,3 +162,29 @@ def reopen_case(
         actor=actor,
         remarks=f"[REOPEN AUTHORIZED]: {reopen_reason}"
     )
+
+
+def reject_case(
+    db: Session,
+    case: ComplaintCase,
+    actor: User,
+    rejection_reason: str,
+) -> ComplaintCase:
+    """Authorized rejection of a malformed, spam, or out-of-jurisdiction complaint."""
+    if not rejection_reason or len(rejection_reason.strip()) < 5:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail={
+                "code": "MISSING_REJECTION_REASON",
+                "message": "A detailed reason (minimum 5 characters) is required to reject a complaint as malformed or spam."
+            }
+        )
+
+    return execute_transition(
+        db=db,
+        case=case,
+        to_status=CaseStatus.REJECTED,
+        actor=actor,
+        remarks=rejection_reason.strip()
+    )
+

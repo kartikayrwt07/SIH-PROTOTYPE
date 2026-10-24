@@ -11,15 +11,16 @@ interface CaseTransitionModalProps {
 }
 
 const ALLOWED_TRANSITIONS: Record<CaseStatus, CaseStatus[]> = {
-  Received: ["Registered"],
-  Registered: ["Under Triage"],
-  "Under Triage": ["Assigned"],
-  Assigned: ["In Progress"],
-  "In Progress": ["Awaiting Information", "Under Review"],
-  "Awaiting Information": ["In Progress"],
-  "Under Review": ["In Progress", "Resolved"],
+  Received: ["Registered", "Rejected"],
+  Registered: ["Under Triage", "Rejected"],
+  "Under Triage": ["Assigned", "Rejected"],
+  Assigned: ["In Progress", "Rejected"],
+  "In Progress": ["Awaiting Information", "Under Review", "Rejected"],
+  "Awaiting Information": ["In Progress", "Rejected"],
+  "Under Review": ["In Progress", "Resolved", "Rejected"],
   Resolved: ["Closed", "In Progress"],
   Closed: [],
+  Rejected: [],
 };
 
 export const CaseTransitionModal: React.FC<CaseTransitionModalProps> = ({
@@ -40,6 +41,7 @@ export const CaseTransitionModal: React.FC<CaseTransitionModalProps> = ({
 
   const isReopen = currentCase.status === "Resolved" && selectedNext === "In Progress";
   const isClosing = selectedNext === "Closed";
+  const isRejecting = selectedNext === "Rejected";
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -205,7 +207,8 @@ export const CaseTransitionModal: React.FC<CaseTransitionModalProps> = ({
                 >
                   {allowedNext.map((st) => (
                     <option key={st} value={st}>
-                      {st} {currentCase.status === "Resolved" && st === "In Progress" ? "(Reopen)" : ""}
+                      {st === "Rejected" ? "Rejected (Spam / Malformed)" : st}{" "}
+                      {currentCase.status === "Resolved" && st === "In Progress" ? "(Reopen)" : ""}
                     </option>
                   ))}
                 </select>
@@ -213,6 +216,25 @@ export const CaseTransitionModal: React.FC<CaseTransitionModalProps> = ({
             </div>
 
             {/* Special notices */}
+            {isRejecting && (
+              <div
+                style={{
+                  padding: "0.6rem 0.8rem",
+                  background: "rgba(239, 68, 68, 0.12)",
+                  border: "1px solid rgba(239, 68, 68, 0.3)",
+                  borderRadius: "4px",
+                  fontSize: "0.8rem",
+                  color: "#EF4444",
+                  display: "flex",
+                  gap: "0.5rem",
+                  alignItems: "center",
+                }}
+              >
+                <AlertCircle size={15} color="#EF4444" />
+                Rejecting quarantines this complaint as spam/malformed. It will NOT pollute Average Resolution Time (MTTR) or Resolution Rate KPIs.
+              </div>
+            )}
+
             {isClosing && (
               <div
                 style={{
@@ -294,13 +316,23 @@ export const CaseTransitionModal: React.FC<CaseTransitionModalProps> = ({
                 type="submit"
                 className="btn btn-primary"
                 disabled={isSubmitting || remarks.trim().length < 3}
-                style={{ display: "inline-flex", alignItems: "center", gap: "0.4rem" }}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "0.4rem",
+                  background: isRejecting ? "#EF4444" : undefined,
+                  borderColor: isRejecting ? "#DC2626" : undefined,
+                }}
               >
                 {isSubmitting ? (
                   "Recording..."
                 ) : isReopen ? (
                   <>
                     <RefreshCw size={15} /> Reopen Case
+                  </>
+                ) : isRejecting ? (
+                  <>
+                    <AlertCircle size={15} /> Reject & Quarantine Spam
                   </>
                 ) : (
                   <>

@@ -13,6 +13,8 @@ class CaseAttachmentRead(BaseModel):
     mime_type: str
     storage_path: str
     storage_bucket: str
+    storage_provider: str = "supabase"
+    secure_url: str
     category: AttachmentCategory
     description: Optional[str] = None
     is_confidential: bool

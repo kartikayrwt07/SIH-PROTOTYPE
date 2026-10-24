@@ -1,5 +1,5 @@
 import React from "react";
-import { X, ShieldAlert, Building2 } from "lucide-react";
+import { X, ShieldAlert, Building2, AlertTriangle } from "lucide-react";
 import { ComplaintCase, DuplicateMatch } from "../../types";
 
 interface DuplicateComparisonModalProps {
@@ -20,81 +20,191 @@ export const DuplicateComparisonModal: React.FC<DuplicateComparisonModalProps> =
 
   const similarityPct = Math.round(duplicateMatch.similarity_score * 100);
 
-  const getSimilarityBadge = (pct: number) => {
+  const getMatchTheme = (pct: number) => {
     if (pct >= 78) {
       return {
-        bg: "bg-red-50 text-red-700 border-red-200",
-        bar: "bg-red-600",
-        label: "Critical Match (High Confidence Duplicate)",
+        color: "#EF4444",
+        bg: "rgba(239, 68, 68, 0.15)",
+        border: "rgba(239, 68, 68, 0.4)",
+        label: "Critical Duplicate Collision (High Confidence)",
+        gradient: "linear-gradient(90deg, #EF4444, #F97316)",
       };
     }
     if (pct >= 65) {
       return {
-        bg: "bg-amber-50 text-amber-700 border-amber-200",
-        bar: "bg-amber-500",
-        label: "Moderate Match (Thematically Related Cluster)",
+        color: "#F59E0B",
+        bg: "rgba(245, 158, 11, 0.15)",
+        border: "rgba(245, 158, 11, 0.4)",
+        label: "Thematically Related Cluster (Moderate Similarity)",
+        gradient: "linear-gradient(90deg, #F59E0B, #EAB308)",
       };
     }
     return {
-      bg: "bg-blue-50 text-blue-700 border-blue-200",
-      bar: "bg-blue-500",
-      label: "Low Match (Marginal Affinity)",
+      color: "#3B82F6",
+      bg: "rgba(59, 130, 246, 0.15)",
+      border: "rgba(59, 130, 246, 0.4)",
+      label: "Thematic Overlap (Low Match)",
+      gradient: "linear-gradient(90deg, #3B82F6, #06B6D4)",
     };
   };
 
-  const badgeStyle = getSimilarityBadge(similarityPct);
+  const theme = getMatchTheme(similarityPct);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fadeIn">
-      <div className="relative w-full max-w-5xl bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[90vh]">
+    <div
+      style={{
+        position: "fixed",
+        inset: 0,
+        zIndex: 9999,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: "1rem",
+        backgroundColor: "rgba(0, 0, 0, 0.75)",
+        backdropFilter: "blur(8px)",
+      }}
+    >
+      <div
+        style={{
+          width: "100%",
+          maxWidth: "1050px",
+          background: "var(--bg-surface)",
+          border: `1px solid ${theme.border}`,
+          borderRadius: "16px",
+          boxShadow: "0 24px 64px rgba(0, 0, 0, 0.6)",
+          overflow: "hidden",
+          display: "flex",
+          flexDirection: "column",
+          maxHeight: "90vh",
+        }}
+      >
         {/* Header */}
-        <div className="px-6 py-4 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <div className="p-2 bg-indigo-50 border border-indigo-100 rounded-lg text-indigo-600">
-              <ShieldAlert className="w-5 h-5" />
+        <div
+          style={{
+            padding: "1.25rem 1.5rem",
+            background: "rgba(255, 255, 255, 0.03)",
+            borderBottom: "1px solid var(--border-subtle)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+            <div
+              style={{
+                width: "40px",
+                height: "40px",
+                borderRadius: "10px",
+                background: theme.bg,
+                border: `1px solid ${theme.border}`,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <ShieldAlert size={20} color={theme.color} />
             </div>
             <div>
-              <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2">
-                Duplicate Complaint Dossier Comparison
-                <span className={`px-2.5 py-0.5 text-xs font-semibold rounded-full border ${badgeStyle.bg}`}>
-                  {similarityPct}% Match
+              <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
+                <h3 style={{ fontSize: "1.2rem", fontWeight: 800, color: "#FFFFFF", margin: 0 }}>
+                  Semantic Duplicate Dossier Comparison
+                </h3>
+                <span
+                  style={{
+                    background: theme.bg,
+                    border: `1px solid ${theme.border}`,
+                    color: theme.color,
+                    fontSize: "0.75rem",
+                    fontWeight: 800,
+                    padding: "0.2rem 0.6rem",
+                    borderRadius: "6px",
+                  }}
+                >
+                  {similarityPct}% Semantic Match
                 </span>
-              </h2>
-              <p className="text-xs text-slate-500">
-                AICTE Dense Semantic Vector Embedding Analysis (BGE-Small ONNX)
+              </div>
+              <p style={{ fontSize: "0.8rem", color: "var(--text-secondary)", margin: "0.2rem 0 0 0" }}>
+                AICTE Dense Vector Embedding Cosine Analysis &bull; Deterministic Token Overlap Verification
               </p>
             </div>
           </div>
+
           <button
             onClick={onClose}
-            className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+            style={{
+              background: "rgba(255, 255, 255, 0.06)",
+              border: "1px solid var(--border-subtle)",
+              color: "var(--text-secondary)",
+              padding: "0.4rem",
+              borderRadius: "8px",
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              transition: "all 0.15s ease",
+            }}
           >
-            <X className="w-5 h-5" />
+            <X size={18} />
           </button>
         </div>
 
         {/* Similarity Metric Gauge Bar */}
-        <div className="px-6 py-3 bg-gradient-to-r from-slate-50 via-indigo-50/30 to-slate-50 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-          <div className="flex-1 max-w-md">
-            <div className="flex justify-between text-xs font-semibold text-slate-700 mb-1">
-              <span>Cosine Similarity Confidence: {similarityPct}%</span>
-              <span className="text-slate-500">{badgeStyle.label}</span>
+        <div
+          style={{
+            padding: "1rem 1.5rem",
+            background: "rgba(0, 0, 0, 0.25)",
+            borderBottom: "1px solid var(--border-subtle)",
+            display: "flex",
+            flexWrap: "wrap",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: "1rem",
+          }}
+        >
+          <div style={{ flex: 1, minWidth: "280px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.78rem", fontWeight: 700, marginBottom: "0.35rem" }}>
+              <span style={{ color: "#FFFFFF" }}>Cosine Similarity Score: {similarityPct}%</span>
+              <span style={{ color: theme.color }}>{theme.label}</span>
             </div>
-            <div className="w-full bg-slate-200 rounded-full h-2.5 overflow-hidden">
+            <div
+              style={{
+                width: "100%",
+                height: "8px",
+                background: "rgba(255, 255, 255, 0.08)",
+                borderRadius: "4px",
+                overflow: "hidden",
+              }}
+            >
               <div
-                className={`h-2.5 rounded-full transition-all duration-500 ${badgeStyle.bar}`}
-                style={{ width: `${Math.min(similarityPct, 100)}%` }}
+                style={{
+                  width: `${Math.min(similarityPct, 100)}%`,
+                  height: "100%",
+                  background: theme.gradient,
+                  borderRadius: "4px",
+                  transition: "width 0.4s ease",
+                }}
               />
             </div>
           </div>
 
           {duplicateMatch.matched_keywords && duplicateMatch.matched_keywords.length > 0 && (
-            <div className="flex items-center gap-1.5 flex-wrap">
-              <span className="text-xs font-medium text-slate-500">Matched Tokens:</span>
+            <div style={{ display: "flex", alignItems: "center", gap: "0.4rem", flexWrap: "wrap" }}>
+              <span style={{ fontSize: "0.75rem", fontWeight: 600, color: "var(--text-muted)" }}>
+                Salient Overlap Tokens:
+              </span>
               {duplicateMatch.matched_keywords.map((kw, idx) => (
                 <span
                   key={idx}
-                  className="px-2 py-0.5 text-[11px] font-medium bg-amber-100 text-amber-800 rounded-md border border-amber-200"
+                  style={{
+                    background: "rgba(245, 158, 11, 0.12)",
+                    border: "1px solid rgba(245, 158, 11, 0.3)",
+                    color: "#FCD34D",
+                    fontSize: "0.72rem",
+                    fontWeight: 700,
+                    padding: "0.15rem 0.5rem",
+                    borderRadius: "4px",
+                    fontFamily: "var(--font-mono)",
+                  }}
                 >
                   {kw}
                 </span>
@@ -104,135 +214,184 @@ export const DuplicateComparisonModal: React.FC<DuplicateComparisonModalProps> =
         </div>
 
         {/* Side-by-side comparison panels */}
-        <div className="flex-1 overflow-y-auto p-6 grid grid-cols-1 md:grid-cols-2 gap-6 bg-slate-50/50">
+        <div
+          style={{
+            flex: 1,
+            overflowY: "auto",
+            padding: "1.5rem",
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
+            gap: "1.25rem",
+          }}
+        >
           {/* Current Case (Left) */}
-          <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
-              <div className="flex items-center space-x-2">
-                <span className="px-2 py-0.5 text-xs font-semibold bg-indigo-100 text-indigo-700 rounded">
-                  Current Case (Focus)
+          <div
+            style={{
+              background: "rgba(255, 255, 255, 0.02)",
+              border: "1px solid var(--border-subtle)",
+              borderTop: "3px solid #8B5CF6",
+              borderRadius: "12px",
+              padding: "1.25rem",
+              display: "flex",
+              flexDirection: "column",
+              gap: "1rem",
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: "1px solid rgba(255, 255, 255, 0.06)", paddingBottom: "0.75rem" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                <span style={{ background: "rgba(139, 92, 246, 0.18)", color: "#C4B5FD", fontSize: "0.72rem", fontWeight: 800, padding: "0.2rem 0.5rem", borderRadius: "4px" }}>
+                  CURRENT FOCUS CASE
                 </span>
-                <span className="text-xs font-mono font-bold text-slate-700">
+                <span style={{ fontFamily: "var(--font-mono)", fontSize: "0.85rem", fontWeight: 800, color: "#FFFFFF" }}>
                   {currentCase.case_reference_id}
                 </span>
               </div>
-              <span className="text-xs font-medium px-2 py-0.5 rounded bg-slate-100 text-slate-600">
+              <span style={{ fontSize: "0.72rem", color: "var(--text-muted)", background: "rgba(255, 255, 255, 0.05)", padding: "0.2rem 0.5rem", borderRadius: "4px" }}>
                 {currentCase.status}
               </span>
             </div>
 
-            <div className="space-y-4 flex-1">
-              <div>
-                <label className="text-[11px] font-semibold uppercase tracking-wider text-slate-400 block mb-1">
-                  Subject
-                </label>
-                <p className="text-sm font-semibold text-slate-800">{currentCase.subject}</p>
+            <div>
+              <div style={{ fontSize: "0.7rem", color: "var(--text-muted)", textTransform: "uppercase", fontWeight: 700, marginBottom: "0.25rem" }}>
+                Subject
               </div>
-
-              <div>
-                <label className="text-[11px] font-semibold uppercase tracking-wider text-slate-400 block mb-1">
-                  Institution
-                </label>
-                <div className="flex items-center gap-1.5 text-xs text-slate-600">
-                  <Building2 className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                  <span>{currentCase.institution?.name || "Central / Unaffiliated"}</span>
-                </div>
+              <div style={{ fontSize: "0.95rem", fontWeight: 700, color: "#FFFFFF", lineHeight: 1.35 }}>
+                {currentCase.subject}
               </div>
+            </div>
 
-              <div className="grid grid-cols-2 gap-3 text-xs">
-                <div>
-                  <label className="text-[11px] font-semibold uppercase tracking-wider text-slate-400 block mb-1">
-                    Bureau
-                  </label>
-                  <span className="font-medium text-slate-700">
-                    {currentCase.bureau?.name || currentCase.bureau?.code || "Pending Assignment"}
-                  </span>
-                </div>
-                <div>
-                  <label className="text-[11px] font-semibold uppercase tracking-wider text-slate-400 block mb-1">
-                    Category
-                  </label>
-                  <span className="font-medium text-slate-700">{currentCase.category}</span>
+            <div>
+              <div style={{ fontSize: "0.7rem", color: "var(--text-muted)", textTransform: "uppercase", fontWeight: 700, marginBottom: "0.25rem" }}>
+                Collegiate Institution
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: "0.4rem", fontSize: "0.82rem", color: "#E2E8F0" }}>
+                <Building2 size={14} color="#94A3B8" />
+                <span>{currentCase.institution?.name || "Central / Unaffiliated"}</span>
+              </div>
+            </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem" }}>
+              <div style={{ background: "rgba(0, 0, 0, 0.2)", padding: "0.6rem", borderRadius: "8px" }}>
+                <div style={{ fontSize: "0.68rem", color: "var(--text-muted)", textTransform: "uppercase", fontWeight: 700 }}>Bureau</div>
+                <div style={{ fontSize: "0.85rem", fontWeight: 700, color: "#93C5FD", marginTop: "0.15rem" }}>
+                  {currentCase.bureau?.name || currentCase.bureau?.code || "Unassigned"}
                 </div>
               </div>
-
-              <div>
-                <label className="text-[11px] font-semibold uppercase tracking-wider text-slate-400 block mb-1">
-                  Grievance Narrative
-                </label>
-                <div className="p-3 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-700 max-h-48 overflow-y-auto whitespace-pre-wrap leading-relaxed">
-                  {currentCase.description_confidential || currentCase.description_redacted || "No narrative text."}
+              <div style={{ background: "rgba(0, 0, 0, 0.2)", padding: "0.6rem", borderRadius: "8px" }}>
+                <div style={{ fontSize: "0.68rem", color: "var(--text-muted)", textTransform: "uppercase", fontWeight: 700 }}>Category</div>
+                <div style={{ fontSize: "0.85rem", fontWeight: 700, color: "#FCD34D", marginTop: "0.15rem" }}>
+                  {currentCase.category}
                 </div>
+              </div>
+            </div>
+
+            <div>
+              <div style={{ fontSize: "0.7rem", color: "var(--text-muted)", textTransform: "uppercase", fontWeight: 700, marginBottom: "0.35rem" }}>
+                Grievance Abstract
+              </div>
+              <div
+                style={{
+                  background: "rgba(0, 0, 0, 0.35)",
+                  border: "1px solid var(--border-subtle)",
+                  borderRadius: "8px",
+                  padding: "0.85rem",
+                  fontSize: "0.82rem",
+                  color: "#CBD5E1",
+                  maxHeight: "180px",
+                  overflowY: "auto",
+                  lineHeight: 1.5,
+                  whiteSpace: "pre-wrap",
+                }}
+              >
+                {currentCase.description_confidential || currentCase.description_redacted || "No narrative text."}
               </div>
             </div>
           </div>
 
           {/* Candidate Duplicate (Right) */}
-          <div className="bg-white p-5 rounded-xl border-2 border-amber-200 shadow-sm flex flex-col">
-            <div className="flex items-center justify-between pb-3 border-b border-amber-100 mb-4">
-              <div className="flex items-center space-x-2">
-                <span className="px-2 py-0.5 text-xs font-semibold bg-amber-100 text-amber-800 rounded">
-                  Matched Candidate
+          <div
+            style={{
+              background: "rgba(255, 255, 255, 0.02)",
+              border: `1px solid ${theme.border}`,
+              borderTop: `3px solid ${theme.color}`,
+              borderRadius: "12px",
+              padding: "1.25rem",
+              display: "flex",
+              flexDirection: "column",
+              gap: "1rem",
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: "1px solid rgba(255, 255, 255, 0.06)", paddingBottom: "0.75rem" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                <span style={{ background: theme.bg, color: theme.color, fontSize: "0.72rem", fontWeight: 800, padding: "0.2rem 0.5rem", borderRadius: "4px" }}>
+                  MATCHED CANDIDATE
                 </span>
-                <span className="text-xs font-mono font-bold text-slate-700">
+                <span style={{ fontFamily: "var(--font-mono)", fontSize: "0.85rem", fontWeight: 800, color: "#FFFFFF" }}>
                   {duplicateMatch.case_reference_id}
                 </span>
               </div>
-              <span className="text-xs font-medium px-2 py-0.5 rounded bg-slate-100 text-slate-600">
+              <span style={{ fontSize: "0.72rem", color: "var(--text-muted)", background: "rgba(255, 255, 255, 0.05)", padding: "0.2rem 0.5rem", borderRadius: "4px" }}>
                 {duplicateMatch.status}
               </span>
             </div>
 
-            <div className="space-y-4 flex-1">
-              <div>
-                <label className="text-[11px] font-semibold uppercase tracking-wider text-slate-400 block mb-1">
-                  Subject
-                </label>
-                <p className="text-sm font-semibold text-slate-800">{duplicateMatch.subject}</p>
+            <div>
+              <div style={{ fontSize: "0.7rem", color: "var(--text-muted)", textTransform: "uppercase", fontWeight: 700, marginBottom: "0.25rem" }}>
+                Subject
               </div>
+              <div style={{ fontSize: "0.95rem", fontWeight: 700, color: "#FFFFFF", lineHeight: 1.35 }}>
+                {duplicateMatch.subject}
+              </div>
+            </div>
 
-              <div>
-                <label className="text-[11px] font-semibold uppercase tracking-wider text-slate-400 block mb-1">
-                  Institution
-                </label>
-                <div className="flex items-center gap-1.5 text-xs text-slate-600">
-                  <Building2 className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                  <span>
-                    {duplicateMatch.institution_name} ({duplicateMatch.institution_aicte_id})
-                  </span>
+            <div>
+              <div style={{ fontSize: "0.7rem", color: "var(--text-muted)", textTransform: "uppercase", fontWeight: 700, marginBottom: "0.25rem" }}>
+                Collegiate Institution
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: "0.4rem", fontSize: "0.82rem", color: "#E2E8F0" }}>
+                <Building2 size={14} color="#94A3B8" />
+                <span>
+                  {duplicateMatch.institution_name} {duplicateMatch.institution_aicte_id && `(${duplicateMatch.institution_aicte_id})`}
+                </span>
+              </div>
+            </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem" }}>
+              <div style={{ background: "rgba(0, 0, 0, 0.2)", padding: "0.6rem", borderRadius: "8px" }}>
+                <div style={{ fontSize: "0.68rem", color: "var(--text-muted)", textTransform: "uppercase", fontWeight: 700 }}>Bureau</div>
+                <div style={{ fontSize: "0.85rem", fontWeight: 700, color: "#93C5FD", marginTop: "0.15rem" }}>
+                  {duplicateMatch.bureau_name} ({duplicateMatch.bureau_code})
                 </div>
               </div>
+              <div style={{ background: "rgba(0, 0, 0, 0.2)", padding: "0.6rem", borderRadius: "8px" }}>
+                <div style={{ fontSize: "0.68rem", color: "var(--text-muted)", textTransform: "uppercase", fontWeight: 700 }}>Filed On</div>
+                <div style={{ fontSize: "0.85rem", fontWeight: 700, color: "#E2E8F0", marginTop: "0.15rem" }}>
+                  {new Date(duplicateMatch.created_at).toLocaleDateString()}
+                </div>
+              </div>
+            </div>
 
-              <div className="grid grid-cols-2 gap-3 text-xs">
+            <div>
+              <div style={{ fontSize: "0.7rem", color: "var(--text-muted)", textTransform: "uppercase", fontWeight: 700, marginBottom: "0.35rem" }}>
+                Collision Rationale & Analysis
+              </div>
+              <div
+                style={{
+                  background: theme.bg,
+                  border: `1px solid ${theme.border}`,
+                  borderRadius: "8px",
+                  padding: "0.85rem",
+                  fontSize: "0.82rem",
+                  color: "#E2E8F0",
+                  lineHeight: 1.5,
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "center", gap: "0.4rem", color: theme.color, fontWeight: 700, marginBottom: "0.3rem" }}>
+                  <AlertTriangle size={14} />
+                  <span>Substantial Vector & Semantic Overlap</span>
+                </div>
                 <div>
-                  <label className="text-[11px] font-semibold uppercase tracking-wider text-slate-400 block mb-1">
-                    Bureau
-                  </label>
-                  <span className="font-medium text-slate-700">
-                    {duplicateMatch.bureau_name} ({duplicateMatch.bureau_code})
-                  </span>
-                </div>
-                <div>
-                  <label className="text-[11px] font-semibold uppercase tracking-wider text-slate-400 block mb-1">
-                    Registered On
-                  </label>
-                  <span className="font-medium text-slate-700">
-                    {new Date(duplicateMatch.created_at).toLocaleDateString()}
-                  </span>
-                </div>
-              </div>
-
-              <div>
-                <label className="text-[11px] font-semibold uppercase tracking-wider text-slate-400 block mb-1">
-                  Matching Overlap Rationale
-                </label>
-                <div className="p-3 bg-amber-50/60 border border-amber-200 rounded-lg text-xs text-slate-700 space-y-2">
-                  <p className="font-medium text-amber-900">
-                    High n-gram overlap detected across academic institution and grievance narrative.
-                  </p>
-                  <p className="text-[11px] text-slate-600">
-                    Officers may link this complaint as a duplicate submission or reference the earlier case investigation dossier for precedent.
-                  </p>
+                  High cosine affinity across academic institution and narrative themes. Case officers may review the precedent ATR of this registered dossier or combine under a Master Ticket.
                 </div>
               </div>
             </div>
@@ -240,20 +399,39 @@ export const DuplicateComparisonModal: React.FC<DuplicateComparisonModalProps> =
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between">
-          <div className="text-xs text-slate-500">
-            Human-in-the-Loop decision required. No automatic merge or deletion performed.
+        <div
+          style={{
+            padding: "1rem 1.5rem",
+            background: "rgba(255, 255, 255, 0.03)",
+            borderTop: "1px solid var(--border-subtle)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            flexWrap: "wrap",
+            gap: "0.75rem",
+          }}
+        >
+          <div style={{ fontSize: "0.78rem", color: "var(--text-muted)" }}>
+            Human-in-the-Loop decision required. No automated case destruction or mutation is executed.
           </div>
-          <div className="flex items-center space-x-3">
-            <button
-              onClick={onClose}
-              className="px-4 py-2 text-xs font-semibold text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors"
-            >
-              Close Dossier
-            </button>
-          </div>
+          <button
+            onClick={onClose}
+            style={{
+              background: "rgba(255, 255, 255, 0.08)",
+              border: "1px solid var(--border-subtle)",
+              color: "#FFFFFF",
+              padding: "0.5rem 1.1rem",
+              borderRadius: "8px",
+              fontSize: "0.82rem",
+              fontWeight: 700,
+              cursor: "pointer",
+            }}
+          >
+            Close Comparison
+          </button>
         </div>
       </div>
     </div>
   );
 };
+

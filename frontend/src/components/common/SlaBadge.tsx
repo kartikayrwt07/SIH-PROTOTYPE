@@ -14,6 +14,29 @@ export const SlaBadge: React.FC<SlaBadgeProps> = ({
   status,
   compact = false,
 }) => {
+  if (status === "Rejected") {
+    return (
+      <span
+        style={{
+          display: "inline-flex",
+          alignItems: "center",
+          gap: "0.3rem",
+          padding: compact ? "0.15rem 0.4rem" : "0.25rem 0.6rem",
+          borderRadius: "4px",
+          fontSize: compact ? "0.75rem" : "0.8rem",
+          fontWeight: 600,
+          background: "rgba(239, 68, 68, 0.12)",
+          color: "#EF4444",
+          border: "1px solid rgba(239, 68, 68, 0.25)",
+        }}
+        title="Grievance rejected as malformed, spam, or out-of-jurisdiction"
+      >
+        <AlertCircle size={compact ? 12 : 14} />
+        {!compact && "Rejected / Spam"}
+      </span>
+    );
+  }
+
   if (status === "Resolved" || status === "Closed") {
     return (
       <span

@@ -33,7 +33,7 @@ from backend.app.schemas.magic_ingest import (
     MagicIngestRequest,
     MagicIngestResponse,
 )
-from backend.app.services.lifecycle import execute_transition, reopen_case
+from backend.app.services.lifecycle import execute_transition, reopen_case, reject_case
 from backend.app.services.audit import get_case_audit_trail, log_case_event
 from backend.app.services.assignment import assign_case
 from backend.app.services.sla import compute_case_sla_risk, escalate_case
@@ -408,6 +408,35 @@ def reopen_resolved_case(
     case_dict = sanitize_case_for_role(case_dict, current_user.role)
 
     return StandardResponse(data=ComplaintCaseRead(**case_dict))
+
+
+@router.post("/{case_ref}/reject", response_model=StandardResponse[ComplaintCaseRead])
+def reject_malformed_or_spam_case(
+    case_ref: str,
+    reason: str = Query(..., min_length=5, description="Mandatory detailed reason for rejecting complaint as malformed or spam"),
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Authorized rejection of a malformed, invalid, spam, or out-of-jurisdiction complaint."""
+    case = db.query(ComplaintCase).filter(ComplaintCase.case_reference_id == case_ref).first()
+    if not case:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Case with reference ID '{case_ref}' not found."
+        )
+
+    rejected = reject_case(
+        db=db,
+        case=case,
+        actor=current_user,
+        rejection_reason=reason
+    )
+
+    case_dict = ComplaintCaseRead.model_validate(rejected).model_dump()
+    case_dict = sanitize_case_for_role(case_dict, current_user.role)
+
+    return StandardResponse(data=ComplaintCaseRead(**case_dict))
+
 
 
 @router.get("/{case_ref}/timeline", response_model=StandardResponse[List[TimelineEventRead]])

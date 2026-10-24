@@ -17,6 +17,7 @@ class CaseStatus(str, enum.Enum):
     UNDER_REVIEW = "Under Review"
     RESOLVED = "Resolved"
     CLOSED = "Closed"
+    REJECTED = "Rejected"  # Dedicated terminal state for malformed, spam, or out-of-jurisdiction complaints
 
 
 class ComplaintCase(Base):
@@ -32,6 +33,9 @@ class ComplaintCase(Base):
     subject = Column(String(255), nullable=False)
     description_redacted = Column(Text, nullable=False)
     description_confidential = Column(Text, nullable=True)
+    original_language = Column(String(20), nullable=True, default="en")
+    original_description = Column(Text, nullable=True)
+    translation_provider = Column(String(50), nullable=True, default="BHASHINI_NMT_ULCA")
     category = Column(String(100), nullable=False, index=True)
     priority = Column(Enum(CasePriority), nullable=False, default=CasePriority.MEDIUM, index=True)
     status = Column(Enum(CaseStatus), nullable=False, default=CaseStatus.RECEIVED, index=True)

@@ -41,6 +41,16 @@ class BureauRouting(BaseModel):
     key_evidence_tokens: List[str] = Field(default_factory=list, description="Salient semantic tokens matched in grievance text")
 
 
+class TranslationResult(BaseModel):
+    source_language: str = Field(..., description="Detected language code (e.g. hi, ta, mr, en)")
+    source_language_name: str = Field(..., description="Human-readable language name")
+    is_translated: bool = Field(..., description="True if text was non-English and auto-translated")
+    original_text: str = Field(..., description="Verbatim raw vernacular text kept as legal evidence")
+    translated_text: str = Field(..., description="English translated text used for AI triage and officer review")
+    confidence: float = Field(..., ge=0.0, le=1.0, description="Language detection / translation confidence")
+    provider: str = Field(..., description="Translation service provider (e.g. BHASHINI_NMT_ULCA, BHASHINI_ULCA_LIVE, DIRECT)")
+
+
 class MagicAnalysisResult(BaseModel):
     extracted_college: ExtractedInstitution
     categorization: CategorizationResult
@@ -48,6 +58,7 @@ class MagicAnalysisResult(BaseModel):
     bureau_routing: BureauRouting
     generated_subject: str
     summary_insight: str
+    translation: TranslationResult
 
 
 class MagicIngestRequest(BaseModel):

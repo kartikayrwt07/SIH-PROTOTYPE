@@ -11,7 +11,8 @@ export type CaseStatus =
   | "Awaiting Information"
   | "Under Review"
   | "Resolved"
-  | "Closed";
+  | "Closed"
+  | "Rejected";
 
 export interface Bureau {
   id: string;
@@ -64,6 +65,9 @@ export interface ComplaintCase {
   bureau?: Bureau;
   assigned_officer?: UserSummary;
   complainant_verification_badge?: ComplainantVerificationBadge;
+  original_language?: string | null;
+  original_description?: string | null;
+  translation_provider?: string | null;
 }
 
 export interface CaseAttachment {
@@ -75,6 +79,8 @@ export interface CaseAttachment {
   mime_type: string;
   storage_path: string;
   storage_bucket: string;
+  storage_provider?: string;
+  secure_url?: string;
   category: "FEE_RECEIPT" | "BANK_STATEMENT" | "AFFILIATION_DOCUMENT" | "FACILITY_PHOTOGRAPH" | "SALARY_SLIP" | "COMMUNICATION_RECORD" | "OTHER";
   description?: string;
   is_confidential: boolean;
@@ -154,7 +160,9 @@ export interface BureauWorkloadStat {
   overdue_cases: number;
   approaching_cases: number;
   resolved_cases: number;
+  rejected_cases?: number;
   resolution_rate_pct: number;
+  avg_resolution_hours?: number;
 }
 
 export interface StageDwellTimeStat {
@@ -175,6 +183,9 @@ export interface ExecutiveKPIs {
   overdue_cases: number;
   resolved_closed: number;
   resolution_rate_pct: number;
+  rejected_spam_cases?: number;
+  avg_resolution_hours?: number;
+  avg_resolution_days?: number;
 }
 
 export interface DashboardOverview {
@@ -190,6 +201,120 @@ export interface BottleneckAnalysis {
   primary_bottleneck_stage?: string | null;
   system_health_status: string;
   operational_advisory?: string | null;
+}
+
+export interface RecurringCategoryCount {
+  category: string;
+  count: number;
+}
+
+export type RegulatoryInterventionStatus = "CRITICAL_INTERVENTION" | "WATCHLIST" | "COMPLIANT";
+
+export interface InstitutionPerformanceStat {
+  institution_id: string;
+  aicte_permanent_id: string;
+  name: string;
+  state: string;
+  district: string;
+  institution_type: string;
+  total_cases: number;
+  open_cases: number;
+  pending_cases: number;
+  resolved_cases: number;
+  overdue_cases: number;
+  approaching_cases: number;
+  resolution_rate_pct: number;
+  top_recurring_categories: RecurringCategoryCount[];
+  intervention_status: RegulatoryInterventionStatus;
+  trust_score?: number;
+  trust_grade?: string;
+  risk_level?: "LOW" | "MODERATE" | "HIGH" | "CRITICAL";
+  automated_directive?: string;
+  sla_penalty_points?: number;
+  severe_penalty_points?: number;
+}
+
+export interface DeductionBreakdown {
+  sla_breaches_count: number;
+  sla_breach_points: number;
+  approaching_warnings_count: number;
+  approaching_warning_points: number;
+  severe_complaints_count: number;
+  severe_complaint_points: number;
+  sensitive_category_count: number;
+  sensitive_category_points: number;
+  master_ticket_clusters_count: number;
+  master_ticket_points: number;
+  backlog_dwell_count: number;
+  backlog_dwell_points: number;
+  recovery_bonus_points: number;
+  total_deductions: number;
+}
+
+export interface CaseDeductionCitation {
+  case_reference_id: string;
+  subject: string;
+  category: string;
+  priority: string;
+  status: string;
+  points_deducted: number;
+  deduction_reason: string;
+  created_at: string;
+}
+
+export interface InstitutionTrustScoreDetail {
+  institution_id: string;
+  aicte_permanent_id: string;
+  name: string;
+  state: string;
+  district: string;
+  institution_type: string;
+  trust_score: number;
+  base_score: number;
+  trust_grade: string;
+  risk_level: "LOW" | "MODERATE" | "HIGH" | "CRITICAL";
+  risk_tier: string;
+  trend: "improving" | "stable" | "deteriorating";
+  total_cases: number;
+  open_cases: number;
+  resolved_cases: number;
+  overdue_cases: number;
+  resolution_rate_pct: number;
+  top_recurring_categories: RecurringCategoryCount[];
+  deduction_breakdown: DeductionBreakdown;
+  citations: CaseDeductionCitation[];
+  automated_directive: string;
+  recommended_action_code: "MANDATORY_INSPECTION_FREEZE" | "SHOW_CAUSE_SUMMONS" | "HEIGHTENED_MONITORING" | "ROUTINE_COMPLIANCE";
+  last_audit_date: string;
+}
+
+export interface InstitutionOption {
+  id: string;
+  aicte_permanent_id: string;
+  name: string;
+  state: string;
+  district: string;
+  institution_type?: string;
+}
+
+export interface TrustLeaderboardSummary {
+  national_average_score: number;
+  total_institutions: number;
+  critical_risk_count: number;
+  high_risk_count: number;
+  watchlist_count: number;
+  compliant_count: number;
+  total_sla_breaches: number;
+  total_penalties_deducted: number;
+}
+
+export interface RegulatoryActionResponse {
+  success: boolean;
+  institution_id: string;
+  action_type: string;
+  reference_number: string;
+  issued_at: string;
+  message: string;
 }
 
 export type SlaRiskLevel = "ON_TRACK" | "APPROACHING" | "OVERDUE" | "COMPLETED";
@@ -408,6 +533,16 @@ export interface BureauRouting {
   key_evidence_tokens: string[];
 }
 
+export interface TranslationResult {
+  source_language: string;
+  source_language_name: string;
+  is_translated: boolean;
+  original_text: string;
+  translated_text: string;
+  confidence: number;
+  provider: string;
+}
+
 export interface MagicAnalysisResult {
   extracted_college: ExtractedInstitution;
   categorization: CategorizationResult;
@@ -415,6 +550,7 @@ export interface MagicAnalysisResult {
   bureau_routing: BureauRouting;
   generated_subject: string;
   summary_insight: string;
+  translation: TranslationResult;
 }
 
 export interface MagicIngestRequest {
@@ -435,3 +571,186 @@ export interface MagicIngestResponse {
   created_at?: string | null;
   docket_message: string;
 }
+
+// -------------------------------------------------------------
+// Smart Duplicate Grouping / Master Ticket Types
+// -------------------------------------------------------------
+
+export type MasterTicketStatus = "Open" | "In Progress" | "Resolved" | "Closed";
+
+export interface MasterTicketChild {
+  id: string;
+  case_id: string;
+  case_reference_id: string;
+  subject: string;
+  status: string;
+  similarity_score: number;
+  linked_at: string;
+  is_anchor: boolean;
+}
+
+export interface MasterTicketRead {
+  id: string;
+  ticket_reference_id: string;
+  institution_id: string;
+  institution_name: string;
+  institution_aicte_id: string;
+  bureau_id: string;
+  bureau_code: string;
+  bureau_name: string;
+  assigned_officer_id?: string | null;
+  assigned_officer_name?: string | null;
+  consolidated_subject: string;
+  consolidated_description: string;
+  category: string;
+  common_grievance_theme?: string | null;
+  child_count: number;
+  similarity_threshold: number;
+  avg_similarity_score: number;
+  status: MasterTicketStatus;
+  resolution_remarks?: string | null;
+  time_saved_hours: number;
+  created_at: string;
+  updated_at: string;
+  resolved_at?: string | null;
+  children: MasterTicketChild[];
+}
+
+export interface MasterTicketSummary {
+  id: string;
+  ticket_reference_id: string;
+  institution_name: string;
+  bureau_code: string;
+  bureau_name: string;
+  consolidated_subject: string;
+  category: string;
+  child_count: number;
+  avg_similarity_score: number;
+  status: MasterTicketStatus;
+  time_saved_hours: number;
+  created_at: string;
+}
+
+export interface DetectedGroup {
+  anchor_case_reference_id: string;
+  anchor_subject: string;
+  institution_name: string;
+  institution_aicte_id: string;
+  bureau_code: string;
+  bureau_name: string;
+  category: string;
+  member_count: number;
+  avg_similarity: number;
+  member_case_refs: string[];
+  common_keywords: string[];
+}
+
+export interface AutoDetectResponse {
+  total_cases_scanned: number;
+  groups_detected: number;
+  total_groupable_cases: number;
+  estimated_time_saved_hours: number;
+  groups: DetectedGroup[];
+}
+
+export interface CreateMasterTicketRequest {
+  case_reference_ids: string[];
+  consolidated_subject?: string | null;
+  resolution_remarks?: string | null;
+}
+
+export interface CreateMasterTicketResponse {
+  ticket_reference_id: string;
+  child_count: number;
+  institution_name: string;
+  category: string;
+  avg_similarity_score: number;
+  time_saved_hours: number;
+  message: string;
+}
+
+export interface ResolveMasterTicketRequest {
+  resolution_remarks: string;
+  child_status?: string;
+}
+
+export interface ResolveMasterTicketResponse {
+  ticket_reference_id: string;
+  children_resolved: number;
+  children_already_resolved: number;
+  total_time_saved_hours: number;
+  resolution_remarks: string;
+  resolved_at: string;
+}
+
+export interface MasterTicketStats {
+  total_master_tickets: number;
+  open_tickets: number;
+  resolved_tickets: number;
+  total_children_grouped: number;
+  total_time_saved_hours: number;
+  avg_group_size: number;
+  largest_group_size: number;
+  top_categories: Array<{ category: string; count: number }>;
+}
+
+export interface InstitutionRecurringViolation {
+  category: string;
+  count: number;
+  percentage: number;
+  sample_subjects: string[];
+  has_cluster: boolean;
+  cluster_case_refs: string[];
+  cluster_avg_similarity: number;
+  anchor_case_ref?: string | null;
+  master_ticket_id?: string | null;
+}
+
+export interface InstitutionViolationBreakdown {
+  institution_id: string;
+  institution_name: string;
+  aicte_permanent_id: string;
+  state: string;
+  district: string;
+  institution_type: string;
+  total_cases: number;
+  open_cases: number;
+  resolved_cases: number;
+  cluster_count: number;
+  primary_violation: string;
+  risk_severity: "CRITICAL" | "HIGH" | "ELEVATED" | "STANDARD";
+  top_recurring_themes: InstitutionRecurringViolation[];
+}
+
+// -------------------------------------------------------------
+// Telegram Bot Tracker Types
+// -------------------------------------------------------------
+
+export interface TelegramBotCommand {
+  command: string;
+  description: string;
+}
+
+export interface TelegramBotInfo {
+  bot_name: string;
+  bot_username: string;
+  is_configured: boolean;
+  webhook_url_example: string;
+  commands: TelegramBotCommand[];
+  supported_formats: string[];
+}
+
+export interface TelegramSimulateRequest {
+  message: string;
+  first_name?: string;
+  chat_id?: number;
+}
+
+export interface TelegramSimulateResponse {
+  message_sent: string;
+  reply_html: string;
+  extracted_case_ref?: string | null;
+  chat_id: number;
+  parse_mode: string;
+}
+

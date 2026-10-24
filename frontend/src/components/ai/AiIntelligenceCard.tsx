@@ -9,6 +9,7 @@ import {
   Check,
   RefreshCw,
   Layers,
+  ShieldCheck,
 } from "lucide-react";
 import { ComplaintCase, DuplicateCheckResponse, DuplicateMatch, TriageSuggestion, UserRole } from "../../types";
 import { api } from "../../services/api";
@@ -29,6 +30,7 @@ export const AiIntelligenceCard: React.FC<AiIntelligenceCardProps> = ({
   const [triageSuggestion, setTriageSuggestion] = useState<TriageSuggestion | null>(null);
   const [selectedDuplicate, setSelectedDuplicate] = useState<DuplicateMatch | null>(null);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+  const [threshold, setThreshold] = useState<number>(0.65);
 
   const [loading, setLoading] = useState<boolean>(true);
   const [applying, setApplying] = useState<boolean>(false);
@@ -43,7 +45,7 @@ export const AiIntelligenceCard: React.FC<AiIntelligenceCardProps> = ({
     setApplyError(null);
 
     Promise.allSettled([
-      api.getCaseDuplicates(currentCase.case_reference_id, 0.70),
+      api.getCaseDuplicates(currentCase.case_reference_id, threshold),
       api.getCaseTriageSuggestion(currentCase.case_reference_id),
     ]).then(([dupResult, triageResult]) => {
       if (!isMounted) return;
@@ -60,7 +62,7 @@ export const AiIntelligenceCard: React.FC<AiIntelligenceCardProps> = ({
     return () => {
       isMounted = false;
     };
-  }, [currentCase.case_reference_id]);
+  }, [currentCase.case_reference_id, threshold]);
 
   const handleApplySuggestion = async () => {
     if (!triageSuggestion) return;
@@ -78,7 +80,7 @@ export const AiIntelligenceCard: React.FC<AiIntelligenceCardProps> = ({
       });
 
       if (res.success && res.data) {
-        setApplySuccess(`Successfully applied triage: Routed to ${res.data.bureau_name}`);
+        setApplySuccess(`Successfully applied triage: Routed to ${res.data.bureau_name} (${triageSuggestion.recommended_bureau_code})`);
         if (onTriageApplied) {
           onTriageApplied();
         }
@@ -97,7 +99,6 @@ export const AiIntelligenceCard: React.FC<AiIntelligenceCardProps> = ({
     currentCase.bureau?.code === triageSuggestion.recommended_bureau_code &&
     currentCase.category === triageSuggestion.recommended_category;
 
-  // Authorization check: Officer, Supervisor, or Admin can act on triage
   const canApplyTriage =
     userRole === "SUPERVISOR" ||
     userRole === "ADMIN" ||
@@ -105,52 +106,107 @@ export const AiIntelligenceCard: React.FC<AiIntelligenceCardProps> = ({
 
   if (loading) {
     return (
-      <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
-        <div className="flex items-center space-x-3 text-slate-500 animate-pulse">
-          <Sparkles className="w-5 h-5 text-indigo-500 animate-spin" />
-          <span className="text-xs font-medium">Computing explainable AI heuristics & vector similarity...</span>
-        </div>
+      <div
+        style={{
+          background: "var(--bg-surface)",
+          border: "1px solid var(--border-subtle)",
+          borderRadius: "14px",
+          padding: "2rem",
+          textAlign: "center",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          gap: "0.75rem",
+        }}
+      >
+        <RefreshCw size={24} className="spin" style={{ color: "#8B5CF6" }} />
+        <span style={{ fontSize: "0.85rem", color: "var(--text-secondary)", fontWeight: 600 }}>
+          Computing explainable AI heuristics & vector similarity matrix...
+        </span>
       </div>
     );
   }
 
-  const topDuplicate = duplicateData?.matches?.[0] || null;
+  const matches = duplicateData?.matches || [];
+  const topDuplicate = matches[0] || null;
   const duplicateSimilarityPct = topDuplicate ? Math.round(topDuplicate.similarity_score * 100) : 0;
 
   return (
-    <div className="space-y-4">
+    <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
       {/* 1. Potential Duplicate Alert Banner */}
-      {topDuplicate && (
-        <div className="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-xl p-4 shadow-sm">
-          <div className="flex items-start justify-between gap-3">
-            <div className="flex items-start space-x-3">
-              <div className="p-2 bg-amber-100 text-amber-700 rounded-lg shrink-0 mt-0.5">
-                <ShieldAlert className="w-5 h-5" />
+      {topDuplicate ? (
+        <div
+          style={{
+            background: "linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(239, 68, 68, 0.08) 100%)",
+            border: "1px solid rgba(245, 158, 11, 0.35)",
+            borderLeft: "4px solid #F59E0B",
+            borderRadius: "14px",
+            padding: "1.25rem",
+          }}
+        >
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "0.75rem" }}>
+            <div style={{ display: "flex", alignItems: "flex-start", gap: "0.75rem", flex: 1, minWidth: "260px" }}>
+              <div
+                style={{
+                  width: "36px",
+                  height: "36px",
+                  borderRadius: "8px",
+                  background: "rgba(245, 158, 11, 0.2)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  flexShrink: 0,
+                  marginTop: "0.1rem",
+                }}
+              >
+                <ShieldAlert size={18} color="#F59E0B" />
               </div>
+
               <div>
-                <div className="flex items-center gap-2">
-                  <h4 className="text-sm font-bold text-amber-900">
-                    {duplicateSimilarityPct >= 78 ? "High-Confidence Duplicate" : "Thematically Related Case"} ({duplicateSimilarityPct}% Semantic Match)
+                <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", flexWrap: "wrap" }}>
+                  <h4 style={{ fontSize: "0.95rem", fontWeight: 800, color: "#FFFFFF", margin: 0 }}>
+                    {duplicateSimilarityPct >= 78 ? "High-Confidence Duplicate Collision" : "Thematically Related Case"}
                   </h4>
-                  <span className={`px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-full ${
-                    duplicateSimilarityPct >= 78 ? "bg-red-200/90 text-red-900" : "bg-amber-200/80 text-amber-900"
-                  }`}>
-                    {topDuplicate.status}
+                  <span
+                    style={{
+                      background: duplicateSimilarityPct >= 78 ? "rgba(239, 68, 68, 0.2)" : "rgba(245, 158, 11, 0.2)",
+                      border: `1px solid ${duplicateSimilarityPct >= 78 ? "#EF4444" : "#F59E0B"}`,
+                      color: duplicateSimilarityPct >= 78 ? "#F87171" : "#FCD34D",
+                      fontSize: "0.72rem",
+                      fontWeight: 800,
+                      padding: "0.15rem 0.5rem",
+                      borderRadius: "6px",
+                    }}
+                  >
+                    {duplicateSimilarityPct}% Semantic Match
+                  </span>
+                  <span style={{ fontSize: "0.72rem", color: "var(--text-muted)", background: "rgba(255,255,255,0.06)", padding: "0.15rem 0.45rem", borderRadius: "4px" }}>
+                    Status: {topDuplicate.status}
                   </span>
                 </div>
-                <p className="text-xs text-amber-800 mt-1">
-                  Dense semantic similarity (BGE ONNX Embeddings) with registered case{" "}
-                  <span className="font-mono font-semibold">{topDuplicate.case_reference_id}</span> at{" "}
-                  <span className="font-semibold">{topDuplicate.institution_name}</span>.
+
+                <p style={{ fontSize: "0.82rem", color: "#CBD5E1", margin: "0.35rem 0 0 0", lineHeight: 1.4 }}>
+                  Dense semantic similarity with registered case{" "}
+                  <strong style={{ color: "#FFFFFF", fontFamily: "var(--font-mono)" }}>{topDuplicate.case_reference_id}</strong> at{" "}
+                  <span style={{ color: "#93C5FD" }}>{topDuplicate.institution_name}</span>.
                 </p>
 
                 {topDuplicate.matched_keywords && topDuplicate.matched_keywords.length > 0 && (
-                  <div className="flex items-center gap-1.5 mt-2 flex-wrap">
-                    <span className="text-[11px] font-medium text-amber-700">Salient overlap:</span>
+                  <div style={{ display: "flex", alignItems: "center", gap: "0.35rem", marginTop: "0.5rem", flexWrap: "wrap" }}>
+                    <span style={{ fontSize: "0.72rem", fontWeight: 700, color: "var(--text-muted)" }}>Salient overlap:</span>
                     {topDuplicate.matched_keywords.map((kw, i) => (
                       <span
                         key={i}
-                        className="px-1.5 py-0.5 text-[10px] bg-white/80 text-amber-800 border border-amber-300 rounded font-mono"
+                        style={{
+                          background: "rgba(255, 255, 255, 0.06)",
+                          border: "1px solid rgba(255, 255, 255, 0.1)",
+                          color: "#FCD34D",
+                          fontSize: "0.7rem",
+                          fontWeight: 600,
+                          padding: "0.1rem 0.4rem",
+                          borderRadius: "4px",
+                          fontFamily: "var(--font-mono)",
+                        }}
                       >
                         {kw}
                       </span>
@@ -160,123 +216,322 @@ export const AiIntelligenceCard: React.FC<AiIntelligenceCardProps> = ({
               </div>
             </div>
 
-            <button
-              onClick={() => {
-                setSelectedDuplicate(topDuplicate);
-                setIsModalOpen(true);
-              }}
-              className="px-3 py-1.5 text-xs font-semibold bg-amber-600 hover:bg-amber-700 text-white rounded-lg shadow-sm transition-colors shrink-0 flex items-center gap-1"
-            >
-              <span>Compare</span>
-              <ChevronRight className="w-3.5 h-3.5" />
-            </button>
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "0.5rem" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "0.25rem" }}>
+                <span style={{ fontSize: "0.68rem", color: "var(--text-muted)", fontWeight: 700 }}>Threshold:</span>
+                {[0.60, 0.65, 0.75].map((val) => (
+                  <button
+                    key={val}
+                    onClick={() => setThreshold(val)}
+                    style={{
+                      background: threshold === val ? "rgba(245, 158, 11, 0.25)" : "rgba(255, 255, 255, 0.04)",
+                      border: `1px solid ${threshold === val ? "#F59E0B" : "rgba(255, 255, 255, 0.1)"}`,
+                      color: threshold === val ? "#FCD34D" : "var(--text-secondary)",
+                      padding: "0.15rem 0.4rem",
+                      borderRadius: "4px",
+                      fontSize: "0.68rem",
+                      fontWeight: 700,
+                      cursor: "pointer",
+                    }}
+                  >
+                    {(val * 100).toFixed(0)}%
+                  </button>
+                ))}
+              </div>
+
+              <button
+                onClick={() => {
+                  setSelectedDuplicate(topDuplicate);
+                  setIsModalOpen(true);
+                }}
+                style={{
+                  background: "linear-gradient(135deg, #F59E0B, #D97706)",
+                  border: "none",
+                  color: "#000000",
+                  padding: "0.45rem 0.9rem",
+                  borderRadius: "8px",
+                  fontSize: "0.78rem",
+                  fontWeight: 800,
+                  cursor: "pointer",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "0.3rem",
+                  boxShadow: "0 2px 10px rgba(245, 158, 11, 0.3)",
+                }}
+              >
+                <span>Compare Side-by-Side</span>
+                <ChevronRight size={14} />
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div
+          style={{
+            background: "rgba(16, 185, 129, 0.08)",
+            border: "1px solid rgba(16, 185, 129, 0.25)",
+            borderRadius: "12px",
+            padding: "0.85rem 1.1rem",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            flexWrap: "wrap",
+            gap: "0.6rem",
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
+            <ShieldCheck size={18} color="#10B981" />
+            <span style={{ fontSize: "0.82rem", color: "#6EE7B7", fontWeight: 600 }}>
+              No Duplicate Collisions Detected &bull; Unique Grievance Narrative (Threshold: {(threshold * 100).toFixed(0)}%)
+            </span>
+          </div>
+
+          <div style={{ display: "flex", alignItems: "center", gap: "0.25rem" }}>
+            <span style={{ fontSize: "0.68rem", color: "var(--text-muted)", fontWeight: 700 }}>Scan at:</span>
+            {[0.60, 0.65, 0.75].map((val) => (
+              <button
+                key={val}
+                onClick={() => setThreshold(val)}
+                style={{
+                  background: threshold === val ? "rgba(16, 185, 129, 0.25)" : "rgba(255, 255, 255, 0.04)",
+                  border: `1px solid ${threshold === val ? "#10B981" : "rgba(255, 255, 255, 0.1)"}`,
+                  color: threshold === val ? "#6EE7B7" : "var(--text-secondary)",
+                  padding: "0.15rem 0.4rem",
+                  borderRadius: "4px",
+                  fontSize: "0.68rem",
+                  fontWeight: 700,
+                  cursor: "pointer",
+                }}
+              >
+                {(val * 100).toFixed(0)}%
+              </button>
+            ))}
           </div>
         </div>
       )}
 
       {/* 2. Explainable Smart Triage Recommender */}
       {triageSuggestion && !dismissed && (
-        <div className="bg-white rounded-xl border border-indigo-100 shadow-sm overflow-hidden">
+        <div
+          style={{
+            background: "var(--bg-surface)",
+            border: "1px solid var(--border-subtle)",
+            borderTop: "3px solid #8B5CF6",
+            borderRadius: "14px",
+            overflow: "hidden",
+          }}
+        >
           {/* Card Header */}
-          <div className="px-5 py-3.5 bg-gradient-to-r from-indigo-50/70 via-slate-50 to-white border-b border-indigo-100 flex items-center justify-between">
-            <div className="flex items-center space-x-2.5">
-              <div className="p-1.5 bg-indigo-600 text-white rounded-lg shadow-sm">
-                <Sparkles className="w-4 h-4" />
+          <div
+            style={{
+              padding: "1rem 1.25rem",
+              background: "linear-gradient(135deg, rgba(139, 92, 246, 0.12) 0%, rgba(59, 130, 246, 0.05) 100%)",
+              borderBottom: "1px solid var(--border-subtle)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
+              <div
+                style={{
+                  width: "32px",
+                  height: "32px",
+                  borderRadius: "8px",
+                  background: "rgba(139, 92, 246, 0.25)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <Sparkles size={16} color="#C4B5FD" />
               </div>
               <div>
-                <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2">
-                  Explainable Smart Routing Suggestion
-                  <span className="px-2 py-0.5 text-[11px] font-semibold bg-indigo-100 text-indigo-700 rounded-full border border-indigo-200">
+                <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                  <h3 style={{ fontSize: "0.95rem", fontWeight: 800, color: "#FFFFFF", margin: 0 }}>
+                    Explainable AI Routing Recommendation
+                  </h3>
+                  <span
+                    style={{
+                      background: "rgba(139, 92, 246, 0.2)",
+                      border: "1px solid rgba(139, 92, 246, 0.4)",
+                      color: "#C4B5FD",
+                      fontSize: "0.72rem",
+                      fontWeight: 800,
+                      padding: "0.15rem 0.5rem",
+                      borderRadius: "6px",
+                    }}
+                  >
                     {Math.round(triageSuggestion.confidence_score * 100)}% Confidence
                   </span>
-                </h3>
+                </div>
               </div>
             </div>
 
             <button
               onClick={() => setDismissed(true)}
-              className="text-xs text-slate-400 hover:text-slate-600 transition-colors"
+              style={{
+                background: "transparent",
+                border: "none",
+                color: "var(--text-muted)",
+                fontSize: "0.75rem",
+                cursor: "pointer",
+              }}
             >
               Dismiss
             </button>
           </div>
 
-          <div className="p-5 space-y-4">
+          <div style={{ padding: "1.25rem", display: "flex", flexDirection: "column", gap: "1rem" }}>
             {/* Recommendation Targets Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-              <div className="p-3 bg-slate-50 rounded-lg border border-slate-200">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1">
-                  Target Bureau
-                </span>
-                <span className="text-xs font-bold text-indigo-900 block">
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "0.85rem" }}>
+              <div
+                style={{
+                  background: "rgba(139, 92, 246, 0.08)",
+                  border: "1px solid rgba(139, 92, 246, 0.25)",
+                  borderRadius: "10px",
+                  padding: "0.85rem",
+                }}
+              >
+                <div style={{ fontSize: "0.68rem", fontWeight: 700, color: "#C4B5FD", textTransform: "uppercase", letterSpacing: "0.04em" }}>
+                  Recommended Target Bureau
+                </div>
+                <div style={{ fontSize: "0.95rem", fontWeight: 800, color: "#FFFFFF", marginTop: "0.25rem" }}>
                   {triageSuggestion.recommended_bureau_name}
-                </span>
-                <span className="text-[11px] font-mono text-slate-500">
-                  Code: {triageSuggestion.recommended_bureau_code}
-                </span>
+                </div>
+                <div style={{ fontSize: "0.72rem", color: "var(--text-muted)", fontFamily: "var(--font-mono)", marginTop: "0.15rem" }}>
+                  Bureau Code: {triageSuggestion.recommended_bureau_code}
+                </div>
               </div>
 
-              <div className="p-3 bg-slate-50 rounded-lg border border-slate-200">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1">
+              <div
+                style={{
+                  background: "rgba(59, 130, 246, 0.08)",
+                  border: "1px solid rgba(59, 130, 246, 0.25)",
+                  borderRadius: "10px",
+                  padding: "0.85rem",
+                }}
+              >
+                <div style={{ fontSize: "0.68rem", fontWeight: 700, color: "#93C5FD", textTransform: "uppercase", letterSpacing: "0.04em" }}>
                   Recommended Category
-                </span>
-                <span className="text-xs font-semibold text-slate-800 block">
+                </div>
+                <div style={{ fontSize: "0.95rem", fontWeight: 800, color: "#FFFFFF", marginTop: "0.25rem" }}>
                   {triageSuggestion.recommended_category}
-                </span>
-                <span className="text-[11px] text-slate-500">
+                </div>
+                <div style={{ fontSize: "0.72rem", color: "var(--text-muted)", marginTop: "0.15rem" }}>
                   Current: {currentCase.category || "Unassigned"}
-                </span>
+                </div>
               </div>
 
-              <div className="p-3 bg-slate-50 rounded-lg border border-slate-200">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1">
-                  Suggested Priority
-                </span>
-                <span
-                  className={`text-xs font-bold px-2 py-0.5 rounded inline-block ${
-                    triageSuggestion.recommended_priority === "URGENT"
-                      ? "bg-red-100 text-red-700"
-                      : triageSuggestion.recommended_priority === "HIGH"
-                      ? "bg-orange-100 text-orange-700"
-                      : "bg-blue-100 text-blue-700"
-                  }`}
-                >
-                  {triageSuggestion.recommended_priority}
-                </span>
+              <div
+                style={{
+                  background: "rgba(255, 255, 255, 0.03)",
+                  border: "1px solid var(--border-subtle)",
+                  borderRadius: "10px",
+                  padding: "0.85rem",
+                }}
+              >
+                <div style={{ fontSize: "0.68rem", fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.04em" }}>
+                  Suggested SLA Priority
+                </div>
+                <div style={{ marginTop: "0.25rem" }}>
+                  <span
+                    style={{
+                      background:
+                        triageSuggestion.recommended_priority === "URGENT"
+                          ? "rgba(239, 68, 68, 0.2)"
+                          : triageSuggestion.recommended_priority === "HIGH"
+                          ? "rgba(245, 158, 11, 0.2)"
+                          : "rgba(59, 130, 246, 0.2)",
+                      border: `1px solid ${
+                        triageSuggestion.recommended_priority === "URGENT"
+                          ? "#EF4444"
+                          : triageSuggestion.recommended_priority === "HIGH"
+                          ? "#F59E0B"
+                          : "#3B82F6"
+                      }`,
+                      color:
+                        triageSuggestion.recommended_priority === "URGENT"
+                          ? "#F87171"
+                          : triageSuggestion.recommended_priority === "HIGH"
+                          ? "#FBBF24"
+                          : "#93C5FD",
+                      fontSize: "0.78rem",
+                      fontWeight: 800,
+                      padding: "0.2rem 0.6rem",
+                      borderRadius: "6px",
+                      display: "inline-block",
+                    }}
+                  >
+                    {triageSuggestion.recommended_priority}
+                  </span>
+                </div>
               </div>
             </div>
 
             {/* Explainable Rationale Breakdown */}
             <div>
-              <label className="text-[11px] font-bold uppercase tracking-wider text-slate-500 block mb-2 flex items-center gap-1.5">
-                <Layers className="w-3.5 h-3.5 text-indigo-500" />
-                Explainability Factors & Evidence
-              </label>
+              <div style={{ fontSize: "0.72rem", fontWeight: 800, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "0.5rem", display: "flex", alignItems: "center", gap: "0.4rem" }}>
+                <Layers size={13} color="#8B5CF6" />
+                <span>Explainability Evidence & Decision Factors</span>
+              </div>
 
-              <div className="space-y-2">
+              <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
                 {triageSuggestion.rationales.map((item, idx) => (
                   <div
                     key={idx}
-                    className="p-3 rounded-lg border border-slate-200 bg-white hover:bg-slate-50/70 transition-colors flex items-start gap-3"
+                    style={{
+                      background: "rgba(255, 255, 255, 0.02)",
+                      border: "1px solid rgba(255, 255, 255, 0.06)",
+                      borderRadius: "8px",
+                      padding: "0.75rem 1rem",
+                      display: "flex",
+                      alignItems: "flex-start",
+                      gap: "0.75rem",
+                    }}
                   >
-                    <div className="p-1 bg-slate-100 rounded text-slate-600 mt-0.5 shrink-0">
-                      <TrendingUp className="w-3.5 h-3.5" />
+                    <div
+                      style={{
+                        width: "24px",
+                        height: "24px",
+                        borderRadius: "6px",
+                        background: "rgba(139, 92, 246, 0.15)",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        flexShrink: 0,
+                        marginTop: "0.1rem",
+                      }}
+                    >
+                      <TrendingUp size={13} color="#A78BFA" />
                     </div>
-                    <div className="flex-1">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-semibold text-slate-800">{item.title}</span>
-                        <span className="text-[10px] font-mono text-slate-400">
+
+                    <div style={{ flex: 1 }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <span style={{ fontSize: "0.82rem", fontWeight: 700, color: "#FFFFFF" }}>{item.title}</span>
+                        <span style={{ fontSize: "0.72rem", fontFamily: "var(--font-mono)", color: "var(--text-muted)" }}>
                           Weight: {Math.round(item.weight * 100)}%
                         </span>
                       </div>
-                      <p className="text-[11px] text-slate-600 mt-0.5">{item.explanation}</p>
+                      <p style={{ fontSize: "0.78rem", color: "#CBD5E1", margin: "0.2rem 0 0 0", lineHeight: 1.4 }}>
+                        {item.explanation}
+                      </p>
 
                       {item.matched_tokens && item.matched_tokens.length > 0 && (
-                        <div className="flex items-center gap-1 mt-1.5 flex-wrap">
+                        <div style={{ display: "flex", alignItems: "center", gap: "0.3rem", marginTop: "0.4rem", flexWrap: "wrap" }}>
                           {item.matched_tokens.map((tok, ti) => (
                             <span
                               key={ti}
-                              className="px-1.5 py-0.5 text-[10px] bg-indigo-50 text-indigo-700 border border-indigo-100 rounded font-mono"
+                              style={{
+                                background: "rgba(139, 92, 246, 0.12)",
+                                border: "1px solid rgba(139, 92, 246, 0.25)",
+                                color: "#C4B5FD",
+                                fontSize: "0.68rem",
+                                fontWeight: 700,
+                                padding: "0.1rem 0.35rem",
+                                borderRadius: "4px",
+                                fontFamily: "var(--font-mono)",
+                              }}
                             >
                               {tok}
                             </span>
@@ -291,50 +546,111 @@ export const AiIntelligenceCard: React.FC<AiIntelligenceCardProps> = ({
 
             {/* Status alerts */}
             {applySuccess && (
-              <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-lg text-xs text-emerald-800 flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+              <div
+                style={{
+                  padding: "0.75rem 1rem",
+                  background: "rgba(16, 185, 129, 0.15)",
+                  border: "1px solid rgba(16, 185, 129, 0.4)",
+                  borderRadius: "8px",
+                  fontSize: "0.82rem",
+                  color: "#6EE7B7",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "0.5rem",
+                }}
+              >
+                <CheckCircle2 size={16} color="#10B981" />
                 <span>{applySuccess}</span>
               </div>
             )}
             {applyError && (
-              <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-xs text-red-800 flex items-center gap-2">
-                <AlertTriangle className="w-4 h-4 text-red-600 shrink-0" />
+              <div
+                style={{
+                  padding: "0.75rem 1rem",
+                  background: "rgba(239, 68, 68, 0.15)",
+                  border: "1px solid rgba(239, 68, 68, 0.4)",
+                  borderRadius: "8px",
+                  fontSize: "0.82rem",
+                  color: "#FCA5A5",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "0.5rem",
+                }}
+              >
+                <AlertTriangle size={16} color="#EF4444" />
                 <span>{applyError}</span>
               </div>
             )}
 
             {/* Human-in-the-Loop Decision Buttons */}
-            <div className="pt-2 border-t border-slate-100 flex items-center justify-between">
-              <span className="text-[11px] text-slate-500">
-                Decision Gate: Officer authorization mandatory before updating dossier.
+            <div
+              style={{
+                paddingTop: "0.85rem",
+                borderTop: "1px solid rgba(255, 255, 255, 0.08)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                flexWrap: "wrap",
+                gap: "0.75rem",
+              }}
+            >
+              <span style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>
+                Strict Human-in-the-Loop Gate &bull; Officer authorization mandatory before mutating dossier.
               </span>
 
               {isAlreadyAligned ? (
-                <div className="flex items-center gap-1.5 text-xs text-emerald-700 font-medium px-3 py-1.5 bg-emerald-50 border border-emerald-200 rounded-lg">
-                  <Check className="w-3.5 h-3.5" />
-                  <span>Dossier Aligned with AI Suggestion</span>
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "0.4rem",
+                    fontSize: "0.78rem",
+                    fontWeight: 700,
+                    color: "#10B981",
+                    background: "rgba(16, 185, 129, 0.12)",
+                    border: "1px solid rgba(16, 185, 129, 0.3)",
+                    padding: "0.4rem 0.8rem",
+                    borderRadius: "8px",
+                  }}
+                >
+                  <Check size={14} />
+                  <span>Dossier Already Aligned with AI Suggestion</span>
                 </div>
               ) : canApplyTriage ? (
                 <button
                   onClick={handleApplySuggestion}
                   disabled={applying}
-                  className="px-4 py-2 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 rounded-lg shadow-sm transition-all flex items-center gap-2 disabled:opacity-50"
+                  style={{
+                    background: "linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%)",
+                    border: "none",
+                    color: "#FFFFFF",
+                    padding: "0.55rem 1.1rem",
+                    borderRadius: "8px",
+                    fontSize: "0.82rem",
+                    fontWeight: 800,
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "0.5rem",
+                    boxShadow: "0 4px 14px rgba(99, 102, 241, 0.35)",
+                    transition: "all 0.2s ease",
+                  }}
                 >
                   {applying ? (
                     <>
-                      <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                      <RefreshCw size={14} className="spin" />
                       <span>Applying Routing...</span>
                     </>
                   ) : (
                     <>
-                      <Sparkles className="w-3.5 h-3.5" />
-                      <span>Apply Suggestion (Human-in-the-Loop)</span>
+                      <Sparkles size={14} />
+                      <span>Apply AI Triage (Human-in-the-Loop)</span>
                     </>
                   )}
                 </button>
               ) : (
-                <span className="text-xs text-slate-400 italic">
-                  Read-only view (Requires Case Officer or Supervisor role to apply)
+                <span style={{ fontSize: "0.75rem", color: "var(--text-muted)", fontStyle: "italic" }}>
+                  Read-only view (Requires Case Officer or Supervisor role)
                 </span>
               )}
             </div>
@@ -352,3 +668,4 @@ export const AiIntelligenceCard: React.FC<AiIntelligenceCardProps> = ({
     </div>
   );
 };
+

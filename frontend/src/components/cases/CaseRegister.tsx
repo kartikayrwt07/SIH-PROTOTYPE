@@ -23,10 +23,16 @@ import { CsvIngestionModal } from "../ingest/CsvIngestionModal";
 interface CaseRegisterProps {
   onSelectCase: (caseRef: string) => void;
   initialBureauFilter?: string;
+  initialSearch?: string;
   onOpenMagicIntake?: () => void;
 }
 
-export const CaseRegister: React.FC<CaseRegisterProps> = ({ onSelectCase, initialBureauFilter, onOpenMagicIntake }) => {
+export const CaseRegister: React.FC<CaseRegisterProps> = ({
+  onSelectCase,
+  initialBureauFilter,
+  initialSearch,
+  onOpenMagicIntake,
+}) => {
   const [cases, setCases] = useState<ComplaintCase[]>([]);
   const [bureaus, setBureaus] = useState<Bureau[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -39,7 +45,7 @@ export const CaseRegister: React.FC<CaseRegisterProps> = ({ onSelectCase, initia
   const [exportSuccess, setExportSuccess] = useState<string | null>(null);
 
   // Filter & Search states
-  const [search, setSearch] = useState<string>("");
+  const [search, setSearch] = useState<string>(initialSearch || "");
   const [statusFilter, setStatusFilter] = useState<string>("");
   const [priorityFilter, setPriorityFilter] = useState<string>("");
   const [bureauFilter, setBureauFilter] = useState<string>(initialBureauFilter || "");
@@ -49,6 +55,12 @@ export const CaseRegister: React.FC<CaseRegisterProps> = ({ onSelectCase, initia
       setBureauFilter(initialBureauFilter);
     }
   }, [initialBureauFilter]);
+
+  useEffect(() => {
+    if (initialSearch !== undefined) {
+      setSearch(initialSearch);
+    }
+  }, [initialSearch]);
   const [sortBy, setSortBy] = useState<"created_at" | "due_date" | "priority" | "status" | "subject">("created_at");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
 
@@ -195,6 +207,8 @@ export const CaseRegister: React.FC<CaseRegisterProps> = ({ onSelectCase, initia
       case "Resolved":
         return { bg: "rgba(16, 185, 129, 0.15)", color: "#34d399" };
       case "Closed":
+        return { bg: "rgba(100, 116, 139, 0.2)", color: "#94a3b8" };
+      default:
         return { bg: "rgba(100, 116, 139, 0.2)", color: "#94a3b8" };
     }
   };
