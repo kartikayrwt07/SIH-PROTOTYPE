@@ -111,99 +111,12 @@ def check_duplicate_complaints(
     request: DuplicateCheckRequest,
 ) -> DuplicateCheckResponse:
     """
-    Computes TF-IDF vectors across the corpus of existing complaint cases and
-    evaluates cosine similarity against incoming grievance text.
+    Evaluates cosine similarity against incoming grievance text using the
+    high-throughput pre-computed VectorIndexCache engine.
     """
-    query_content = f"{request.subject} {request.description}".strip()
-    clean_query = clean_text(query_content)
+    from backend.app.services.vector_cache import vector_index
+    return vector_index.query_similarity(db, request)
 
-    # Fetch active cases (excluding terminal or excluded cases)
-    query = db.query(ComplaintCase).join(Institution, ComplaintCase.institution_id == Institution.id)\
-        .join(Bureau, ComplaintCase.bureau_id == Bureau.id)
-    
-    if request.exclude_case_ref:
-        query = query.filter(ComplaintCase.case_reference_id != request.exclude_case_ref)
-        
-    candidates: List[ComplaintCase] = query.limit(500).all()
-    
-    if not candidates or not clean_query:
-        return DuplicateCheckResponse(
-            total_evaluated=0,
-            matches_found=0,
-            highest_similarity=0.0,
-            has_potential_duplicate=False,
-            matches=[]
-        )
-
-    # Prepare corpus for TF-IDF vectorization
-    corpus = [clean_query]
-    candidate_meta = []
-    
-    for case in candidates:
-        case_desc = case.description_confidential or case.description_redacted or ""
-        text = clean_text(f"{case.subject} {case_desc}")
-        corpus.append(text)
-        candidate_meta.append((case, case_desc))
-
-    # Compute TF-IDF matrix
-    vectorizer = TfidfVectorizer(
-        stop_words="english",
-        max_features=2000,
-        ngram_range=(1, 2)
-    )
-    
-    tfidf_matrix = vectorizer.fit_transform(corpus)
-    query_vector = tfidf_matrix[0:1]
-    candidate_vectors = tfidf_matrix[1:]
-    
-    # Compute cosine similarity
-    similarities = cosine_similarity(query_vector, candidate_vectors)[0]
-    
-    matches: List[DuplicateMatch] = []
-    highest_score = 0.0
-
-    for idx, raw_score in enumerate(similarities):
-        score = float(raw_score)
-        case, case_desc = candidate_meta[idx]
-        
-        # Institutional match boost (+0.08 if exact same institution, capped at 1.0)
-        is_same_institution = (
-            request.institution_aicte_id and
-            case.institution and
-            case.institution.aicte_permanent_id == request.institution_aicte_id
-        )
-        if is_same_institution and score > 0.15:
-            score = min(1.0, score + 0.08)
-
-        if score > highest_score:
-            highest_score = round(score, 3)
-
-        if score >= request.threshold:
-            matched_keywords = extract_matched_tokens(query_content, f"{case.subject} {case_desc}")
-            
-            matches.append(DuplicateMatch(
-                case_reference_id=case.case_reference_id,
-                subject=case.subject,
-                institution_name=case.institution.name if case.institution else "Unknown",
-                institution_aicte_id=case.institution.aicte_permanent_id if case.institution else "N/A",
-                bureau_code=case.bureau.code if case.bureau else "N/A",
-                bureau_name=case.bureau.name if case.bureau else "Unassigned",
-                similarity_score=round(score, 3),
-                matched_keywords=matched_keywords,
-                status=case.status.value,
-                created_at=case.created_at,
-            ))
-
-    # Sort matches by similarity score descending
-    matches.sort(key=lambda m: m.similarity_score, reverse=True)
-
-    return DuplicateCheckResponse(
-        total_evaluated=len(candidates),
-        matches_found=len(matches),
-        highest_similarity=highest_score,
-        has_potential_duplicate=len(matches) > 0,
-        matches=matches
-    )
 
 
 def compute_triage_suggestion(

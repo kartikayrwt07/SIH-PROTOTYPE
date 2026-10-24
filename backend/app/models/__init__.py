@@ -4,6 +4,17 @@ from backend.app.models.institution import Institution
 from backend.app.models.sla import SLAPolicy, CasePriority
 from backend.app.models.case import ComplaintCase, CaseStatus, CaseAssignmentHistory, CaseNote
 from backend.app.models.audit import CaseAuditEvent, AuditEventType
+from backend.app.models.identity import (
+    ComplainantIdentity,
+    VerificationOTPChallenge,
+    VerificationMethod,
+    ComplainantType,
+)
+from backend.app.models.attachment import (
+    CaseAttachment,
+    AttachmentCategory,
+    ScanStatus,
+)
 
 __all__ = [
     "Bureau",
@@ -18,4 +29,11 @@ __all__ = [
     "CaseNote",
     "CaseAuditEvent",
     "AuditEventType",
+    "ComplainantIdentity",
+    "VerificationOTPChallenge",
+    "VerificationMethod",
+    "ComplainantType",
+    "CaseAttachment",
+    "AttachmentCategory",
+    "ScanStatus",
 ]

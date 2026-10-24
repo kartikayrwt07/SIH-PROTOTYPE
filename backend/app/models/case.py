@@ -27,6 +27,7 @@ class ComplaintCase(Base):
     institution_id = Column(String(36), ForeignKey("institutions.id", ondelete="RESTRICT"), nullable=False, index=True)
     bureau_id = Column(String(36), ForeignKey("bureaus.id", ondelete="RESTRICT"), nullable=False, index=True)
     assigned_officer_id = Column(String(36), ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True)
+    complainant_identity_id = Column(String(36), ForeignKey("complainant_identities.id", ondelete="SET NULL"), nullable=True, index=True)
 
     subject = Column(String(255), nullable=False)
     description_redacted = Column(Text, nullable=False)
@@ -49,10 +50,12 @@ class ComplaintCase(Base):
     institution = relationship("Institution", back_populates="cases")
     bureau = relationship("Bureau", back_populates="cases")
     assigned_officer = relationship("User", back_populates="assigned_cases")
+    complainant_identity = relationship("ComplainantIdentity", back_populates="cases")
     sla_policy = relationship("SLAPolicy", back_populates="cases")
     assignment_history = relationship("CaseAssignmentHistory", back_populates="case", cascade="all, delete-orphan")
     audit_events = relationship("CaseAuditEvent", back_populates="case", cascade="all, delete-orphan")
     notes = relationship("CaseNote", back_populates="case", cascade="all, delete-orphan")
+    attachments = relationship("CaseAttachment", back_populates="case", cascade="all, delete-orphan")
 
     __table_args__ = (
         Index("idx_cases_bureau_status", "bureau_id", "status"),

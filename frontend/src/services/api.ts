@@ -275,6 +275,55 @@ class ApiService {
       body: JSON.stringify(payload),
     });
   }
+
+  async getCaseAttachments(caseRef: string): Promise<StandardResponse<import("../types").CaseAttachment[]>> {
+    return this.request(`/cases/${caseRef}/attachments`);
+  }
+
+  async uploadCaseAttachment(caseRef: string, formData: FormData): Promise<StandardResponse<import("../types").CaseAttachment>> {
+    const activeRole = localStorage.getItem("aicte_demo_role") || "SUPERVISOR";
+    const headers: Record<string, string> = {
+      "X-Demo-Role": activeRole,
+    };
+    const token = localStorage.getItem("aicte_token");
+    if (token) {
+      headers["Authorization"] = `Bearer ${token}`;
+    }
+
+    const response = await fetch(`/api/v1/cases/${caseRef}/attachments`, {
+      method: "POST",
+      headers,
+      body: formData,
+    });
+    return await response.json();
+  }
+
+  // -------------------------------------------------------------
+  // Complainant Identity & e-KYC Verification
+  // -------------------------------------------------------------
+
+  async sendVerificationOtp(payload: {
+    full_name: string;
+    target: string;
+    method?: string;
+    complainant_type?: string;
+  }): Promise<StandardResponse<{ tx_ref: string; target_masked: string; expires_in_seconds: number; message: string; sandbox_otp?: string }>> {
+    return this.request("/identity/otp/send", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  }
+
+  async verifyOtp(payload: {
+    tx_ref: string;
+    otp_code: string;
+  }): Promise<StandardResponse<{ verification_token: string; masked_identifier: string; full_name: string; complainant_type: string; verification_method: string }>> {
+    return this.request("/identity/otp/verify", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  }
 }
 
 export const api = new ApiService();
+

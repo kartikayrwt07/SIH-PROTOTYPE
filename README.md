@@ -1,103 +1,170 @@
 # AICTE Integrated Complaint Case Monitoring Dashboard
 
-> **Smart India Hackathon (SIH) Prototype & Enterprise Foundation**  
-> *"Integrated Dashboard for Monitoring and Tracking Institution-Related Complaint Cases Across AICTE Bureaus/Cells"*
-
-A centralized, role-based complaint monitoring and lifecycle tracking platform for authorized personnel across AICTE bureaus and cells. Provides cross-bureau visibility into institution-related cases, auditable transition histories, configurable SLA/aging risk radar, and explainable intelligence for categorization and duplicate detection.
-
----
-
-## 🏛️ System Architecture
-
-The platform is designed as a **Modular Monolith** adhering to strict separation of concerns:
-
-- **Backend**: FastAPI (Python 3.14 compatible), SQLAlchemy 2.0 ORM, Pydantic v2 schemas.
-- **Frontend**: React 18, TypeScript, Vite, Vanilla CSS with custom accessible design system (AICTE Deep Navy, Academic Saffron, Slate).
-- **Database**: Dual compatibility — local SQLite (`aicte_complaints.db`) with zero friction, PostgreSQL production-ready schemas.
-- **Security**: Server-side RBAC (deny-by-default) across 4 roles (`ADMIN`, `SUPERVISOR`, `OFFICER`, `AUDITOR`) with IDOR protection and PII redaction.
-- **Auditability**: Append-only tamper-evident audit trail recording every state change, reassignment, and note with actor and timestamp attribution.
-- **SLA Surveillance**: Dynamic policy engine computing target resolution deadlines and classifying cases into `OVERDUE`, `APPROACHING` (<48h), `ON_TRACK`, and `COMPLETED`.
+> **Enterprise Grievance Redressal, Surveillance & Intelligence Platform for Technical Education Institutions**
+>
+> Developed for **All India Council for Technical Education (AICTE)** to provide centralized, cross-bureau visibility, role-governed lifecycle management, automated SLA breach tracking, whistleblower-shielded e-KYC verification, virus-scanned evidentiary document storage, and high-throughput explainable AI triage.
 
 ---
 
-## 🚀 Quickstart Guide
+## 🏛️ Executive Overview
 
-### 1. Backend Setup & Seed Data
+Technical education institutions across India (engineering, pharmacy, management, architecture, and polytechnics) handle thousands of grievances regarding fee overcharging, ragging allegations, unapproved courses, faculty salary arrears, and infrastructure deficiencies. 
+
+Previously, grievances were siloed within disparate cells or paper processes. This platform establishes a **single pane of glass** across AICTE's primary regulatory bureaus:
+* **APPR (Approval Bureau):** Unapproved programs, land/building norm violations, lab equipment shortages.
+* **FIN (Finance & Fee Regulatory Bureau):** Capitation fees, tuition overcharging, caution money refunds.
+* **STU (Student Welfare & Anti-Ragging Cell):** Campus safety, senior harassment, hostel amenities.
+* **FDC (Faculty Grievance Cell):** 7th CPC pay scale non-compliance, salary delays, unlawful terminations.
+
+---
+
+## 🚀 Key Architectural Capabilities
+
+### 1. Cloud-Native Managed Database (Supabase PostgreSQL)
+- **High-Performance Relational Schema:** Automated foreign key constraints, index-optimized searches across 15+ Indian technical institutions and 50+ complaint cases.
+- **Connection Pooling & Resiliency:** Integrated `psycopg2-binary` connection pooling (`pool_pre_ping=True`, `pool_recycle=300`) preventing stale connections and network dropouts.
+- **Local Fallback:** Seamless dual compatibility with SQLite for offline evaluation.
+
+### 2. High-Throughput Explainable AI & Vector Caching (~1.6 ms)
+- **Deterministic NLP & TF-IDF Vectorization:** Evaluates grievance text cosine similarity against historical cases with domain-specific keyword extraction.
+- **In-Memory Sparse Matrix Cache (`VectorIndexCache`):** Decouples vector calculations from synchronous database scans, dropping query response latency from >3,000ms down to **`1.66 ms`** per request.
+- **Explainable Triage Recommender:** Transparent rationale breakdown (`KEYWORD_AFFINITY`, `INSTITUTION_HISTORY`, `DOMAIN_POLICY`) with confidence scores.
+- **Strict Human-in-the-Loop Gating:** AI suggestions never auto-mutate cases without explicit officer confirmation.
+
+### 3. Complainant Identity Verification & Whistleblower Shielding
+- **Multi-Channel e-KYC:** Supports Mobile/Email 2FA OTP, Aadhaar VID simulation, and DigiLocker SSO.
+- **Cryptographic Challenge Store:** Time-bound 10-minute OTP challenges with brute-force attempt lockout (max 5 attempts).
+- **Privacy-by-Design Identity Vault:** Decouples true personal identity (Aadhaar/phone/email) from public case dossiers. Case officers see only verified institutional status (e.g., `Verified Student [XXXX-XX-3210]`), protecting student whistleblowers from campus retaliation.
+
+### 4. Evidentiary Document & Attachment Storage
+- **Proof Attachment Pipeline:** Upload fee deposit slips, affiliation certificates, bank records, and facility photos.
+- **Format & Size Guards:** Whitelist validation for PDF, JPEG, PNG, WEBP, and DOCX up to 15MB.
+- **Antivirus Inspection Simulation:** Computes 64-character SHA-256 integrity hashes and scans files for malware signatures (including EICAR detection), rejecting malicious payloads with HTTP 400.
+- **Role-Based Redaction:** Confidential evidentiary attachments are automatically scrubbed from unprivileged and auditor viewports.
+
+### 5. Deterministic 9-State Case Lifecycle & Tamper-Evident Audit Trail
+- **Enforced State Flow:** `Received ➔ Registered ➔ Under Triage ➔ Assigned ➔ In Progress ➔ Awaiting Information ➔ Under Review ➔ Resolved ➔ Closed`.
+- **Illegal Jump Guards:** Invalid transitions (e.g. `Received ➔ Closed`) are strictly blocked with HTTP 422.
+- **Immutable Event Log:** Every status transition, assignment transfer, internal note, and reopening records actor, timestamp, previous state, new state, and rationale.
+
+### 6. Dynamic SLA Aging Radar & Bottleneck Analytics
+- **Working-Day Policy Engine:** Calculates dynamic target resolution deadlines based on case severity (`URGENT`, `HIGH`, `MEDIUM`, `LOW`).
+- **Real-Time Aging Risk Radar:** Live classification into `OVERDUE`, `APPROACHING` (<48 hours), `ON_TRACK`, and `COMPLETED`.
+- **Executive Analytics:** Lifecycle dwell-time analysis and cross-bureau workload distribution matrices.
+
+### 7. Validated CSV Batch Pipeline & Role-Scoped Exports
+- **Dry-Run Import Preview:** Field-by-field validation, missing institution alerts, duplicate grievance warnings, and atomic batch insertion.
+- **Role-Scoped RFC 4180 CSV Export:** Exports case registers with server-enforced redaction of confidential notes and complainant identities for external auditors.
+
+---
+
+## 🛠️ Technology Stack
+
+| Layer | Technologies |
+| :--- | :--- |
+| **Backend Framework** | **FastAPI** (Python 3.11+ / 3.14 compatible), Uvicorn ASGI server |
+| **ORM & Database** | **SQLAlchemy 2.0**, **PostgreSQL (Supabase)** / SQLite fallback |
+| **Driver & Storage** | `psycopg2-binary`, `python-multipart`, SHA-256 file hashing |
+| **AI & NLP Engine** | **Scikit-Learn** (`TfidfVectorizer`, Cosine Similarity), `scipy.sparse` CSR caching |
+| **Security & Auth** | OAuth2 Bearer JWT, Passlib, PBKDF2/bcrypt hashing, Server-Side RBAC |
+| **Frontend Framework**| **React 18**, **TypeScript**, **Vite** |
+| **Design System** | Custom Accessible AICTE Design Tokens (Navy `#0A192F`, Saffron `#FF9933`, Slate `#F8FAFC`) |
+| **Testing** | **Pytest** (50 passing automated tests covering all modules) |
+
+---
+
+## 🚦 Getting Started
+
+### Prerequisites
+- Python 3.11 or higher
+- Node.js 18+ and npm
+- Git
+
+---
+
+### Step 1: Clone & Configure Environment
 
 ```bash
-# Navigate to backend directory
+git clone <YOUR_REPO_URL>
+cd SIH
+```
+
+Create `.env` in the root and in `backend/.env`:
+```env
+# Supabase PostgreSQL (or leave empty for default SQLite)
+DATABASE_URL=postgresql+psycopg2://postgres:<PASSWORD>@<HOST>:5432/postgres?sslmode=require
+ENVIRONMENT=development
+SECRET_KEY=your-secure-secret-key-change-in-production
+```
+
+---
+
+### Step 2: Backend Setup & Seed Data
+
+```bash
+# Navigate to backend
 cd backend
 
 # Install dependencies
-pip install -r requirements.txt
+pip install -r pyproject.toml
+# or
+pip install fastapi uvicorn sqlalchemy psycopg2-binary scikit-learn pydantic pydantic-settings python-multipart httpx pytest
 
-# Run database seeder (populates 58 synthetic cases across 4 bureaus, 15 institutions, and 6 SLA policies)
-python -m backend.seed
+# Seed database with realistic institutions, bureaus, SLA policies, and 58 cases
+python -m backend.scripts.seed
 
-# Launch FastAPI server
-uvicorn backend.app.main:app --reload --host 127.0.0.1 --port 8000
+# Run FastAPI server
+python -m uvicorn backend.app.main:app --host 127.0.0.1 --port 8001 --reload
 ```
-- Interactive API Documentation: [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)
-- Health Check: [http://127.0.0.1:8000/api/v1/health](http://127.0.0.1:8000/api/v1/health)
+* **API Documentation (Swagger UI):** [http://127.0.0.1:8001/docs](http://127.0.0.1:8001/docs)
+* **API Health Check:** [http://127.0.0.1:8001/api/v1/health](http://127.0.0.1:8001/api/v1/health)
 
-### 2. Frontend Setup
+---
+
+### Step 3: Frontend Setup
 
 ```bash
-# Navigate to frontend directory
+# In a new terminal, navigate to frontend
 cd frontend
 
 # Install npm dependencies
 npm install
 
-# Run Vite development server
+# Start Vite development server
 npm run dev
 ```
-- Web Application URL: [http://localhost:5173](http://localhost:5173)
+* **Web Application UI:** [http://localhost:5173/](http://localhost:5173/)
 
-### 3. Automated Test Suite
+---
+
+## 🧪 Testing & Verification
+
+The platform maintains comprehensive automated unit, integration, and performance benchmark suites.
 
 ```bash
-# Run all backend tests (37 tests covering auth, state machine, search, assignment, SLA radar, analytics, CSV I/O)
+# Run complete test suite (50 passing tests)
 python -m pytest backend/tests -v
 
-# Run frontend production build & TypeScript validation
+# Run AI Vector Index latency benchmark
+python -m pytest backend/tests/test_vector_cache_benchmark.py -s -v
+
+# Run frontend production build
 npm --prefix frontend run build
 ```
 
 ---
 
-## 📊 Roadmap & Implementation Progress
+## 🔒 Security & Role Matrix
 
-| Phase | Description | Plans | Status |
-|-------|-------------|:-----:|:------:|
-| **Phase 1** | Project Scaffolding, Relational Data Models & 58-Case Synthetic Seeder | 2/2 | ✅ Completed |
-| **Phase 2** | Authentication, Server-Side RBAC, Bureau IDOR Protection & Auditor PII Redaction | 2/2 | ✅ Completed |
-| **Phase 3** | Deterministic 9-State Lifecycle State Machine & Tamper-Evident Audit Trail | 2/2 | ✅ Completed |
-| **Phase 4** | Searchable Multi-Criteria Case Register & Interactive Case Detail Dossier Workspace | 2/2 | ✅ Completed |
-| **Phase 5** | Bureau Assignment/Delegation Workflow & Real-Time SLA Aging Risk Radar | 2/2 | ✅ Completed |
-| **Phase 6** | Executive Cross-Bureau Monitoring Dashboard & Bottleneck Analytics | 2/2 | ✅ Completed |
-| **Phase 7** | Validated CSV Batch Ingestion Pipeline & Role-Scoped Export Engine | 2/2 | ✅ Completed |
-| **Phase 8** | Explainable AI Intelligence (TF-IDF Duplicate Detection & Smart Routing Heuristics) | 0/2 | ⏳ Next |
-
-**Overall Progress**: **14 of 16 Plans Completed (87.5%)**
+| Role | Cross-Bureau Visibility | State Advancement | Assignment | Confidential Notes & Attachments | CSV Export |
+| :--- | :---: | :---: | :---: | :---: | :---: |
+| **Platform Admin** | Full | All States | Any Bureau / Officer | Visible | Unredacted |
+| **Supervisor** | Full | Triage / Escalate | Any Bureau / Officer | Visible | Unredacted |
+| **Bureau Case Officer**| Own Bureau Only | Assigned Bureau Workflow| Internal Bureau Reassign | Visible (Own Bureau) | Redacted PII |
+| **Auditor** | Read-Only Full | No Mutation | Read-Only | **Redacted / Scrubbed** | **Redacted** |
 
 ---
 
-## 🔐 Role-Based Access Control Matrix
-
-| Capability | Platform Administrator (`ADMIN`) | Central Supervisor (`SUPERVISOR`) | Bureau Case Officer (`OFFICER`) | Read-Only Auditor (`AUDITOR`) |
-|---|:---:|:---:|:---:|:---:|
-| **Cross-Bureau Case Visibility** | Full | Full | Scoped to Assigned Bureau | Full Scoped Read |
-| **Case Status Transitions** | Allowed | Allowed | Allowed (Own Bureau) | ❌ Forbidden |
-| **Reassign Bureau / Officer** | Allowed | Allowed | Allowed (Own Bureau) | ❌ Forbidden |
-| **Escalate Stalled Cases** | Allowed | Allowed | ❌ Forbidden | ❌ Forbidden |
-| **Create Internal Notes** | Allowed | Allowed | Allowed | ❌ Forbidden |
-| **View Confidential Complainant Statements** | Allowed | Allowed | Allowed | 🔒 Server-Redacted |
-| **View Immutable Audit Timeline** | Full | Full | Full | Full |
-
----
-
-## 🛡️ Zero-Fabrication & Ethical Compliance
-- **100% Synthetic Data**: Zero actual student or complainant personal data used. All names, emails, and phone numbers are generated purely for demonstration.
-- **Configurable Organizational Hierarchy**: Prevents inventing official statutory deadlines or non-public internal AICTE cell hierarchies.
-- **Explainable Intelligence Boundary**: Recommender tools remain strictly advisory with human-in-the-loop sign-off; no autonomous disciplinary decisions.
+## 👥 Contributors
+Developed for the **Smart India Hackathon (SIH)**.
+Licensed under the MIT License.

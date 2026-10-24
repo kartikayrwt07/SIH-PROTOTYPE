@@ -37,6 +37,7 @@ class ComplaintCaseBase(BaseModel):
 class ComplaintCaseCreate(ComplaintCaseBase):
     institution_id: str
     bureau_id: str
+    verification_token: Optional[str] = Field(None, description="Signed complainant e-KYC token")
 
 
 class ComplaintCaseRead(BaseModel):
@@ -45,6 +46,8 @@ class ComplaintCaseRead(BaseModel):
     institution_id: str
     bureau_id: str
     assigned_officer_id: Optional[str] = None
+    complainant_identity_id: Optional[str] = None
+    complainant_verification_badge: Optional[dict] = None
     subject: str
     description_redacted: str
     description_confidential: Optional[str] = None

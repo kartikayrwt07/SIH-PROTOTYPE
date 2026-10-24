@@ -3,12 +3,23 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
 from backend.app.core.config import settings
-from backend.app.core.database import engine, Base
+from contextlib import asynccontextmanager
+from backend.app.core.database import engine, Base, SessionLocal
 from backend.app.api.v1.router import api_router
 from backend.app.schemas.common import StandardResponse, ErrorInfo, ErrorDetail
+from backend.app.services.vector_cache import vector_index
 
-# Initialize all database tables on startup
-Base.metadata.create_all(bind=engine)
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Warm up in-memory vector similarity index
+    db = SessionLocal()
+    try:
+        vector_index.initialize_index(db)
+    except Exception as e:
+        print(f"[VectorIndexCache] Warmup deferred: {e}")
+    finally:
+        db.close()
+    yield
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
@@ -16,7 +27,8 @@ app = FastAPI(
     version="1.0.0",
     docs_url="/docs",
     redoc_url="/redoc",
-    openapi_url="/openapi.json"
+    openapi_url="/openapi.json",
+    lifespan=lifespan,
 )
 
 # CORS Configuration

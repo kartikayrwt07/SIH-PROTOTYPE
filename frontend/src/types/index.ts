@@ -63,6 +63,33 @@ export interface ComplaintCase {
   institution?: Institution;
   bureau?: Bureau;
   assigned_officer?: UserSummary;
+  complainant_verification_badge?: ComplainantVerificationBadge;
+}
+
+export interface CaseAttachment {
+  id: string;
+  case_id: string;
+  uploaded_by_id?: string;
+  file_name: string;
+  file_size_bytes: number;
+  mime_type: string;
+  storage_path: string;
+  storage_bucket: string;
+  category: "FEE_RECEIPT" | "BANK_STATEMENT" | "AFFILIATION_DOCUMENT" | "FACILITY_PHOTOGRAPH" | "SALARY_SLIP" | "COMMUNICATION_RECORD" | "OTHER";
+  description?: string;
+  is_confidential: boolean;
+  scan_status: "PENDING" | "CLEAN" | "INFECTED" | "SKIPPED";
+  sha256_hash?: string;
+  created_at: string;
+}
+
+export interface ComplainantVerificationBadge {
+  is_verified: boolean;
+  verification_method: "AADHAAR_OTP" | "DIGILOCKER_OAUTH" | "STUDENT_PORTAL_SSO" | "MOBILE_EMAIL_2FA";
+  masked_identifier: string;
+  complainant_type: "STUDENT" | "FACULTY" | "PARENT" | "CITIZEN";
+  verified_at?: string;
+  whistleblower_shielded: boolean;
 }
 
 export interface TimelineEvent {

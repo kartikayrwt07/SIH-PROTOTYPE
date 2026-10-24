@@ -27,6 +27,7 @@ from backend.app.schemas.csv_io import (
     CsvCommitRequest,
     CsvCommitResponse,
 )
+from backend.app.schemas.attachment import CaseAttachmentRead
 from backend.app.services.lifecycle import execute_transition, reopen_case
 from backend.app.services.audit import get_case_audit_trail, log_case_event
 from backend.app.services.assignment import assign_case
@@ -329,6 +330,15 @@ def get_case_detail(
     assert_bureau_access(current_user, case.bureau_id)
 
     case_dict = ComplaintCaseRead.model_validate(case).model_dump()
+    if case.complainant_identity:
+        case_dict["complainant_verification_badge"] = {
+            "is_verified": case.complainant_identity.is_verified,
+            "verification_method": case.complainant_identity.verification_method.value,
+            "masked_identifier": case.complainant_identity.masked_identifier,
+            "complainant_type": case.complainant_identity.complainant_type.value,
+            "verified_at": case.complainant_identity.verified_at.isoformat() if case.complainant_identity.verified_at else None,
+            "whistleblower_shielded": True,
+        }
     case_dict = sanitize_case_for_role(case_dict, current_user.role)
 
     return StandardResponse(data=ComplaintCaseRead(**case_dict))
@@ -597,4 +607,80 @@ def escalate_case_endpoint(
     case_dict = sanitize_case_for_role(case_dict, current_user.role)
 
     return StandardResponse(data=ComplaintCaseRead(**case_dict))
+
+
+@router.get("/{case_ref}/attachments", response_model=StandardResponse[List[CaseAttachmentRead]])
+def list_case_attachments(
+    case_ref: str,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Retrieve all evidentiary attachments for a complaint case."""
+    case = db.query(ComplaintCase).filter(ComplaintCase.case_reference_id == case_ref).first()
+    if not case:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Case with reference ID '{case_ref}' not found."
+        )
+
+    assert_bureau_access(current_user, case.bureau_id)
+    from backend.app.services.attachment import get_case_attachments
+    attachments = get_case_attachments(db, case, current_user)
+    return StandardResponse(data=[CaseAttachmentRead.model_validate(a) for a in attachments])
+
+
+@router.post("/{case_ref}/attachments", response_model=StandardResponse[CaseAttachmentRead])
+async def upload_case_attachment(
+    case_ref: str,
+    request: Request,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Upload and verify an evidentiary proof document (PDF, PNG, JPG, DOCX)."""
+    case = db.query(ComplaintCase).filter(ComplaintCase.case_reference_id == case_ref).first()
+    if not case:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Case with reference ID '{case_ref}' not found."
+        )
+
+    assert_bureau_access(current_user, case.bureau_id)
+
+    form = await request.form()
+    file = form.get("file")
+    if not file or not hasattr(file, "read"):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Multipart upload missing 'file' payload."
+        )
+
+    file_bytes = await file.read()
+    file_name = file.filename or "evidence_file.pdf"
+    content_type = file.content_type or "application/octet-stream"
+    category = form.get("category", "OTHER")
+    description = form.get("description", None)
+    is_confidential = form.get("is_confidential", "false").lower() == "true"
+
+    from backend.app.models.attachment import AttachmentCategory
+    from backend.app.services.attachment import create_case_attachment
+
+    try:
+        cat_enum = AttachmentCategory(category)
+    except ValueError:
+        cat_enum = AttachmentCategory.OTHER
+
+    attachment = create_case_attachment(
+        db=db,
+        case=case,
+        file_name=file_name,
+        file_bytes=file_bytes,
+        mime_type=content_type,
+        category=cat_enum,
+        uploader=current_user,
+        description=description,
+        is_confidential=is_confidential,
+    )
+
+    return StandardResponse(data=CaseAttachmentRead.model_validate(attachment))
+
 
