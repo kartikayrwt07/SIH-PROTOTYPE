@@ -36,15 +36,16 @@ export interface UserProfileResponse extends UserSummary {
 class ApiService {
   private async request<T>(endpoint: string, options?: RequestInit): Promise<T> {
     try {
-      const activeRole = localStorage.getItem("aicte_demo_role") || "SUPERVISOR";
+      const token = localStorage.getItem("aicte_token");
       const headers: Record<string, string> = {
         "Content-Type": "application/json",
-        "X-Demo-Role": activeRole,
       };
 
-      const token = localStorage.getItem("aicte_token");
       if (token) {
         headers["Authorization"] = `Bearer ${token}`;
+      } else {
+        const activeRole = localStorage.getItem("aicte_demo_role") || "SUPERVISOR";
+        headers["X-Demo-Role"] = activeRole;
       }
 
       const response = await fetch(`${API_BASE}${endpoint}`, {

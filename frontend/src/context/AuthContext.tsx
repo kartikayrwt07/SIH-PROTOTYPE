@@ -35,10 +35,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setIsLoading(false);
         return;
       }
-      const res = await api.getCurrentUser(currentRole);
+      const res = await api.getCurrentUser();
       if (res.success && res.data) {
         setCurrentUser(res.data);
         setCurrentRole(res.data.role);
+        localStorage.setItem("aicte_demo_role", res.data.role);
         setPermissions(res.data.permissions || []);
       } else {
         // Token expired or invalid
