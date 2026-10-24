@@ -14,7 +14,7 @@ import { deriveSlaStatus } from "@/components/cases/SlaPill";
 import { DwellTimeChart } from "./DwellTimeChart";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import type { ComplaintCase, BureauStat } from "@/types/ui";
+import type { ComplaintCase } from "@/types/ui";
 import { AlertCircle } from "lucide-react";
 
 export function DashboardView() {
@@ -90,11 +90,11 @@ export function DashboardView() {
       key: "institution_name",
       header: "Institution",
       cell: (c) => (
-        <div>
+        <div className="py-0.5">
           <div className="font-medium text-[var(--color-text-primary)] text-xs line-clamp-1">
             {c.institution_name}
           </div>
-          <div className="font-mono text-[10px] text-[var(--color-text-muted)]">
+          <div className="font-mono text-[10px] text-[var(--color-text-muted)] mt-0.5">
             {c.aicte_permanent_id ? c.aicte_permanent_id : "—"}
           </div>
         </div>
@@ -103,7 +103,7 @@ export function DashboardView() {
     {
       key: "stage",
       header: "Stage",
-      width: "220px",
+      width: "230px",
       cell: (c) => (
         <div className="flex items-center">
           <LifecycleStrip currentStatus={c.status} variant="compact" />
@@ -126,7 +126,7 @@ export function DashboardView() {
       key: "bureau",
       header: "Bureau",
       cell: (b) => (
-        <div>
+        <div className="py-0.5">
           <span className="font-medium text-[var(--color-text-primary)] text-xs">
             {b.bureau_name}
           </span>
@@ -188,15 +188,15 @@ export function DashboardView() {
       key: "rate",
       header: "Resolution rate",
       align: "right",
-      width: "160px",
+      width: "180px",
       cell: (b) => (
-        <div className="flex items-center justify-end gap-2.5">
-          <span className="tabular-nums text-xs text-[var(--color-text-secondary)]">
+        <div className="flex items-center justify-end gap-3 py-0.5">
+          <span className="tabular-nums text-xs text-[var(--color-text-secondary)] font-medium">
             {b.completionPct}%
           </span>
-          <div className="w-16 h-1.5 bg-[var(--color-page)] border border-[var(--color-rule)] rounded-[2px] overflow-hidden">
+          <div className="w-20 h-1.5 bg-[var(--color-page)] border border-[var(--color-rule)] rounded-[2px] overflow-hidden">
             <div
-              className="h-full bg-[var(--color-action)]"
+              className="h-full bg-[var(--color-action)] transition-all duration-300"
               style={{ width: `${b.completionPct}%` }}
             />
           </div>
@@ -206,56 +206,63 @@ export function DashboardView() {
   ];
 
   return (
-    <div className="py-6 px-6 lg:px-8 max-w-7xl mx-auto space-y-8">
+    <div className="py-8 px-6 lg:px-8 max-w-7xl mx-auto space-y-10">
       {/* Header & KPI Summary Sentence */}
-      <div className="space-y-2">
+      <div className="space-y-4">
         <PageHeader title="Dashboard" />
 
         {isStatsLoading ? (
-          <Skeleton className="h-5 w-80 rounded" />
+          <Skeleton className="h-6 w-96 rounded" />
         ) : isStatsError || !stats ? (
-          <div className="flex items-center justify-between p-3 text-xs bg-red-50 text-[var(--sla-overdue-text)] border border-red-200 rounded-[4px]">
+          <div className="flex items-center justify-between p-4 text-xs bg-red-50 text-[var(--sla-overdue-text)] border border-red-200 rounded-[6px]">
             <div className="flex items-center gap-2">
               <AlertCircle className="h-4 w-4" />
               <span>Failed to load summary statistics: {(statsError as Error)?.message || "Unknown error"}</span>
             </div>
-            <Button size="sm" variant="outline" onClick={() => refetchStats()} className="h-7 text-xs">
+            <Button size="sm" variant="outline" onClick={() => refetchStats()} className="h-7 text-xs border-red-200">
               Try again
             </Button>
           </div>
         ) : (
-          <p className="text-sm text-[var(--color-text-secondary)] -mt-2">
-            <span className="font-semibold text-[var(--sla-overdue-text)] tabular-nums">
-              {stats.overdue_cases}
-            </span>{" "}
-            overdue,{" "}
-            <span className="font-semibold text-[var(--sla-approaching-text)] tabular-nums">
-              {stats.approaching_cases}
-            </span>{" "}
-            due within 48 hours,{" "}
-            <span className="font-semibold text-[var(--color-text-primary)] tabular-nums">
-              {stats.active_cases}
-            </span>{" "}
-            open. Resolution rate{" "}
-            <span className="font-semibold text-[var(--color-text-primary)] tabular-nums">
-              {Math.round(stats.resolution_rate * 100)}%
-            </span>
-            .
-          </p>
+          <div className="py-3 px-4 bg-surface border border-[var(--color-rule)] rounded-[6px] text-sm text-[var(--color-text-secondary)] flex items-center justify-between">
+            <p>
+              <span className="font-semibold text-[var(--sla-overdue-text)] tabular-nums">
+                {stats.overdue_cases}
+              </span>{" "}
+              overdue,{" "}
+              <span className="font-semibold text-[var(--sla-approaching-text)] tabular-nums">
+                {stats.approaching_cases}
+              </span>{" "}
+              due within 48 hours,{" "}
+              <span className="font-semibold text-[var(--color-text-primary)] tabular-nums">
+                {stats.active_cases}
+              </span>{" "}
+              open. Resolution rate{" "}
+              <span className="font-semibold text-[var(--color-text-primary)] tabular-nums">
+                {Math.round(stats.resolution_rate * 100)}%
+              </span>
+              .
+            </p>
+          </div>
         )}
       </div>
 
       {/* Section: Cases that need action today */}
-      <section className="space-y-3">
-        <div className="flex items-baseline justify-between border-b border-[var(--color-rule)] pb-2">
-          <h2 className="font-serif text-base font-semibold text-[var(--color-ink)]">
-            Cases that need action today
-          </h2>
+      <section className="space-y-4">
+        <div className="flex items-baseline justify-between border-b border-[var(--color-rule)] pb-3">
+          <div>
+            <h2 className="font-serif text-base font-semibold text-[var(--color-ink)]">
+              Cases that need action today
+            </h2>
+            <p className="text-xs text-[var(--color-text-muted)] mt-0.5">
+              Priority complaints ranked by deadline proximity requiring immediate desk attention.
+            </p>
+          </div>
           <Link
             to="/cases"
             className="text-xs font-medium text-[var(--color-action)] hover:underline"
           >
-            View all in the register
+            View all in the register →
           </Link>
         </div>
 
@@ -277,11 +284,14 @@ export function DashboardView() {
       </section>
 
       {/* Section: Workload by bureau */}
-      <section className="space-y-3">
-        <div className="border-b border-[var(--color-rule)] pb-2">
+      <section className="space-y-4">
+        <div className="border-b border-[var(--color-rule)] pb-3">
           <h2 className="font-serif text-base font-semibold text-[var(--color-ink)]">
             Workload by bureau
           </h2>
+          <p className="text-xs text-[var(--color-text-muted)] mt-0.5">
+            Jurisdictional distribution of active caseloads, overdue breach volumes, and determination rates.
+          </p>
         </div>
 
         <DataTable
@@ -304,7 +314,7 @@ export function DashboardView() {
       {/* Section: Where cases wait longest */}
       <section>
         {isCasesLoading ? (
-          <Skeleton className="h-48 w-full rounded" />
+          <Skeleton className="h-56 w-full rounded-[6px]" />
         ) : (
           <DwellTimeChart cases={allCases} />
         )}

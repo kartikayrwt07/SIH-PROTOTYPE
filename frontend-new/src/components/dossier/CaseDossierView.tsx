@@ -127,12 +127,12 @@ export function CaseDossierView({ caseRef }: CaseDossierViewProps) {
   };
 
   return (
-    <div className="py-6 px-6 lg:px-8 max-w-7xl mx-auto space-y-6">
+    <div className="py-8 px-6 lg:px-8 max-w-7xl mx-auto space-y-8">
       {/* Back button */}
       <div>
         <Link
           to="/cases"
-          className="inline-flex items-center gap-1 text-xs text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]"
+          className="inline-flex items-center gap-1.5 text-xs font-medium text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors"
         >
           <ChevronLeft className="h-3.5 w-3.5" />
           <span>Case register</span>
@@ -140,12 +140,12 @@ export function CaseDossierView({ caseRef }: CaseDossierViewProps) {
       </div>
 
       {/* Header: reference ID (mono, secondary), SUBJECT as serif page title, StatusMark, PriorityMark, SlaPill, escalation note */}
-      <header className="space-y-3">
-        <div className="space-y-1">
-          <div className="font-mono text-xs text-[var(--color-text-secondary)]">
+      <header className="space-y-4">
+        <div className="space-y-1.5">
+          <div className="font-mono text-xs text-[var(--color-text-secondary)] tracking-wider">
             {caseItem.case_reference_id}
           </div>
-          <h1 className="font-serif text-2xl font-semibold text-[var(--color-ink)] leading-tight max-w-4xl">
+          <h1 className="font-serif text-2xl lg:text-3xl font-semibold text-[var(--color-ink)] leading-snug max-w-4xl tracking-tight">
             {caseItem.subject}
           </h1>
         </div>
@@ -155,14 +155,14 @@ export function CaseDossierView({ caseRef }: CaseDossierViewProps) {
           <PriorityMark priority={caseItem.priority} />
           <SlaPill dueDate={caseItem.due_date} isResolved={isResolvedOrClosed} />
           {caseItem.escalation_level > 0 && (
-            <span className="text-xs text-[var(--color-text-secondary)] font-medium">
+            <span className="text-xs text-[var(--color-text-secondary)] font-medium bg-[var(--color-page)] px-2 py-0.5 border border-[var(--color-rule)] rounded-[4px]">
               Escalation level {caseItem.escalation_level}
             </span>
           )}
         </div>
 
         {/* Full LifecycleStrip directly under header */}
-        <div className="pt-2">
+        <div className="pt-3">
           <LifecycleStrip
             currentStatus={caseItem.status}
             dueDate={caseItem.due_date}
@@ -173,67 +173,67 @@ export function CaseDossierView({ caseRef }: CaseDossierViewProps) {
       </header>
 
       {/* Main Two Columns: Left (65% case file), Right (35% action rail). On mobile: action rail first */}
-      <div className="flex flex-col-reverse lg:grid lg:grid-cols-[1fr_320px] gap-8 items-start pt-2">
+      <div className="flex flex-col-reverse lg:grid lg:grid-cols-[1fr_340px] gap-10 items-start pt-2">
         {/* Left Column: Continuous document with 1px rules between sections */}
-        <div className="w-full space-y-6">
+        <div className="w-full space-y-8">
           {/* Section 1: Institution plain term/value list */}
-          <section className="space-y-3">
-            <h2 className="font-serif text-base font-semibold text-[var(--color-ink)]">
+          <section className="space-y-4">
+            <h2 className="font-serif text-base font-semibold text-[var(--color-ink)] tracking-tight">
               Institution
             </h2>
-            <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3 text-xs">
+            <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-10 gap-y-4 text-xs">
               <div>
-                <dt className="text-[var(--color-text-muted)] text-[11px]">Name</dt>
-                <dd className="font-medium text-[var(--color-text-primary)] mt-0.5">
+                <dt className="text-[11px] font-medium text-[var(--color-text-muted)] tracking-wider uppercase">Name</dt>
+                <dd className="font-medium text-[var(--color-text-primary)] mt-1 text-sm">
                   {caseItem.institution_name}
                 </dd>
               </div>
 
               <div>
-                <dt className="text-[var(--color-text-muted)] text-[11px]">AICTE ID</dt>
-                <dd className="font-mono text-[var(--color-text-secondary)] mt-0.5">
+                <dt className="text-[11px] font-medium text-[var(--color-text-muted)] tracking-wider uppercase">AICTE ID</dt>
+                <dd className="font-mono text-[var(--color-text-secondary)] mt-1">
                   {caseItem.aicte_permanent_id || "—"}
                 </dd>
               </div>
 
               <div>
-                <dt className="text-[var(--color-text-muted)] text-[11px]">State</dt>
-                <dd className="text-[var(--color-text-primary)] mt-0.5">
+                <dt className="text-[11px] font-medium text-[var(--color-text-muted)] tracking-wider uppercase">State</dt>
+                <dd className="text-[var(--color-text-primary)] mt-1 font-medium">
                   {instMeta.state}
                 </dd>
               </div>
 
               <div>
-                <dt className="text-[var(--color-text-muted)] text-[11px]">District</dt>
-                <dd className="text-[var(--color-text-primary)] mt-0.5">
+                <dt className="text-[11px] font-medium text-[var(--color-text-muted)] tracking-wider uppercase">District</dt>
+                <dd className="text-[var(--color-text-primary)] mt-1 font-medium">
                   {instMeta.district}
                 </dd>
               </div>
 
               <div>
-                <dt className="text-[var(--color-text-muted)] text-[11px]">Type</dt>
-                <dd className="text-[var(--color-text-primary)] mt-0.5">
+                <dt className="text-[11px] font-medium text-[var(--color-text-muted)] tracking-wider uppercase">Type</dt>
+                <dd className="text-[var(--color-text-primary)] mt-1">
                   {instMeta.type}
                 </dd>
               </div>
 
               <div>
-                <dt className="text-[var(--color-text-muted)] text-[11px]">Bureau</dt>
-                <dd className="text-[var(--color-text-primary)] mt-0.5">
+                <dt className="text-[11px] font-medium text-[var(--color-text-muted)] tracking-wider uppercase">Bureau</dt>
+                <dd className="text-[var(--color-text-primary)] mt-1">
                   {caseItem.bureau_name} ({caseItem.bureau_code})
                 </dd>
               </div>
 
               <div>
-                <dt className="text-[var(--color-text-muted)] text-[11px]">Assigned officer</dt>
-                <dd className="text-[var(--color-text-primary)] mt-0.5">
+                <dt className="text-[11px] font-medium text-[var(--color-text-muted)] tracking-wider uppercase">Assigned officer</dt>
+                <dd className="text-[var(--color-text-primary)] mt-1">
                   {caseItem.assigned_officer_name || "Unassigned"}
                 </dd>
               </div>
 
               <div>
-                <dt className="text-[var(--color-text-muted)] text-[11px]">Category</dt>
-                <dd className="text-[var(--color-text-primary)] mt-0.5">
+                <dt className="text-[11px] font-medium text-[var(--color-text-muted)] tracking-wider uppercase">Category</dt>
+                <dd className="text-[var(--color-text-primary)] mt-1">
                   {caseItem.category || "General Grievance"}
                 </dd>
               </div>
@@ -244,8 +244,8 @@ export function CaseDossierView({ caseRef }: CaseDossierViewProps) {
           <div className="border-t border-[var(--color-rule)]" />
 
           {/* Section 2: Description and Confidential statement */}
-          <section className="space-y-4">
-            <h2 className="font-serif text-base font-semibold text-[var(--color-ink)]">
+          <section className="space-y-5">
+            <h2 className="font-serif text-base font-semibold text-[var(--color-ink)] tracking-tight">
               Description
             </h2>
 
@@ -253,15 +253,15 @@ export function CaseDossierView({ caseRef }: CaseDossierViewProps) {
               {caseItem.description_redacted}
             </div>
 
-            <div className="space-y-2 pt-2">
-              <div className="text-xs font-medium text-[var(--color-text-primary)]">
+            <div className="space-y-2.5 pt-2">
+              <div className="text-xs font-semibold text-[var(--color-ink)]">
                 Confidential statement
               </div>
 
               {isAuditor ? (
                 <RedactionBar />
               ) : caseItem.description_confidential ? (
-                <div className="text-xs text-[var(--color-text-secondary)] bg-[var(--color-page)] border border-[var(--color-rule)] rounded-[4px] p-3 leading-relaxed max-w-3xl whitespace-pre-wrap">
+                <div className="text-xs text-[var(--color-text-secondary)] bg-[var(--color-page)] border border-[var(--color-rule)] rounded-[6px] p-4 leading-relaxed max-w-3xl whitespace-pre-wrap">
                   {caseItem.description_confidential}
                 </div>
               ) : (
@@ -272,11 +272,11 @@ export function CaseDossierView({ caseRef }: CaseDossierViewProps) {
             </div>
 
             {caseItem.closure_remarks && (
-              <div className="space-y-1.5 pt-2">
-                <div className="text-xs font-medium text-[var(--color-text-primary)]">
+              <div className="space-y-2 pt-2">
+                <div className="text-xs font-semibold text-[var(--color-ink)]">
                   Closure remarks
                 </div>
-                <div className="text-xs text-[var(--color-text-secondary)] bg-[var(--color-page)] border border-[var(--color-rule)] rounded-[4px] p-3 leading-relaxed max-w-3xl">
+                <div className="text-xs text-[var(--color-text-secondary)] bg-[var(--color-page)] border border-[var(--color-rule)] rounded-[6px] p-4 leading-relaxed max-w-3xl">
                   {caseItem.closure_remarks}
                 </div>
               </div>
@@ -287,40 +287,40 @@ export function CaseDossierView({ caseRef }: CaseDossierViewProps) {
           <div className="border-t border-[var(--color-rule)]" />
 
           {/* Section 3: Tabs "Timeline", "Notes", "Assignment history" */}
-          <section className="space-y-3">
+          <section className="space-y-4">
             <Tabs defaultValue="timeline" className="w-full">
               <div className="border-b border-[var(--color-rule)]">
-                <TabsList className="bg-transparent p-0 h-auto gap-6 border-0">
+                <TabsList className="bg-transparent p-0 h-auto gap-8 border-0">
                   <TabsTrigger
                     value="timeline"
-                    className="border-b-2 border-transparent data-[state=active]:border-[var(--color-action)] data-[state=active]:text-[var(--color-ink)] data-[state=active]:shadow-none rounded-none px-0 py-2 text-xs font-medium text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-none"
+                    className="border-b-2 border-transparent data-[state=active]:border-[var(--color-action)] data-[state=active]:text-[var(--color-ink)] data-[state=active]:shadow-none rounded-none px-1 py-2.5 text-xs font-medium text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-none"
                   >
                     Timeline
                   </TabsTrigger>
                   <TabsTrigger
                     value="notes"
-                    className="border-b-2 border-transparent data-[state=active]:border-[var(--color-action)] data-[state=active]:text-[var(--color-ink)] data-[state=active]:shadow-none rounded-none px-0 py-2 text-xs font-medium text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-none"
+                    className="border-b-2 border-transparent data-[state=active]:border-[var(--color-action)] data-[state=active]:text-[var(--color-ink)] data-[state=active]:shadow-none rounded-none px-1 py-2.5 text-xs font-medium text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-none"
                   >
                     Notes
                   </TabsTrigger>
                   <TabsTrigger
                     value="history"
-                    className="border-b-2 border-transparent data-[state=active]:border-[var(--color-action)] data-[state=active]:text-[var(--color-ink)] data-[state=active]:shadow-none rounded-none px-0 py-2 text-xs font-medium text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-none"
+                    className="border-b-2 border-transparent data-[state=active]:border-[var(--color-action)] data-[state=active]:text-[var(--color-ink)] data-[state=active]:shadow-none rounded-none px-1 py-2.5 text-xs font-medium text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-none"
                   >
                     Assignment history
                   </TabsTrigger>
                 </TabsList>
               </div>
 
-              <TabsContent value="timeline" className="m-0 focus-visible:outline-none">
+              <TabsContent value="timeline" className="m-0 pt-6 focus-visible:outline-none">
                 <AuditTimelineTab caseRef={caseItem.case_reference_id} />
               </TabsContent>
 
-              <TabsContent value="notes" className="m-0 focus-visible:outline-none">
+              <TabsContent value="notes" className="m-0 pt-6 focus-visible:outline-none">
                 <InternalNotesTab caseRef={caseItem.case_reference_id} />
               </TabsContent>
 
-              <TabsContent value="history" className="m-0 focus-visible:outline-none">
+              <TabsContent value="history" className="m-0 pt-6 focus-visible:outline-none">
                 <AssignmentHistoryTab caseRef={caseItem.case_reference_id} />
               </TabsContent>
             </Tabs>
@@ -328,14 +328,14 @@ export function CaseDossierView({ caseRef }: CaseDossierViewProps) {
         </div>
 
         {/* Right Column: Sticky Action Rail (1px rule separating from case file, no cards) */}
-        <aside className="w-full lg:sticky lg:top-6 lg:border-l border-[var(--color-rule)] lg:pl-6 space-y-4">
-          <div className="border-b border-[var(--color-rule)] pb-2">
-            <h2 className="font-serif text-sm font-semibold text-[var(--color-ink)]">
+        <aside className="w-full lg:sticky lg:top-8 lg:border-l border-[var(--color-rule)] lg:pl-8 space-y-5">
+          <div className="border-b border-[var(--color-rule)] pb-2.5">
+            <h2 className="font-serif text-sm font-semibold text-[var(--color-ink)] tracking-tight">
               Actions
             </h2>
           </div>
 
-          <div className="space-y-2">
+          <div className="space-y-2.5">
             {/* Primary button: Change status */}
             <Button
               onClick={() => handleOpenStatusModal()}
@@ -350,7 +350,7 @@ export function CaseDossierView({ caseRef }: CaseDossierViewProps) {
               <Button
                 variant="outline"
                 onClick={() => setReassignOpen(true)}
-                className="w-full text-xs h-8 font-normal text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] border-[var(--color-rule)] rounded-[6px]"
+                className="w-full text-xs h-8.5 font-normal text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] border-[var(--color-rule)] bg-surface hover:bg-[var(--color-page)] rounded-[6px]"
               >
                 Reassign case
               </Button>
@@ -361,7 +361,7 @@ export function CaseDossierView({ caseRef }: CaseDossierViewProps) {
               <Button
                 variant="outline"
                 onClick={() => setEscalateOpen(true)}
-                className="w-full text-xs h-8 font-normal text-[var(--sla-overdue-text)] hover:text-[var(--sla-overdue-text)] border-[var(--color-rule)] rounded-[6px]"
+                className="w-full text-xs h-8.5 font-normal text-[var(--sla-overdue-text)] hover:text-[var(--sla-overdue-text)] border-[var(--color-rule)] bg-surface hover:bg-[var(--sla-overdue-bg)]/50 rounded-[6px]"
               >
                 Escalate case
               </Button>
@@ -372,7 +372,7 @@ export function CaseDossierView({ caseRef }: CaseDossierViewProps) {
               <Button
                 variant="outline"
                 onClick={() => handleOpenStatusModal("In Progress")}
-                className="w-full text-xs h-8 font-normal text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] border-[var(--color-rule)] rounded-[6px]"
+                className="w-full text-xs h-8.5 font-normal text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] border-[var(--color-rule)] bg-surface hover:bg-[var(--color-page)] rounded-[6px]"
               >
                 Reopen case
               </Button>
@@ -380,13 +380,13 @@ export function CaseDossierView({ caseRef }: CaseDossierViewProps) {
 
             {/* Status notices for special states */}
             {isAuditor && (
-              <p className="text-[11px] text-[var(--color-text-muted)] pt-2 leading-relaxed">
+              <p className="text-[11px] text-[var(--color-text-muted)] pt-3 leading-relaxed border-t border-[var(--color-rule)]">
                 Auditor access is strictly read-only. Status advancement, reassignment, and escalation controls are disabled.
               </p>
             )}
 
             {isClosed && (
-              <p className="text-[11px] text-[var(--color-text-muted)] pt-2 leading-relaxed">
+              <p className="text-[11px] text-[var(--color-text-muted)] pt-3 leading-relaxed border-t border-[var(--color-rule)]">
                 This case is closed. The lifecycle has terminated and further status transitions are locked.
               </p>
             )}

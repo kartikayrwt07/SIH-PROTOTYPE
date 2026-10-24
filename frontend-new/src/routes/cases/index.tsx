@@ -20,7 +20,7 @@ function CasesRoute() {
   const { bureau_id } = Route.useSearch();
 
   return (
-    <div className="py-6 px-6 lg:px-8 max-w-7xl mx-auto">
+    <div className="py-8 px-6 lg:px-8 max-w-7xl mx-auto space-y-8">
       <CaseRegister initialBureauId={bureau_id} />
     </div>
   );

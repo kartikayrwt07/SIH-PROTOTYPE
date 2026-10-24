@@ -38,7 +38,7 @@ export function DataTable<T>({
   className,
 }: DataTableProps<T>) {
   return (
-    <div className={cn("w-full bg-surface border border-rule rounded overflow-hidden", className)}>
+    <div className={cn("w-full bg-surface border border-rule rounded-[6px] overflow-hidden", className)}>
       <div className="overflow-x-auto">
         <table className="w-full text-left text-sm border-collapse">
           <thead className="sticky top-0 bg-page border-b border-rule z-10">
@@ -48,7 +48,7 @@ export function DataTable<T>({
                   key={col.key}
                   style={{ width: col.width }}
                   className={cn(
-                    "h-9 px-4 py-2 text-xs font-medium text-text-secondary select-none",
+                    "h-10 px-4 py-2.5 text-xs font-semibold text-text-secondary select-none",
                     col.align === "right"
                       ? "text-right tabular-nums"
                       : col.align === "center"
@@ -65,12 +65,12 @@ export function DataTable<T>({
           <tbody className="divide-y divide-rule">
             {isLoading ? (
               Array.from({ length: skeletonRows }).map((_, rIdx) => (
-                <tr key={`skel-${rIdx}`} className="h-10 bg-surface">
+                <tr key={`skel-${rIdx}`} className="h-11 bg-surface">
                   {columns.map((col, cIdx) => (
                     <td
                       key={`skel-c-${cIdx}`}
                       className={cn(
-                        "px-4 py-2",
+                        "px-4 py-3",
                         col.align === "right" ? "text-right" : "text-left",
                       )}
                     >
@@ -88,10 +88,10 @@ export function DataTable<T>({
               <tr>
                 <td
                   colSpan={columns.length}
-                  className="px-4 py-12 text-center text-sm text-text-secondary"
+                  className="px-4 py-14 text-center text-sm text-text-secondary"
                 >
-                  <div className="max-w-sm mx-auto space-y-1">
-                    <p className="font-medium text-ink">{emptyMessage}</p>
+                  <div className="max-w-sm mx-auto space-y-1.5">
+                    <p className="font-serif text-base font-semibold text-ink">{emptyMessage}</p>
                     <p className="text-xs text-text-muted">{emptyInstruction}</p>
                     {emptyAction && <div className="pt-2">{emptyAction}</div>}
                   </div>
@@ -115,7 +115,7 @@ export function DataTable<T>({
                     tabIndex={isClickable ? 0 : undefined}
                     role={isClickable ? "button" : undefined}
                     className={cn(
-                      "h-10 bg-surface text-ink transition-none",
+                      "min-h-[44px] bg-surface text-ink transition-colors",
                       isClickable &&
                         "cursor-pointer hover:bg-page focus:outline-none focus:bg-page focus:ring-1 focus:ring-action",
                       customClasses,
@@ -125,7 +125,7 @@ export function DataTable<T>({
                       <td
                         key={col.key}
                         className={cn(
-                          "px-4 py-2 text-xs",
+                          "px-4 py-3 text-xs",
                           col.align === "right"
                             ? "text-right tabular-nums"
                             : col.align === "center"

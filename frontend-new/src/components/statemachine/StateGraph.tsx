@@ -13,7 +13,6 @@ import {
   CheckCircle2,
   Lock,
   ArrowRight,
-  RotateCcw,
   Sparkles,
 } from "lucide-react";
 
@@ -41,8 +40,8 @@ const STATUS_DESCRIPTIONS: Record<CaseStatus, string> = {
   "Under Triage": "Bureau & priority classified",
   Assigned: "Assigned to desk officer",
   "In Progress": "Active investigation underway",
-  "Awaiting Information": "Pending complainant response",
-  "Under Review": "Supervisory review underway",
+  "Awaiting Information": "Pending response",
+  "Under Review": "Supervisory review",
   Resolved: "Resolution order issued",
   Closed: "Immutable terminal archive",
 };
@@ -57,280 +56,262 @@ export function StateGraph({
   return (
     <div className="space-y-6">
       {/* Graph Visual Canvas */}
-      <div className="bg-card border border-border/60 rounded-xl p-5 shadow-none relative overflow-hidden">
+      <div className="bg-surface border border-[var(--color-rule)] rounded-[6px] p-6 space-y-6">
         {/* Graph Header / Legend */}
-        <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-border/80 text-xs">
-          <div className="flex items-center gap-2">
-            <span className="font-semibold text-foreground">Interactive State Diagram</span>
-            <span className="text-muted-foreground">· Click any node to inspect allowed transitions & guards</span>
+        <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-[var(--color-rule)] text-xs">
+          <div>
+            <h3 className="font-serif text-sm font-semibold text-[var(--color-ink)]">
+              Interactive state topology
+            </h3>
+            <p className="text-[11px] text-[var(--color-text-muted)]">
+              Select any stage to inspect permissible transitions and statutory guard conditions.
+            </p>
           </div>
 
-          <div className="flex flex-wrap items-center gap-3 text-[11px] text-muted-foreground">
+          <div className="flex flex-wrap items-center gap-4 text-[11px] text-[var(--color-text-secondary)]">
             <span className="flex items-center gap-1.5">
-              <span className="h-2.5 w-2.5 rounded-full bg-primary ring-2 ring-primary/20" />
-              <span>Selected State</span>
+              <span className="w-2.5 h-2.5 rounded-[2px] bg-[var(--color-action)]" />
+              <span>Selected stage</span>
             </span>
             <span className="flex items-center gap-1.5">
-              <span className="h-2.5 w-2.5 rounded-full bg-emerald-500" />
-              <span>Allowed Next Transition</span>
+              <span className="w-2.5 h-2.5 rounded-[2px] bg-[var(--sla-on-track-text)]" />
+              <span>Allowed transition</span>
             </span>
             <span className="flex items-center gap-1.5">
-              <span className="h-2.5 w-2.5 rounded-full bg-slate-400" />
-              <span>Terminal State</span>
+              <span className="w-2.5 h-2.5 rounded-[2px] bg-[var(--color-text-muted)]" />
+              <span>Terminal state</span>
             </span>
           </div>
         </div>
 
         {/* 3-Tier Lifecycle Flow Layout */}
-        <div className="pt-6 space-y-8">
-          {/* Tier 1: Intake & Bureau Triage */}
-          <div className="space-y-2">
-            <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
-              <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+        <div className="space-y-8">
+          {/* Phase 1: Intake & Bureau Triage */}
+          <div className="space-y-3">
+            <div className="text-[10px] font-semibold uppercase tracking-wider text-[var(--color-text-muted)] flex items-center gap-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-[var(--color-ink)]" />
               <span>Phase 1 · Intake & Jurisdictional Triage</span>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 relative">
-              {(["Received", "Registered", "Under Triage"] as CaseStatus[]).map(
-                (status, idx) => {
-                  const Icon = STATUS_ICONS[status];
-                  const isSelected = selectedStatus === status;
-                  const isNext = allowedNext.includes(status);
-                  const count = caseCountsByStatus[status] ?? 0;
-
-                  return (
-                    <button
-                      key={status}
-                      type="button"
-                      onClick={() => onSelectStatus(status)}
-                      className={`text-left p-3.5 rounded-lg border transition-all cursor-pointer relative group flex flex-col justify-between min-h-[96px] ${
-                        isSelected
-                          ? "bg-primary/5 border-primary ring-2 ring-primary/20 shadow-xs"
-                          : isNext
-                          ? "bg-emerald-50/40 border-emerald-400 hover:bg-emerald-50/70 shadow-2xs"
-                          : "bg-card border-border hover:border-primary/40 hover:bg-muted/20"
-                      }`}
-                    >
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="flex items-center gap-2">
-                          <div
-                            className={`h-7 w-7 rounded-md flex items-center justify-center shrink-0 ${
-                              isSelected
-                                ? "bg-primary text-primary-foreground"
-                                : isNext
-                                ? "bg-emerald-100 text-emerald-700"
-                                : "bg-muted text-foreground"
-                            }`}
-                          >
-                            <Icon className="h-4 w-4" />
-                          </div>
-                          <div>
-                            <span className="text-xs font-bold block text-foreground">
-                              {status}
-                            </span>
-                            <span className="text-[10px] text-muted-foreground block">
-                              {STATUS_DESCRIPTIONS[status]}
-                            </span>
-                          </div>
-                        </div>
-
-                        {count > 0 && (
-                          <Badge variant="outline" className="text-[10px] py-0 px-1.5 font-mono">
-                            {count} cases
-                          </Badge>
-                        )}
-                      </div>
-
-                      {isNext && (
-                        <div className="pt-2 flex items-center gap-1 text-[10px] text-emerald-700 font-semibold">
-                          <ArrowRight className="h-3 w-3" />
-                          <span>Valid Next Target</span>
-                        </div>
-                      )}
-
-                      {isSelected && (
-                        <div className="pt-2 flex items-center gap-1 text-[10px] text-primary font-bold uppercase tracking-wider">
-                          <Sparkles className="h-3 w-3" />
-                          <span>Inspecting Guards</span>
-                        </div>
-                      )}
-                    </button>
-                  );
-                },
-              )}
-            </div>
-          </div>
-
-          {/* Tier 2: Assignment, Investigation & Review */}
-          <div className="space-y-2">
-            <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
-              <span className="h-1.5 w-1.5 rounded-full bg-primary" />
-              <span>Phase 2 · Assignment & Active Investigation (with Evidence Loop)</span>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 relative">
-              {(["Assigned", "In Progress", "Awaiting Information", "Under Review"] as CaseStatus[]).map(
-                (status) => {
-                  const Icon = STATUS_ICONS[status];
-                  const isSelected = selectedStatus === status;
-                  const isNext = allowedNext.includes(status);
-                  const count = caseCountsByStatus[status] ?? 0;
-                  const isLoop = status === "Awaiting Information";
-
-                  return (
-                    <button
-                      key={status}
-                      type="button"
-                      onClick={() => onSelectStatus(status)}
-                      className={`text-left p-3.5 rounded-lg border transition-all cursor-pointer relative group flex flex-col justify-between min-h-[96px] ${
-                        isSelected
-                          ? "bg-primary/5 border-primary ring-2 ring-primary/20 shadow-xs"
-                          : isNext
-                          ? "bg-emerald-50/40 border-emerald-400 hover:bg-emerald-50/70 shadow-2xs"
-                          : isLoop
-                          ? "bg-amber-50/20 border-amber-200/80 hover:border-amber-300"
-                          : "bg-card border-border hover:border-primary/40 hover:bg-muted/20"
-                      }`}
-                    >
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="flex items-center gap-2">
-                          <div
-                            className={`h-7 w-7 rounded-md flex items-center justify-center shrink-0 ${
-                              isSelected
-                                ? "bg-primary text-primary-foreground"
-                                : isNext
-                                ? "bg-emerald-100 text-emerald-700"
-                                : isLoop
-                                ? "bg-amber-100 text-amber-800"
-                                : "bg-muted text-foreground"
-                            }`}
-                          >
-                            <Icon className="h-4 w-4" />
-                          </div>
-                          <div>
-                            <span className="text-xs font-bold block text-foreground">
-                              {status}
-                            </span>
-                            <span className="text-[10px] text-muted-foreground block">
-                              {STATUS_DESCRIPTIONS[status]}
-                            </span>
-                          </div>
-                        </div>
-
-                        {count > 0 && (
-                          <Badge variant="outline" className="text-[10px] py-0 px-1.5 font-mono">
-                            {count} cases
-                          </Badge>
-                        )}
-                      </div>
-
-                      {isNext && (
-                        <div className="pt-2 flex items-center gap-1 text-[10px] text-emerald-700 font-semibold">
-                          <ArrowRight className="h-3 w-3" />
-                          <span>Valid Next Target</span>
-                        </div>
-                      )}
-
-                      {isSelected && (
-                        <div className="pt-2 flex items-center gap-1 text-[10px] text-primary font-bold uppercase tracking-wider">
-                          <Sparkles className="h-3 w-3" />
-                          <span>Inspecting Guards</span>
-                        </div>
-                      )}
-
-                      {!isNext && !isSelected && isLoop && (
-                        <div className="pt-2 flex items-center gap-1 text-[10px] text-amber-700 font-medium">
-                          <RotateCcw className="h-3 w-3" />
-                          <span>↔ Bi-directional Loop</span>
-                        </div>
-                      )}
-                    </button>
-                  );
-                },
-              )}
-            </div>
-          </div>
-
-          {/* Tier 3: Resolution & Terminal Archive */}
-          <div className="space-y-2">
-            <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
-              <span className="h-1.5 w-1.5 rounded-full bg-primary" />
-              <span>Phase 3 · Determination & Finality (with Reopen Support)</span>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 relative">
-              {(["Resolved", "Closed"] as CaseStatus[]).map((status) => {
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
+              {(["Received", "Registered", "Under Triage"] as CaseStatus[]).map((status) => {
                 const Icon = STATUS_ICONS[status];
                 const isSelected = selectedStatus === status;
                 const isNext = allowedNext.includes(status);
                 const count = caseCountsByStatus[status] ?? 0;
-                const isTerminalClosed = status === "Closed";
 
                 return (
                   <button
                     key={status}
                     type="button"
                     onClick={() => onSelectStatus(status)}
-                    className={`text-left p-3.5 rounded-lg border transition-all cursor-pointer relative group flex flex-col justify-between min-h-[96px] ${
+                    className={`text-left p-4 rounded-[6px] border transition-all cursor-pointer flex flex-col justify-between min-h-[104px] ${
                       isSelected
-                        ? "bg-primary/5 border-primary ring-2 ring-primary/20 shadow-xs"
+                        ? "bg-[var(--color-page)] border-[var(--color-action)] ring-1 ring-[var(--color-action)]"
                         : isNext
-                        ? "bg-emerald-50/40 border-emerald-400 hover:bg-emerald-50/70 shadow-2xs"
-                        : isTerminalClosed
-                        ? "bg-slate-50 border-slate-300 hover:border-slate-400"
-                        : "bg-card border-border hover:border-primary/40 hover:bg-muted/20"
+                        ? "bg-[#E4F4EC]/40 border-[var(--sla-on-track-text)] hover:bg-[#E4F4EC]/60"
+                        : "bg-surface border-[var(--color-rule)] hover:border-[var(--color-text-muted)] hover:bg-[var(--color-page)]"
                     }`}
                   >
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="flex items-center gap-2">
+                    <div className="flex items-start justify-between gap-2 w-full">
+                      <div className="flex items-center gap-2.5">
                         <div
-                          className={`h-7 w-7 rounded-md flex items-center justify-center shrink-0 ${
+                          className={`w-7 h-7 rounded-[4px] flex items-center justify-center shrink-0 ${
                             isSelected
-                              ? "bg-primary text-primary-foreground"
+                              ? "bg-[var(--color-action)] text-white"
                               : isNext
-                              ? "bg-emerald-100 text-emerald-700"
-                              : isTerminalClosed
-                              ? "bg-slate-200 text-slate-800"
-                              : "bg-muted text-foreground"
+                              ? "bg-[var(--sla-on-track-bg)] text-[var(--sla-on-track-text)]"
+                              : "bg-[var(--color-page)] text-[var(--color-text-secondary)] border border-[var(--color-rule)]"
                           }`}
                         >
-                          <Icon className="h-4 w-4" />
+                          <Icon className="h-3.5 w-3.5" />
                         </div>
                         <div>
-                          <span className="text-xs font-bold block text-foreground">
+                          <span className="text-xs font-semibold block text-[var(--color-text-primary)]">
                             {status}
                           </span>
-                          <span className="text-[10px] text-muted-foreground block">
+                          <span className="text-[10px] text-[var(--color-text-muted)] block">
                             {STATUS_DESCRIPTIONS[status]}
                           </span>
                         </div>
                       </div>
 
                       {count > 0 && (
-                        <Badge variant="outline" className="text-[10px] py-0 px-1.5 font-mono">
-                          {count} cases
-                        </Badge>
+                        <span className="font-mono text-[10px] px-1.5 py-0.5 rounded bg-[var(--color-page)] border border-[var(--color-rule)] text-[var(--color-text-secondary)] tabular-nums">
+                          {count}
+                        </span>
                       )}
                     </div>
 
                     {isNext && (
-                      <div className="pt-2 flex items-center gap-1 text-[10px] text-emerald-700 font-semibold">
+                      <div className="pt-2 flex items-center gap-1 text-[10px] text-[var(--sla-on-track-text)] font-semibold">
                         <ArrowRight className="h-3 w-3" />
-                        <span>Valid Next Target</span>
+                        <span>Permitted next stage</span>
                       </div>
                     )}
 
                     {isSelected && (
-                      <div className="pt-2 flex items-center gap-1 text-[10px] text-primary font-bold uppercase tracking-wider">
+                      <div className="pt-2 flex items-center gap-1 text-[10px] text-[var(--color-action)] font-semibold uppercase tracking-wider">
                         <Sparkles className="h-3 w-3" />
-                        <span>Inspecting Guards</span>
+                        <span>Inspecting rules</span>
+                      </div>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Phase 2: Assignment & Active Investigation */}
+          <div className="space-y-3">
+            <div className="text-[10px] font-semibold uppercase tracking-wider text-[var(--color-text-muted)] flex items-center gap-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-[var(--color-ink)]" />
+              <span>Phase 2 · Assignment & Active Investigation (Evidence Loop)</span>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3.5">
+              {(["Assigned", "In Progress", "Awaiting Information", "Under Review"] as CaseStatus[]).map((status) => {
+                const Icon = STATUS_ICONS[status];
+                const isSelected = selectedStatus === status;
+                const isNext = allowedNext.includes(status);
+                const count = caseCountsByStatus[status] ?? 0;
+                const isLoop = status === "Awaiting Information";
+
+                return (
+                  <button
+                    key={status}
+                    type="button"
+                    onClick={() => onSelectStatus(status)}
+                    className={`text-left p-4 rounded-[6px] border transition-all cursor-pointer flex flex-col justify-between min-h-[104px] ${
+                      isSelected
+                        ? "bg-[var(--color-page)] border-[var(--color-action)] ring-1 ring-[var(--color-action)]"
+                        : isNext
+                        ? "bg-[#E4F4EC]/40 border-[var(--sla-on-track-text)] hover:bg-[#E4F4EC]/60"
+                        : isLoop
+                        ? "bg-[#FFF4DB]/20 border-[var(--sla-approaching-text)]/40 hover:border-[var(--sla-approaching-text)]"
+                        : "bg-surface border-[var(--color-rule)] hover:border-[var(--color-text-muted)] hover:bg-[var(--color-page)]"
+                    }`}
+                  >
+                    <div className="flex items-start justify-between gap-2 w-full">
+                      <div className="flex items-center gap-2.5">
+                        <div
+                          className={`w-7 h-7 rounded-[4px] flex items-center justify-center shrink-0 ${
+                            isSelected
+                              ? "bg-[var(--color-action)] text-white"
+                              : isNext
+                              ? "bg-[var(--sla-on-track-bg)] text-[var(--sla-on-track-text)]"
+                              : "bg-[var(--color-page)] text-[var(--color-text-secondary)] border border-[var(--color-rule)]"
+                          }`}
+                        >
+                          <Icon className="h-3.5 w-3.5" />
+                        </div>
+                        <div>
+                          <span className="text-xs font-semibold block text-[var(--color-text-primary)]">
+                            {status}
+                          </span>
+                          <span className="text-[10px] text-[var(--color-text-muted)] block">
+                            {STATUS_DESCRIPTIONS[status]}
+                          </span>
+                        </div>
+                      </div>
+
+                      {count > 0 && (
+                        <span className="font-mono text-[10px] px-1.5 py-0.5 rounded bg-[var(--color-page)] border border-[var(--color-rule)] text-[var(--color-text-secondary)] tabular-nums">
+                          {count}
+                        </span>
+                      )}
+                    </div>
+
+                    {isNext && (
+                      <div className="pt-2 flex items-center gap-1 text-[10px] text-[var(--sla-on-track-text)] font-semibold">
+                        <ArrowRight className="h-3 w-3" />
+                        <span>Permitted next stage</span>
                       </div>
                     )}
 
-                    {!isNext && !isSelected && isTerminalClosed && (
-                      <div className="pt-2 flex items-center gap-1 text-[10px] text-slate-600 font-semibold uppercase tracking-wider">
-                        <Lock className="h-3 w-3" />
-                        <span>Terminal State (No Exits)</span>
+                    {isSelected && (
+                      <div className="pt-2 flex items-center gap-1 text-[10px] text-[var(--color-action)] font-semibold uppercase tracking-wider">
+                        <Sparkles className="h-3 w-3" />
+                        <span>Inspecting rules</span>
+                      </div>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Phase 3: Determination & Closure */}
+          <div className="space-y-3">
+            <div className="text-[10px] font-semibold uppercase tracking-wider text-[var(--color-text-muted)] flex items-center gap-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-[var(--color-ink)]" />
+              <span>Phase 3 · Administrative Determination & Archive</span>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+              {(["Resolved", "Closed"] as CaseStatus[]).map((status) => {
+                const Icon = STATUS_ICONS[status];
+                const isSelected = selectedStatus === status;
+                const isNext = allowedNext.includes(status);
+                const count = caseCountsByStatus[status] ?? 0;
+                const isTerminalStatus = status === "Closed";
+
+                return (
+                  <button
+                    key={status}
+                    type="button"
+                    onClick={() => onSelectStatus(status)}
+                    className={`text-left p-4 rounded-[6px] border transition-all cursor-pointer flex flex-col justify-between min-h-[104px] ${
+                      isSelected
+                        ? "bg-[var(--color-page)] border-[var(--color-action)] ring-1 ring-[var(--color-action)]"
+                        : isNext
+                        ? "bg-[#E4F4EC]/40 border-[var(--sla-on-track-text)] hover:bg-[#E4F4EC]/60"
+                        : isTerminalStatus
+                        ? "bg-surface border-[var(--color-rule)] hover:border-[var(--color-text-muted)]"
+                        : "bg-surface border-[var(--color-rule)] hover:border-[var(--color-text-muted)] hover:bg-[var(--color-page)]"
+                    }`}
+                  >
+                    <div className="flex items-start justify-between gap-2 w-full">
+                      <div className="flex items-center gap-2.5">
+                        <div
+                          className={`w-7 h-7 rounded-[4px] flex items-center justify-center shrink-0 ${
+                            isSelected
+                              ? "bg-[var(--color-action)] text-white"
+                              : isNext
+                              ? "bg-[var(--sla-on-track-bg)] text-[var(--sla-on-track-text)]"
+                              : "bg-[var(--color-page)] text-[var(--color-text-secondary)] border border-[var(--color-rule)]"
+                          }`}
+                        >
+                          <Icon className="h-3.5 w-3.5" />
+                        </div>
+                        <div>
+                          <span className="text-xs font-semibold block text-[var(--color-text-primary)]">
+                            {status}
+                          </span>
+                          <span className="text-[10px] text-[var(--color-text-muted)] block">
+                            {STATUS_DESCRIPTIONS[status]}
+                          </span>
+                        </div>
+                      </div>
+
+                      {count > 0 && (
+                        <span className="font-mono text-[10px] px-1.5 py-0.5 rounded bg-[var(--color-page)] border border-[var(--color-rule)] text-[var(--color-text-secondary)] tabular-nums">
+                          {count}
+                        </span>
+                      )}
+                    </div>
+
+                    {isNext && (
+                      <div className="pt-2 flex items-center gap-1 text-[10px] text-[var(--sla-on-track-text)] font-semibold">
+                        <ArrowRight className="h-3 w-3" />
+                        <span>Permitted next stage</span>
+                      </div>
+                    )}
+
+                    {isSelected && (
+                      <div className="pt-2 flex items-center gap-1 text-[10px] text-[var(--color-action)] font-semibold uppercase tracking-wider">
+                        <Sparkles className="h-3 w-3" />
+                        <span>Inspecting rules</span>
                       </div>
                     )}
                   </button>

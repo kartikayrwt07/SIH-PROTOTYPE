@@ -74,9 +74,9 @@ export function AuditTimelineTab({ caseRef }: AuditTimelineTabProps) {
   }
 
   return (
-    <div className="py-3 space-y-4">
+    <div className="py-2 space-y-6">
       {/* 1px vertical timeline with small square markers */}
-      <div className="relative pl-6 space-y-6 before:absolute before:left-[4px] before:top-2 before:bottom-2 before:w-[1px] before:bg-[var(--color-rule)]">
+      <div className="relative pl-7 space-y-7 before:absolute before:left-[5px] before:top-2 before:bottom-2 before:w-[1px] before:bg-[var(--color-rule)]">
         {timeline.map((entry) => {
           const statusKey = (entry.new_state || entry.previous_state) as CaseStatus | undefined;
           const markerColor = statusKey ? STATUS_COLOR_VARS[statusKey] || "var(--color-text-muted)" : "var(--color-text-muted)";
@@ -88,15 +88,15 @@ export function AuditTimelineTab({ caseRef }: AuditTimelineTabProps) {
             <div key={entry.id} className="relative group text-xs">
               {/* Square marker in status colour */}
               <span
-                className="absolute -left-[24px] top-1 w-2.5 h-2.5 rounded-[2px] ring-2 ring-[var(--color-surface)]"
+                className="absolute -left-[27px] top-1 w-2.5 h-2.5 rounded-[2px] ring-2 ring-[var(--color-surface)] shadow-xs"
                 style={{ backgroundColor: markerColor }}
               />
 
-              <div className="space-y-1">
+              <div className="space-y-1.5">
                 {/* Header: Event Label + Actor + IST Timestamp */}
                 <div className="flex flex-wrap items-baseline justify-between gap-2">
                   <div className="flex items-center gap-2">
-                    <span className="font-medium text-[var(--color-text-primary)]">
+                    <span className="font-semibold text-[var(--color-ink)]">
                       {eventLabel}
                     </span>
                     {entry.actor_role && (
@@ -122,14 +122,14 @@ export function AuditTimelineTab({ caseRef }: AuditTimelineTabProps) {
 
                 {/* Remark / Reason text */}
                 {entry.remark && (
-                  <p className="text-xs text-[var(--color-text-secondary)] leading-relaxed">
+                  <p className="text-xs text-[var(--color-text-secondary)] leading-relaxed max-w-3xl">
                     {entry.remark}
                   </p>
                 )}
 
                 {/* Optional Metadata details */}
                 {hasMeta && (
-                  <div className="pt-0.5">
+                  <div className="pt-1">
                     <button
                       onClick={() => toggleMeta(entry.id)}
                       className="text-[10px] text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] inline-flex items-center gap-0.5"
@@ -138,7 +138,7 @@ export function AuditTimelineTab({ caseRef }: AuditTimelineTabProps) {
                       <span>{isMetaOpen ? "Hide metadata" : "View metadata"}</span>
                     </button>
                     {isMetaOpen && (
-                      <pre className="mt-1 p-2 bg-[var(--color-page)] border border-[var(--color-rule)] rounded-[4px] font-mono text-[10px] text-[var(--color-text-secondary)] overflow-x-auto">
+                      <pre className="mt-1.5 p-3 bg-[var(--color-page)] border border-[var(--color-rule)] rounded-[4px] font-mono text-[10px] text-[var(--color-text-secondary)] overflow-x-auto max-w-3xl">
                         {JSON.stringify(entry.metadata, null, 2)}
                       </pre>
                     )}

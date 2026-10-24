@@ -85,25 +85,25 @@ export function InternalNotesTab({ caseRef }: InternalNotesTabProps) {
   }
 
   return (
-    <div className="py-3 space-y-6">
+    <div className="space-y-8">
       {/* 1. List of notes with author and timestamp */}
       <div className="space-y-4">
         {notes.length === 0 ? (
-          <div className="py-4 text-xs text-[var(--color-text-secondary)] space-y-1">
+          <div className="py-6 text-xs text-[var(--color-text-secondary)] space-y-1">
             <p className="font-medium text-[var(--color-text-primary)]">No notes recorded yet</p>
-            <p>Internal case notes added by officers will appear here.</p>
+            <p>Internal case notes added by officers will appear here in chronological sequence.</p>
           </div>
         ) : (
           <div className="divide-y divide-[var(--color-rule)]">
             {notes.map((note) => (
-              <div key={note.id} className="py-3 first:pt-0 last:pb-0 space-y-1.5 text-xs">
+              <div key={note.id} className="py-4 first:pt-0 last:pb-1 space-y-2 text-xs">
                 <div className="flex flex-wrap items-baseline justify-between gap-2">
-                  <div className="flex items-center gap-2">
-                    <span className="font-medium text-[var(--color-text-primary)]">
+                  <div className="flex items-center gap-2.5">
+                    <span className="font-semibold text-[var(--color-ink)]">
                       {note.author_name || note.author_role || "Officer"}
                     </span>
                     {note.is_confidential && (
-                      <span className="inline-flex items-center gap-1 text-[11px] text-[var(--color-text-muted)] font-normal">
+                      <span className="inline-flex items-center gap-1 text-[11px] text-[var(--color-text-muted)] font-normal bg-[var(--color-page)] px-1.5 py-0.5 rounded border border-[var(--color-rule)]">
                         <Lock className="h-3 w-3" /> Confidential
                       </span>
                     )}
@@ -112,7 +112,7 @@ export function InternalNotesTab({ caseRef }: InternalNotesTabProps) {
                     {formatIST(note.created_at)}
                   </time>
                 </div>
-                <p className="text-xs text-[var(--color-text-secondary)] leading-relaxed whitespace-pre-wrap">
+                <p className="text-xs text-[var(--color-text-primary)] leading-relaxed whitespace-pre-wrap max-w-3xl">
                   {note.content}
                 </p>
               </div>
@@ -123,9 +123,9 @@ export function InternalNotesTab({ caseRef }: InternalNotesTabProps) {
 
       {/* 2. Add-note form below the list (role gated, unchanged) */}
       {!isAuditor ? (
-        <form onSubmit={handleAddNote} className="pt-4 border-t border-[var(--color-rule)] space-y-3">
-          <div className="space-y-1.5">
-            <Label htmlFor="note-content" className="text-xs font-medium text-[var(--color-text-primary)] block">
+        <form onSubmit={handleAddNote} className="pt-6 border-t border-[var(--color-rule)] space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="note-content" className="text-xs font-semibold text-[var(--color-ink)] block">
               Add note
             </Label>
             <Textarea
@@ -136,15 +136,15 @@ export function InternalNotesTab({ caseRef }: InternalNotesTabProps) {
                 setContent(e.target.value);
                 if (formError) setFormError(null);
               }}
-              rows={3}
-              className="text-xs bg-surface border-[var(--color-rule)] rounded-[6px] focus-visible:ring-1 focus-visible:ring-[var(--color-action)]"
+              rows={4}
+              className="text-xs bg-surface border-[var(--color-rule)] rounded-[6px] focus-visible:ring-1 focus-visible:ring-[var(--color-action)] leading-relaxed p-3 max-w-3xl"
             />
             {formError && (
-              <p className="text-xs text-[var(--sla-overdue-text)]">{formError}</p>
+              <p className="text-xs text-[var(--sla-overdue-text)] font-medium">{formError}</p>
             )}
           </div>
 
-          <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
+          <div className="flex flex-wrap items-center justify-between gap-4 pt-1 max-w-3xl">
             <div className="flex items-center gap-2">
               <Checkbox
                 id="confidential"
@@ -170,7 +170,7 @@ export function InternalNotesTab({ caseRef }: InternalNotesTabProps) {
           </div>
         </form>
       ) : (
-        <div className="pt-4 border-t border-[var(--color-rule)] text-xs text-[var(--color-text-muted)]">
+        <div className="pt-6 border-t border-[var(--color-rule)] text-xs text-[var(--color-text-muted)]">
           Note addition is disabled for the Auditor role.
         </div>
       )}

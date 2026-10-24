@@ -35,9 +35,6 @@ function Breadcrumbs() {
     parts.push({ label: "CSV ingestion" });
   } else if (path === "/state-machine") {
     parts.push({ label: "State machine" });
-  } else if (path === "/dev/ui") {
-    parts.push({ label: "Dev" });
-    parts.push({ label: "Shared components" });
   } else if (path === "/login") {
     parts.push({ label: "Sign in" });
   } else {

@@ -174,9 +174,9 @@ export function SlaRadarView() {
   ];
 
   return (
-    <div className="py-6 px-6 lg:px-8 max-w-7xl mx-auto space-y-6">
+    <div className="py-8 px-6 lg:px-8 max-w-7xl mx-auto space-y-8">
       {/* Page Header */}
-      <div className="space-y-2">
+      <div className="space-y-3">
         <PageHeader
           title="SLA radar"
           description="Cases ranked by urgency across bureaus."
@@ -184,7 +184,7 @@ export function SlaRadarView() {
 
         {/* Summary sentence under the header */}
         {summary && (
-          <p className="text-sm text-[var(--color-text-secondary)] -mt-2">
+          <p className="text-sm text-[var(--color-text-secondary)]">
             <span className="font-semibold text-[var(--sla-overdue-text)] tabular-nums">
               {summary.overdue_count}
             </span>{" "}
@@ -203,33 +203,33 @@ export function SlaRadarView() {
 
       {/* Error notification if failed */}
       {isError && (
-        <div className="flex items-center justify-between p-3 text-xs bg-red-50 text-[var(--sla-overdue-text)] border border-red-200 rounded-[4px]">
+        <div className="flex items-center justify-between p-3.5 text-xs bg-red-50 text-[var(--sla-overdue-text)] border border-red-200 rounded-[6px]">
           <div className="flex items-center gap-2">
             <AlertCircle className="h-4 w-4 shrink-0" />
             <span>Failed to load SLA radar data: {(error as Error)?.message || "Unknown error"}</span>
           </div>
-          <Button size="sm" variant="outline" onClick={() => refetch()} className="h-7 text-xs">
+          <Button size="sm" variant="outline" onClick={() => refetch()} className="h-7 text-xs border-red-200">
             Try again
           </Button>
         </div>
       )}
 
       {/* Bureau filter select above table, right-aligned with search input */}
-      <div className="flex flex-wrap items-center justify-between gap-3 py-2 border-y border-[var(--color-rule)]">
-        <div className="flex items-center gap-2">
-          <span className="text-xs text-[var(--color-text-muted)]">Bureau jurisdiction:</span>
+      <div className="flex flex-wrap items-center justify-between gap-4 py-3 border-y border-[var(--color-rule)]">
+        <div className="flex items-center gap-2.5">
+          <span className="text-xs font-medium text-[var(--color-text-secondary)]">Bureau jurisdiction:</span>
           {isOfficer ? (
-            <div className="flex items-center gap-1.5 text-xs font-medium text-[var(--color-text-primary)]">
+            <div className="flex items-center gap-1.5 text-xs font-semibold text-[var(--color-ink)] bg-surface px-2.5 py-1 border border-[var(--color-rule)] rounded-[6px]">
               <span>{user?.bureau_name || "Approval Bureau"}</span>
               <span className="font-mono text-[10px] text-[var(--color-text-muted)]">({user?.bureau_code || "APPR"})</span>
-              <Lock className="h-3 w-3 text-[var(--color-text-muted)]" />
+              <Lock className="h-3 w-3 text-[var(--color-text-muted)] ml-1" />
             </div>
           ) : (
             <Select
               value={selectedBureau}
               onValueChange={(val) => setSelectedBureau(val)}
             >
-              <SelectTrigger className="h-8 w-[180px] text-xs bg-surface border-[var(--color-rule)] rounded-[6px]">
+              <SelectTrigger className="h-8.5 w-[200px] text-xs bg-surface border-[var(--color-rule)] rounded-[6px]">
                 <SelectValue placeholder="All bureaus" />
               </SelectTrigger>
               <SelectContent>
@@ -252,7 +252,7 @@ export function SlaRadarView() {
             placeholder="Search radar..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="pl-8 text-xs h-8 bg-surface border-[var(--color-rule)] rounded-[6px]"
+            className="pl-8 text-xs h-8.5 bg-surface border-[var(--color-rule)] rounded-[6px]"
           />
         </div>
       </div>

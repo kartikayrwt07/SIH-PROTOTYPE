@@ -1,4 +1,6 @@
 import React, { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { listCases } from "@/api/index";
 import type { CaseStatus } from "@/types/ui";
 import {
   ALL_STATUSES,
@@ -7,7 +9,9 @@ import {
   canTransition,
   getAllowedTransitions,
 } from "@/lib/stateMachine";
-import { PageHeader, StatusMark } from "@/components/shared";
+import { PageHeader } from "@/components/shared";
+import { StateGraph } from "./StateGraph";
+import { StateDetailsPanel } from "./StateDetailsPanel";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import {
@@ -18,9 +22,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
-import { ArrowRight, CheckCircle2, AlertCircle } from "lucide-react";
+import { CheckCircle2, AlertCircle } from "lucide-react";
 
 export function StateMachineView() {
+  const [selectedStatus, setSelectedStatus] = useState<CaseStatus>("In Progress");
   const [fromStatus, setFromStatus] = useState<CaseStatus>("Received");
   const [toStatus, setToStatus] = useState<CaseStatus>("In Progress");
   const [checkedResult, setCheckedResult] = useState<{
@@ -30,6 +35,23 @@ export function StateMachineView() {
     message: string;
     rules: string[];
   } | null>(null);
+
+  // Query cases to calculate live distribution across the 9 states
+  const { data: casesData } = useQuery({
+    queryKey: ["cases", { page: 1, limit: 100 }],
+    queryFn: () => listCases({ page_size: 100 }),
+    staleTime: 60 * 1000,
+  });
+
+  const cases = casesData?.items ?? [];
+
+  const caseCountsByStatus = cases.reduce<Record<CaseStatus, number>>(
+    (acc, c) => {
+      acc[c.status] = (acc[c.status] ?? 0) + 1;
+      return acc;
+    },
+    {} as Record<CaseStatus, number>,
+  );
 
   const handleCheckTransition = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
@@ -63,85 +85,46 @@ export function StateMachineView() {
   };
 
   return (
-    <div className="py-6 px-6 lg:px-8 max-w-7xl mx-auto space-y-8">
+    <div className="py-8 px-6 lg:px-8 max-w-7xl mx-auto space-y-10">
       <PageHeader
         title="State machine"
         description="The 9 complaint lifecycle stages and permitted transitions."
       />
 
-      {/* Visual State Map: ruled sequence of stages with permitted transition arrows */}
-      <section className="space-y-4">
-        <div className="border-b border-[var(--color-rule)] pb-2">
-          <h2 className="font-serif text-base font-semibold text-[var(--color-ink)]">
-            Lifecycle stage topology
-          </h2>
+      {/* Main 2-Column Layout: Visual Interactive Diagram & State Inspector */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+        {/* Visual Graph Canvas (2 cols) */}
+        <div className="lg:col-span-2 space-y-6">
+          <StateGraph
+            selectedStatus={selectedStatus}
+            onSelectStatus={setSelectedStatus}
+            caseCountsByStatus={caseCountsByStatus}
+          />
         </div>
 
-        <div className="p-5 bg-surface border border-[var(--color-rule)] rounded-[4px] space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-9 gap-3">
-            {ALL_STATUSES.map((status, index) => {
-              const allowed = ALLOWED_TRANSITIONS[status] || [];
-              const isSelectedFrom = fromStatus === status;
-              const isSelectedTo = toStatus === status;
-
-              return (
-                <div
-                  key={status}
-                  onClick={() => setFromStatus(status)}
-                  className={`p-3 border rounded-[4px] cursor-pointer space-y-2 transition-none ${
-                    isSelectedFrom
-                      ? "border-[var(--color-ink)] bg-[var(--color-page)] ring-1 ring-[var(--color-ink)]"
-                      : isSelectedTo
-                      ? "border-[var(--color-action)] bg-[var(--color-page)]"
-                      : "border-[var(--color-rule)] bg-surface hover:bg-[var(--color-page)]"
-                  }`}
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="font-mono text-[10px] text-[var(--color-text-muted)]">
-                      0{index + 1}
-                    </span>
-                    {status === "Closed" && (
-                      <span className="text-[10px] font-medium text-[var(--color-text-muted)]">
-                        Terminal
-                      </span>
-                    )}
-                  </div>
-
-                  <div className="space-y-1">
-                    <StatusMark status={status} />
-                  </div>
-
-                  <div className="pt-1 border-t border-[var(--color-rule)] text-[10px] text-[var(--color-text-muted)]">
-                    {allowed.length > 0 ? (
-                      <div>→ {allowed.join(", ")}</div>
-                    ) : (
-                      <div>No further transitions</div>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-
-          <div className="flex flex-wrap items-center justify-between text-xs text-[var(--color-text-secondary)] pt-2 border-t border-[var(--color-rule)]">
-            <span>Click any stage card to select it as the source stage.</span>
-            <span className="text-[11px] text-[var(--color-text-muted)]">
-              Special transitions: In Progress ⇄ Awaiting Information · Resolved → In Progress (Reopen)
-            </span>
-          </div>
+        {/* State Details & Guard Rules Side Panel (1 col, sticky) */}
+        <div className="lg:col-span-1 lg:sticky lg:top-8">
+          <StateDetailsPanel
+            status={selectedStatus}
+            onSelectStatus={setSelectedStatus}
+            caseCount={caseCountsByStatus[selectedStatus] ?? 0}
+          />
         </div>
-      </section>
+      </div>
 
       {/* "Test an illegal transition" Panel */}
-      <section className="space-y-4 max-w-2xl">
-        <div className="border-b border-[var(--color-rule)] pb-2">
+      <section className="space-y-4 max-w-3xl pt-2">
+        <div className="border-b border-[var(--color-rule)] pb-2.5">
           <h2 className="font-serif text-base font-semibold text-[var(--color-ink)]">
             Test an illegal transition
           </h2>
+          <p className="text-xs text-[var(--color-text-secondary)]">
+            Verify lifecycle guard rule validation by testing arbitrary stage transitions.
+          </p>
         </div>
 
-        <form onSubmit={handleCheckTransition} className="p-5 bg-surface border border-[var(--color-rule)] rounded-[4px] space-y-5">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <form onSubmit={handleCheckTransition} className="p-6 bg-surface border border-[var(--color-rule)] rounded-[6px] space-y-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
             {/* From status select */}
             <div className="space-y-1.5">
               <Label className="text-xs font-medium text-[var(--color-text-primary)]">
@@ -207,7 +190,7 @@ export function StateMachineView() {
             <div className="space-y-3 pt-2">
               {checkedResult.isLegal ? (
                 /* Legal green alert */
-                <div className="p-3.5 bg-[var(--sla-on-track-bg)] border border-[var(--sla-on-track-text)]/30 rounded-[4px] text-xs text-[var(--sla-on-track-text)] space-y-2">
+                <div className="p-4 bg-[var(--sla-on-track-bg)] border border-[var(--sla-on-track-text)]/30 rounded-[4px] text-xs text-[var(--sla-on-track-text)] space-y-2">
                   <div className="flex items-center gap-2 font-semibold">
                     <CheckCircle2 className="h-4 w-4 shrink-0" />
                     <span>Permitted transition</span>
@@ -216,7 +199,7 @@ export function StateMachineView() {
                     {checkedResult.message}
                   </p>
                   {checkedResult.rules.length > 0 && (
-                    <div className="space-y-1 pt-1 border-t border-[var(--sla-on-track-text)]/20 text-[11px] text-[var(--color-text-secondary)]">
+                    <div className="space-y-1 pt-1.5 border-t border-[var(--sla-on-track-text)]/20 text-[11px] text-[var(--color-text-secondary)]">
                       <span className="font-medium text-[var(--color-text-primary)] block">Condition rules:</span>
                       {checkedResult.rules.map((rule, idx) => (
                         <div key={idx}>• {rule}</div>
@@ -226,7 +209,7 @@ export function StateMachineView() {
                 </div>
               ) : (
                 /* Illegal red alert */
-                <div className="p-3.5 bg-[var(--sla-overdue-bg)] border border-[var(--sla-overdue-text)]/30 rounded-[4px] text-xs text-[var(--sla-overdue-text)] space-y-3">
+                <div className="p-4 bg-[var(--sla-overdue-bg)] border border-[var(--sla-overdue-text)]/30 rounded-[4px] text-xs text-[var(--sla-overdue-text)] space-y-3">
                   <div className="flex items-center gap-2 font-semibold">
                     <AlertCircle className="h-4 w-4 shrink-0" />
                     <span>Transition blocked</span>
@@ -235,7 +218,7 @@ export function StateMachineView() {
                     {checkedResult.message}
                   </p>
 
-                  <div className="pt-1 border-t border-[var(--sla-overdue-text)]/20 flex items-center justify-between">
+                  <div className="pt-2 border-t border-[var(--sla-overdue-text)]/20 flex items-center justify-between">
                     <span className="text-[11px] text-[var(--color-text-secondary)]">
                       Simulate backend HTTP 400 enforcement:
                     </span>

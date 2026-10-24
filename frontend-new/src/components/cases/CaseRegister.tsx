@@ -197,19 +197,19 @@ export function CaseRegister({ initialBureauId }: CaseRegisterProps) {
   ];
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       {/* Page Header */}
       <PageHeader
         title="Case register"
         description="Search, filter and open any case you are allowed to see."
         action={
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2.5">
             <Button
               variant="outline"
               size="sm"
               onClick={handleExportCsv}
               disabled={isLoading || displayedCases.length === 0}
-              className="h-8 text-xs font-medium border-[var(--color-rule)] bg-surface text-[var(--color-text-primary)] rounded-[6px]"
+              className="h-8 px-3 text-xs font-medium border-[var(--color-rule)] bg-surface text-[var(--color-text-primary)] rounded-[6px]"
             >
               Export CSV
             </Button>
@@ -217,7 +217,7 @@ export function CaseRegister({ initialBureauId }: CaseRegisterProps) {
               <Button
                 asChild
                 size="sm"
-                className="h-8 text-xs font-medium bg-[var(--color-action)] text-white hover:bg-[var(--color-action)]/90 rounded-[6px]"
+                className="h-8 px-3 text-xs font-medium bg-[var(--color-action)] text-white hover:bg-[var(--color-action)]/90 rounded-[6px]"
               >
                 <Link to="/ingest">Ingest CSV</Link>
               </Button>
@@ -227,7 +227,7 @@ export function CaseRegister({ initialBureauId }: CaseRegisterProps) {
       />
 
       {/* Quiet Toolbar Row */}
-      <div className="flex flex-wrap items-center gap-2.5 py-3 border-y border-[var(--color-rule)]">
+      <div className="flex flex-wrap items-center gap-3 py-3.5 border-y border-[var(--color-rule)]">
         {/* Search Input */}
         <div className="relative flex-1 min-w-[220px]">
           <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-[var(--color-text-muted)]" />
