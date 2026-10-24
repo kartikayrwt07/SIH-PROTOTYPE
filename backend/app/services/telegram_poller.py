@@ -56,9 +56,9 @@ def send_telegram_message(token: str, chat_id: int, text: str, parse_mode: str =
 def run_poller(bot_token: Optional[str] = None):
     """Main long-polling loop."""
     token = bot_token or settings.TELEGRAM_BOT_TOKEN
-    if not token:
-        logger.error("No TELEGRAM_BOT_TOKEN found in environment or config!")
-        sys.exit(1)
+    if not token or token == "DEMO_TELEGRAM_BOT_TOKEN":
+        logger.info("No active TELEGRAM_BOT_TOKEN provided. Poller daemon skipped.")
+        return
 
     # 1. Verify Bot Identity
     try:
@@ -68,8 +68,8 @@ def run_poller(bot_token: Optional[str] = None):
             bot_username = me_info.get("result", {}).get("username", "UnknownBot")
             logger.info(f"Connected to Telegram Bot: @{bot_username}")
     except Exception as e:
-        logger.error(f"Could not connect to Telegram Bot API: {e}")
-        sys.exit(1)
+        logger.warning(f"Could not connect to Telegram Bot API ({e}). Poller thread will stop without terminating server.")
+        return
 
     # 2. Delete any webhook to enable getUpdates polling
     try:
