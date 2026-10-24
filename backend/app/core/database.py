@@ -9,10 +9,12 @@ from backend.app.core.config import settings
 def sanitize_db_url(url: str) -> str:
     """
     Safely sanitizes cloud PostgreSQL connection strings (Render / Heroku / Supabase).
-    Handles raw special characters in passwords (slashes, percent signs) and driver aliases.
+    Handles raw special characters in passwords (slashes, percent signs), quotes, whitespace, and driver aliases.
     """
     if not url:
         return url
+
+    url = url.strip("'\" \t\r\n")
 
     # Normalize standard Postgres URL schemes to psycopg2
     if url.startswith("postgres://"):
