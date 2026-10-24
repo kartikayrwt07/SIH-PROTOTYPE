@@ -16,6 +16,8 @@ class Settings(BaseSettings):
     ENVIRONMENT: str = "development"
     SECRET_KEY: str = "aicte-development-secret-key-change-in-production"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24
+    TELEGRAM_BOT_TOKEN: str = "DEMO_TELEGRAM_BOT_TOKEN"
+    TELEGRAM_WEBHOOK_SECRET: str = ""
 
     model_config = SettingsConfigDict(
         env_file=".env",

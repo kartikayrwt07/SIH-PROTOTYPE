@@ -34,6 +34,7 @@ import {
   MasterTicketRead,
   MasterTicketSummary,
   MasterTicketStats,
+  InstitutionPerformanceStat,
 } from "../types";
 
 const API_BASE = "/api/v1";
@@ -192,6 +193,21 @@ class ApiService {
 
   async getBureauWorkload(): Promise<StandardResponse<BureauWorkloadStat[]>> {
     return this.request("/dashboard/workload");
+  }
+
+  async getInstitutionPerformance(params?: {
+    state?: string;
+    intervention_status?: string;
+  }): Promise<StandardResponse<InstitutionPerformanceStat[]>> {
+    const searchParams = new URLSearchParams();
+    if (params?.state && params.state !== "ALL") {
+      searchParams.append("state", params.state);
+    }
+    if (params?.intervention_status && params.intervention_status !== "ALL") {
+      searchParams.append("intervention_status", params.intervention_status);
+    }
+    const qs = searchParams.toString() ? `?${searchParams.toString()}` : "";
+    return this.request(`/dashboard/institutions${qs}`);
   }
 
   async getBureauOfficers(bureauId: string): Promise<StandardResponse<UserSummary[]>> {

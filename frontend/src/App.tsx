@@ -23,6 +23,7 @@ export const AppContent: React.FC = () => {
 
   // Filter state passed from dashboard to register
   const [filterBureauId, setFilterBureauId] = useState<string>("");
+  const [filterSearch, setFilterSearch] = useState<string>("");
 
   // Selected case for Dossier Detail View
   const [selectedCaseDetailRef, setSelectedCaseDetailRef] = useState<string | null>(null);
@@ -71,6 +72,7 @@ export const AppContent: React.FC = () => {
             </div>
             <CaseRegister
               initialBureauFilter={filterBureauId}
+              initialSearch={filterSearch}
               onSelectCase={(ref) => setSelectedCaseDetailRef(ref)}
               onOpenMagicIntake={() => setActiveTab("magic_intake")}
             />
@@ -81,8 +83,9 @@ export const AppContent: React.FC = () => {
       {/* 2. Executive Dashboard Tab */}
       {activeTab === "dashboard" && (
         <ExecutiveDashboard
-          onNavigateToRegister={(bureauId) => {
+          onNavigateToRegister={(bureauId?: string, search?: string) => {
             setFilterBureauId(bureauId || "");
+            setFilterSearch(search || "");
             setSelectedCaseDetailRef(null);
             setActiveTab("cases");
           }}

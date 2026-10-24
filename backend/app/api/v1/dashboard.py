@@ -9,11 +9,13 @@ from backend.app.schemas.analytics import (
     DashboardOverview,
     BottleneckAnalysis,
     BureauWorkloadStat,
+    InstitutionPerformanceStat,
 )
 from backend.app.services.analytics import (
     get_dashboard_overview,
     compute_lifecycle_dwell_times,
     get_bureau_workload_breakdown,
+    get_institution_performance_stats,
 )
 
 router = APIRouter(prefix="/dashboard")
@@ -57,4 +59,24 @@ def get_bureau_workload(
 ):
     """Retrieve non-toxic cross-bureau volume comparison and resolution velocity."""
     stats = get_bureau_workload_breakdown(db)
+    return StandardResponse(data=stats)
+
+
+@router.get("/institutions", response_model=StandardResponse[List[InstitutionPerformanceStat]])
+def get_institution_performance(
+    state: Optional[str] = Query(None, description="Filter institutions by state jurisdiction"),
+    intervention_status: Optional[str] = Query(None, description="Filter by regulatory intervention status: CRITICAL_INTERVENTION, WATCHLIST, COMPLIANT"),
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """
+    Retrieve comparative performance league table across technical institutions.
+    Ranks institutions by overdue SLA breaches, pending complaints, and identifies
+    recurring grievance themes to flag regulatory intervention hotspots.
+    """
+    stats = get_institution_performance_stats(
+        db,
+        state=state,
+        intervention_status=intervention_status,
+    )
     return StandardResponse(data=stats)

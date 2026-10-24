@@ -195,6 +195,31 @@ export interface BottleneckAnalysis {
   operational_advisory?: string | null;
 }
 
+export interface RecurringCategoryCount {
+  category: string;
+  count: number;
+}
+
+export type RegulatoryInterventionStatus = "CRITICAL_INTERVENTION" | "WATCHLIST" | "COMPLIANT";
+
+export interface InstitutionPerformanceStat {
+  institution_id: string;
+  aicte_permanent_id: string;
+  name: string;
+  state: string;
+  district: string;
+  institution_type: string;
+  total_cases: number;
+  open_cases: number;
+  pending_cases: number;
+  resolved_cases: number;
+  overdue_cases: number;
+  approaching_cases: number;
+  resolution_rate_pct: number;
+  top_recurring_categories: RecurringCategoryCount[];
+  intervention_status: RegulatoryInterventionStatus;
+}
+
 export type SlaRiskLevel = "ON_TRACK" | "APPROACHING" | "OVERDUE" | "COMPLETED";
 
 export interface CaseFilterParams {

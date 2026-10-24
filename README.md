@@ -70,9 +70,13 @@ Previously, grievances were siloed within disparate cells or paper processes. Th
 - **Illegal Jump Guards:** Invalid transitions (e.g. `Received ➔ Closed`) are strictly blocked with HTTP 422.
 - **Immutable Event Log:** Every status transition, assignment transfer, internal note, and reopening records actor, timestamp, previous state, new state, and rationale.
 
-### 9. Dynamic SLA Aging Radar & Bottleneck Analytics
+### 9. Dynamic SLA Aging Radar, Bottleneck Analytics & Institution League Table
 - **Working-Day Policy Engine:** Calculates dynamic target resolution deadlines based on case severity (`URGENT`, `HIGH`, `MEDIUM`, `LOW`).
 - **Real-Time Aging Risk Radar:** Live classification into `OVERDUE`, `APPROACHING` (<48 hours), `ON_TRACK`, and `COMPLETED`.
+- **Institution Comparative League Table & Hotspots Matrix:** Side-by-side performance ranking across technical colleges across all Indian States & Union Territories.
+  - Per-institution metrics: `Total Grievances`, `Pending Cases`, `Resolved`, `Overdue SLA Breaches`, and `Resolution Rate %`.
+  - Regulatory hotspot flagging: Flags institutions as `CRITICAL_INTERVENTION` (urgent AICTE audit warranted for persistent breaches), `WATCHLIST`, or `COMPLIANT`.
+  - Systemic Malpractice Discovery: Surfaces top recurring grievance categories per college (e.g. Capitation Fees, Delayed Stipends) with one-click case register scoping.
 - **Executive Analytics:** Lifecycle dwell-time analysis and cross-bureau workload distribution matrices.
 
 ### 10. Validated CSV Batch Pipeline & Role-Scoped Exports

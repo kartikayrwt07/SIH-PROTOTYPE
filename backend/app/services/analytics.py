@@ -5,12 +5,15 @@ from backend.app.models.case import ComplaintCase, CaseStatus, CasePriority
 from backend.app.models.bureau import Bureau
 from backend.app.models.audit import CaseAuditEvent, AuditEventType
 from backend.app.services.sla import compute_case_sla_risk
+from backend.app.models.institution import Institution
 from backend.app.schemas.analytics import (
     ExecutiveKPIs,
     BureauWorkloadStat,
     StageDwellTimeStat,
     DashboardOverview,
     BottleneckAnalysis,
+    InstitutionPerformanceStat,
+    RecurringCategoryCount,
 )
 
 
@@ -288,3 +291,110 @@ def get_dashboard_overview(
         by_priority=by_priority,
         by_category=by_category,
     )
+
+
+def get_institution_performance_stats(
+    db: Session,
+    state: Optional[str] = None,
+    intervention_status: Optional[str] = None,
+) -> List[InstitutionPerformanceStat]:
+    """
+    Computes comparative performance league table across technical institutions.
+    Ranks institutions by overdue SLA breaches, pending complaints, and identifies
+    recurring grievance themes to flag regulatory intervention hotspots.
+    """
+    inst_query = db.query(Institution).filter(Institution.is_active == True)
+    if state and state.strip() and state.lower() != "all":
+        inst_query = inst_query.filter(Institution.state.ilike(f"%{state.strip()}%"))
+
+    institutions = inst_query.all()
+    now = datetime.now(timezone.utc)
+    pending_statuses = {
+        CaseStatus.RECEIVED,
+        CaseStatus.REGISTERED,
+        CaseStatus.UNDER_TRIAGE,
+        CaseStatus.ASSIGNED,
+        CaseStatus.IN_PROGRESS,
+        CaseStatus.AWAITING_INFORMATION,
+        CaseStatus.UNDER_REVIEW,
+    }
+
+    results: List[InstitutionPerformanceStat] = []
+
+    for inst in institutions:
+        cases = db.query(ComplaintCase).filter(ComplaintCase.institution_id == inst.id).all()
+        total = len(cases)
+        if total == 0:
+            continue
+
+        resolved = 0
+        pending = 0
+        overdue = 0
+        approaching = 0
+        category_counts: Dict[str, int] = {}
+
+        for c in cases:
+            if c.status in [CaseStatus.RESOLVED, CaseStatus.CLOSED]:
+                resolved += 1
+            else:
+                if c.status in pending_statuses:
+                    pending += 1
+                risk = compute_case_sla_risk(c, now)
+                if risk["status"] == "OVERDUE":
+                    overdue += 1
+                elif risk["status"] == "APPROACHING":
+                    approaching += 1
+
+            cat = c.category or "General Grievance"
+            category_counts[cat] = category_counts.get(cat, 0) + 1
+
+        open_cases = total - resolved
+        resolution_rate = round((resolved / total) * 100, 1) if total > 0 else 0.0
+
+        # Sort top recurring categories
+        sorted_cats = sorted(category_counts.items(), key=lambda x: x[1], reverse=True)[:3]
+        top_recurring = [RecurringCategoryCount(category=cat, count=cnt) for cat, cnt in sorted_cats]
+
+        # Calculate Regulatory Intervention Status
+        if overdue >= 3 or (total >= 5 and resolution_rate < 35.0):
+            status = "CRITICAL_INTERVENTION"
+        elif overdue >= 1 or open_cases >= 5:
+            status = "WATCHLIST"
+        else:
+            status = "COMPLIANT"
+
+        if intervention_status and intervention_status.strip() and intervention_status.upper() != "ALL":
+            if status != intervention_status.strip().upper():
+                continue
+
+        results.append(
+            InstitutionPerformanceStat(
+                institution_id=inst.id,
+                aicte_permanent_id=inst.aicte_permanent_id,
+                name=inst.name,
+                state=inst.state,
+                district=inst.district,
+                institution_type=inst.institution_type or "Technical Institution",
+                total_cases=total,
+                open_cases=open_cases,
+                pending_cases=pending,
+                resolved_cases=resolved,
+                overdue_cases=overdue,
+                approaching_cases=approaching,
+                resolution_rate_pct=resolution_rate,
+                top_recurring_categories=top_recurring,
+                intervention_status=status,
+            )
+        )
+
+    # Rank by: Critical intervention first, then overdue cases (desc), then total cases (desc), then resolution rate (asc)
+    results.sort(
+        key=lambda x: (
+            0 if x.intervention_status == "CRITICAL_INTERVENTION" else (1 if x.intervention_status == "WATCHLIST" else 2),
+            -x.overdue_cases,
+            -x.total_cases,
+            x.resolution_rate_pct,
+        )
+    )
+
+    return results

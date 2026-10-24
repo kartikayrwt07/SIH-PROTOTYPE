@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import {
   Layers,
   Activity,
@@ -15,6 +15,13 @@ import {
   AlertCircle,
   BarChart3,
   Flame,
+  GraduationCap,
+  Search,
+  CheckCircle2,
+  AlertOctagon,
+  MapPin,
+  SlidersHorizontal,
+  X,
 } from "lucide-react";
 import { api } from "../../services/api";
 import { useAuth } from "../../context/AuthContext";
@@ -24,10 +31,11 @@ import {
   Bureau,
   BureauWorkloadStat,
   StageDwellTimeStat,
+  InstitutionPerformanceStat,
 } from "../../types";
 
 interface ExecutiveDashboardProps {
-  onNavigateToRegister?: (bureauId?: string) => void;
+  onNavigateToRegister?: (bureauId?: string, search?: string) => void;
   onNavigateToSlaRadar?: () => void;
 }
 
@@ -86,6 +94,106 @@ export const ExecutiveDashboard: React.FC<ExecutiveDashboardProps> = ({
   useEffect(() => {
     loadDashboardData();
   }, [loadDashboardData]);
+
+  // Institution League Table states
+  const [institutions, setInstitutions] = useState<InstitutionPerformanceStat[]>([]);
+  const [isInstitutionsLoading, setIsInstitutionsLoading] = useState<boolean>(true);
+  const [institutionError, setInstitutionError] = useState<string | null>(null);
+  const [selectedState, setSelectedState] = useState<string>("ALL");
+  const [selectedInterventionStatus, setSelectedInterventionStatus] = useState<string>("ALL");
+  const [institutionSearchTerm, setInstitutionSearchTerm] = useState<string>("");
+  const [institutionSortBy, setInstitutionSortBy] = useState<"rank" | "overdue" | "total" | "resolution">("rank");
+  const [allAvailableStates, setAllAvailableStates] = useState<string[]>([]);
+
+  // Fetch Institution Performance Stats
+  const loadInstitutionData = useCallback(async () => {
+    setIsInstitutionsLoading(true);
+    setInstitutionError(null);
+    try {
+      const res = await api.getInstitutionPerformance({
+        state: selectedState !== "ALL" ? selectedState : undefined,
+        intervention_status: selectedInterventionStatus !== "ALL" ? selectedInterventionStatus : undefined,
+      });
+      if (res.success && res.data) {
+        setInstitutions(res.data);
+      } else {
+        setInstitutionError(res.error?.message || "Failed to load institution league table");
+      }
+    } catch (err) {
+      setInstitutionError(err instanceof Error ? err.message : "Error fetching institutions");
+    } finally {
+      setIsInstitutionsLoading(false);
+    }
+  }, [selectedState, selectedInterventionStatus]);
+
+  // Initial load of all available states for dropdown
+  useEffect(() => {
+    const fetchStates = async () => {
+      try {
+        const res = await api.getInstitutionPerformance();
+        if (res.success && res.data) {
+          const states = Array.from(new Set(res.data.map((i: InstitutionPerformanceStat) => i.state).filter(Boolean))).sort();
+          setAllAvailableStates(states);
+        }
+      } catch {
+        // fallback silent
+      }
+    };
+    fetchStates();
+  }, []);
+
+  useEffect(() => {
+    loadInstitutionData();
+  }, [loadInstitutionData]);
+
+  // Client search filtering and sorting
+  const filteredInstitutions = useMemo(() => {
+    let list = [...institutions];
+
+    if (institutionSearchTerm.trim()) {
+      const q = institutionSearchTerm.toLowerCase().trim();
+      list = list.filter(
+        (inst) =>
+          inst.name.toLowerCase().includes(q) ||
+          inst.aicte_permanent_id.toLowerCase().includes(q) ||
+          inst.district.toLowerCase().includes(q) ||
+          inst.state.toLowerCase().includes(q) ||
+          inst.institution_type.toLowerCase().includes(q) ||
+          inst.top_recurring_categories.some((c) => c.category.toLowerCase().includes(q))
+      );
+    }
+
+    list.sort((a, b) => {
+      if (institutionSortBy === "overdue") {
+        return b.overdue_cases - a.overdue_cases;
+      }
+      if (institutionSortBy === "total") {
+        return b.total_cases - a.total_cases;
+      }
+      if (institutionSortBy === "resolution") {
+        return b.resolution_rate_pct - a.resolution_rate_pct;
+      }
+      return 0; // default backend rank order
+    });
+
+    return list;
+  }, [institutions, institutionSearchTerm, institutionSortBy]);
+
+  // Aggregate summary cards
+  const institutionSummary = useMemo(() => {
+    const totalInsts = institutions.length;
+    const criticalCount = institutions.filter((i) => i.intervention_status === "CRITICAL_INTERVENTION").length;
+    const watchlistCount = institutions.filter((i) => i.intervention_status === "WATCHLIST").length;
+    const compliantCount = institutions.filter((i) => i.intervention_status === "COMPLIANT").length;
+    const totalOverdue = institutions.reduce((acc, i) => acc + i.overdue_cases, 0);
+    return {
+      totalInsts,
+      criticalCount,
+      watchlistCount,
+      compliantCount,
+      totalOverdue,
+    };
+  }, [institutions]);
 
   // Max dwell hours for relative bar normalization
   const maxDwellHours = bottlenecks?.stages.length
@@ -801,7 +909,754 @@ export const ExecutiveDashboard: React.FC<ExecutiveDashboardProps> = ({
         </div>
       </div>
 
-      {/* Section 4: Categorical Distribution & Priority Profile */}
+      {/* Section 4: Institution-Wise Performance & Regulatory Hotspots League Table */}
+      <div className="glass-panel" style={{ marginBottom: 0 }}>
+        {/* Panel Header */}
+        <div
+          className="panel-header"
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "flex-start",
+            flexWrap: "wrap",
+            gap: "1rem",
+            marginBottom: "1.25rem",
+          }}
+        >
+          <div>
+            <div className="panel-title" style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+              <GraduationCap size={20} color="var(--accent-aicte-blue)" />
+              <span>Institution-Wise Performance & Regulatory Hotspots</span>
+            </div>
+            <div style={{ color: "var(--text-muted)", fontSize: "0.8rem", marginTop: "0.25rem", lineHeight: 1.4 }}>
+              Cross-institutional ranking across technical colleges &bull; Surveillance for SLA breaches, unresolved grievance clusters, and systemic recurrence hotzones
+            </div>
+          </div>
+
+          {/* Aggregate KPI Badges */}
+          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", flexWrap: "wrap" }}>
+            <span
+              className="badge"
+              style={{
+                background: "rgba(255, 255, 255, 0.06)",
+                border: "1px solid var(--border-subtle)",
+                color: "#FFFFFF",
+                fontSize: "0.75rem",
+              }}
+            >
+              {institutionSummary.totalInsts} Institutions Tracked
+            </span>
+            {institutionSummary.criticalCount > 0 && (
+              <span
+                className="badge badge-urgent"
+                style={{
+                  fontSize: "0.75rem",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "0.35rem",
+                  animation: "pulse 2s infinite ease-in-out",
+                }}
+              >
+                <AlertOctagon size={13} />
+                <span>{institutionSummary.criticalCount} Critical Hotspots</span>
+              </span>
+            )}
+            {institutionSummary.watchlistCount > 0 && (
+              <span
+                className="badge badge-high"
+                style={{ fontSize: "0.75rem", display: "flex", alignItems: "center", gap: "0.35rem" }}
+              >
+                <AlertTriangle size={13} />
+                <span>{institutionSummary.watchlistCount} Watchlist</span>
+              </span>
+            )}
+            <span
+              className="badge"
+              style={{
+                background: "rgba(16, 185, 129, 0.15)",
+                border: "1px solid rgba(16, 185, 129, 0.3)",
+                color: "#10B981",
+                fontSize: "0.75rem",
+                display: "flex",
+                alignItems: "center",
+                gap: "0.35rem",
+              }}
+            >
+              <CheckCircle2 size={13} />
+              <span>{institutionSummary.compliantCount} Compliant</span>
+            </span>
+          </div>
+        </div>
+
+        {/* Filter and Search Toolbar */}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            flexWrap: "wrap",
+            gap: "0.75rem",
+            background: "rgba(10, 16, 30, 0.7)",
+            border: "1px solid var(--border-subtle)",
+            borderRadius: "10px",
+            padding: "0.75rem 1rem",
+            marginBottom: "1.25rem",
+          }}
+        >
+          {/* Left: Search input */}
+          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", flex: "1 1 280px", position: "relative" }}>
+            <Search size={16} color="var(--text-muted)" style={{ position: "absolute", left: "0.75rem" }} />
+            <input
+              type="text"
+              placeholder="Search college name, AICTE ID, district, or category..."
+              value={institutionSearchTerm}
+              onChange={(e) => setInstitutionSearchTerm(e.target.value)}
+              className="form-control"
+              style={{
+                width: "100%",
+                paddingLeft: "2.25rem",
+                paddingRight: institutionSearchTerm ? "2rem" : "0.75rem",
+                fontSize: "0.82rem",
+                height: "36px",
+                background: "rgba(255, 255, 255, 0.04)",
+                borderColor: "rgba(255, 255, 255, 0.1)",
+              }}
+            />
+            {institutionSearchTerm && (
+              <button
+                type="button"
+                onClick={() => setInstitutionSearchTerm("")}
+                style={{
+                  position: "absolute",
+                  right: "0.6rem",
+                  background: "transparent",
+                  border: "none",
+                  color: "var(--text-muted)",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                }}
+              >
+                <X size={14} />
+              </button>
+            )}
+          </div>
+
+          {/* Center / Right: State dropdown & Status Filters */}
+          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", flexWrap: "wrap" }}>
+            {/* State Jurisdiction Filter */}
+            <div style={{ display: "flex", alignItems: "center", gap: "0.35rem" }}>
+              <MapPin size={14} color="var(--text-muted)" />
+              <select
+                className="form-control"
+                style={{
+                  fontSize: "0.8rem",
+                  height: "36px",
+                  padding: "0 0.75rem",
+                  background: "rgba(255, 255, 255, 0.04)",
+                  borderColor: "rgba(255, 255, 255, 0.1)",
+                  color: "#FFFFFF",
+                }}
+                value={selectedState}
+                onChange={(e) => setSelectedState(e.target.value)}
+              >
+                <option value="ALL">All States & UTs (All Jurisdictions)</option>
+                {allAvailableStates.map((st: string) => (
+                  <option key={st} value={st}>
+                    {st}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Regulatory Status Filter Pills */}
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                background: "rgba(255, 255, 255, 0.04)",
+                padding: "2px",
+                borderRadius: "6px",
+                border: "1px solid var(--border-subtle)",
+              }}
+            >
+              {[
+                { label: "All", value: "ALL" },
+                { label: "Critical", value: "CRITICAL_INTERVENTION" },
+                { label: "Watchlist", value: "WATCHLIST" },
+                { label: "Compliant", value: "COMPLIANT" },
+              ].map((pill) => {
+                const isActive = selectedInterventionStatus === pill.value;
+                return (
+                  <button
+                    key={pill.value}
+                    type="button"
+                    onClick={() => setSelectedInterventionStatus(pill.value)}
+                    style={{
+                      border: "none",
+                      background: isActive ? "var(--accent-aicte-blue)" : "transparent",
+                      color: isActive ? "#FFFFFF" : "var(--text-secondary)",
+                      padding: "0.3rem 0.65rem",
+                      borderRadius: "5px",
+                      fontSize: "0.75rem",
+                      fontWeight: isActive ? 700 : 500,
+                      cursor: "pointer",
+                      transition: "all 0.15s ease",
+                    }}
+                  >
+                    {pill.label}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Sort Selector */}
+            <div style={{ display: "flex", alignItems: "center", gap: "0.35rem" }}>
+              <SlidersHorizontal size={14} color="var(--text-muted)" />
+              <select
+                className="form-control"
+                style={{
+                  fontSize: "0.8rem",
+                  height: "36px",
+                  padding: "0 0.75rem",
+                  background: "rgba(255, 255, 255, 0.04)",
+                  borderColor: "rgba(255, 255, 255, 0.1)",
+                  color: "#FFFFFF",
+                }}
+                value={institutionSortBy}
+                onChange={(e) => setInstitutionSortBy(e.target.value as any)}
+              >
+                <option value="rank">Sort: Regulatory Risk Rank</option>
+                <option value="overdue">Sort: SLA Overdue (Highest)</option>
+                <option value="total">Sort: Total Cases (Highest)</option>
+                <option value="resolution">Sort: Resolution Rate % (Highest)</option>
+              </select>
+            </div>
+
+            {/* Refresh Button */}
+            <button
+              className="btn btn-secondary"
+              style={{ height: "36px", padding: "0 0.75rem" }}
+              onClick={loadInstitutionData}
+              title="Refresh Institution Rankings"
+            >
+              <RefreshCw size={14} className={isInstitutionsLoading ? "spin" : ""} />
+            </button>
+          </div>
+        </div>
+
+        {/* Error Banner */}
+        {institutionError && (
+          <div
+            className="alert alert-danger"
+            style={{
+              padding: "0.75rem 1rem",
+              marginBottom: "1rem",
+              borderRadius: "8px",
+              display: "flex",
+              alignItems: "center",
+              gap: "0.5rem",
+              fontSize: "0.82rem",
+            }}
+          >
+            <AlertCircle size={16} />
+            <span>{institutionError}</span>
+          </div>
+        )}
+
+        {/* Institution Comparative League Table */}
+        <div style={{ overflowX: "auto", borderRadius: "8px", border: "1px solid var(--border-subtle)" }}>
+          <table
+            style={{
+              width: "100%",
+              borderCollapse: "collapse",
+              textAlign: "left",
+              fontSize: "0.82rem",
+            }}
+          >
+            <thead>
+              <tr
+                style={{
+                  background: "rgba(255, 255, 255, 0.03)",
+                  borderBottom: "1px solid var(--border-subtle)",
+                  color: "var(--text-muted)",
+                  textTransform: "uppercase",
+                  fontSize: "0.7rem",
+                  letterSpacing: "0.05em",
+                }}
+              >
+                <th style={{ padding: "0.75rem 1rem", width: "50px" }}>Rank</th>
+                <th style={{ padding: "0.75rem 1rem", minWidth: "240px" }}>Technical Institution</th>
+                <th style={{ padding: "0.75rem 1rem", minWidth: "160px" }}>Hotspot Status</th>
+                <th style={{ padding: "0.75rem 1rem", minWidth: "140px" }}>Complaint Volume</th>
+                <th style={{ padding: "0.75rem 1rem", minWidth: "150px" }}>SLA Turnaround</th>
+                <th style={{ padding: "0.75rem 1rem", minWidth: "150px" }}>Resolution Velocity</th>
+                <th style={{ padding: "0.75rem 1rem", minWidth: "210px" }}>Recurring Malpractice Themes</th>
+                <th style={{ padding: "0.75rem 1rem", textAlign: "right", minWidth: "120px" }}>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {isInstitutionsLoading && filteredInstitutions.length === 0 ? (
+                <tr>
+                  <td colSpan={8} style={{ padding: "2.5rem", textAlign: "center", color: "var(--text-muted)" }}>
+                    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "0.5rem" }}>
+                      <RefreshCw size={24} className="spin" color="var(--accent-aicte-blue)" />
+                      <span>Aggregating cross-institution performance analytics...</span>
+                    </div>
+                  </td>
+                </tr>
+              ) : filteredInstitutions.length === 0 ? (
+                <tr>
+                  <td colSpan={8} style={{ padding: "2.5rem", textAlign: "center", color: "var(--text-muted)" }}>
+                    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "0.5rem" }}>
+                      <GraduationCap size={32} color="var(--text-muted)" />
+                      <span style={{ fontSize: "0.95rem", color: "#FFFFFF", fontWeight: 600 }}>
+                        No institutions match the current filters
+                      </span>
+                      <span style={{ fontSize: "0.8rem" }}>
+                        Try clearing search terms or selecting "All States & UTs"
+                      </span>
+                      {(institutionSearchTerm || selectedState !== "ALL" || selectedInterventionStatus !== "ALL") && (
+                        <button
+                          className="btn btn-secondary"
+                          style={{ marginTop: "0.5rem", fontSize: "0.75rem" }}
+                          onClick={() => {
+                            setInstitutionSearchTerm("");
+                            setSelectedState("ALL");
+                            setSelectedInterventionStatus("ALL");
+                          }}
+                        >
+                          Reset Filters
+                        </button>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              ) : (
+                filteredInstitutions.map((inst: InstitutionPerformanceStat, index: number) => {
+                  const rank = index + 1;
+                  const isCritical = inst.intervention_status === "CRITICAL_INTERVENTION";
+                  const isWatchlist = inst.intervention_status === "WATCHLIST";
+                  const isCompliant = inst.intervention_status === "COMPLIANT";
+
+                  const resolvedPct = inst.total_cases > 0 ? (inst.resolved_cases / inst.total_cases) * 100 : 0;
+                  const openPct = 100 - resolvedPct;
+
+                  // Border & background accent for hotzone rows
+                  let rowBackground = "transparent";
+                  if (isCritical) {
+                    rowBackground = "rgba(239, 68, 68, 0.04)";
+                  } else if (isWatchlist) {
+                    rowBackground = "rgba(249, 115, 22, 0.02)";
+                  }
+
+                  return (
+                    <tr
+                      key={inst.institution_id}
+                      style={{
+                        background: rowBackground,
+                        borderBottom: "1px solid rgba(255, 255, 255, 0.05)",
+                        transition: "background 0.15s ease",
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = isCritical
+                          ? "rgba(239, 68, 68, 0.09)"
+                          : "rgba(255, 255, 255, 0.04)";
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = rowBackground;
+                      }}
+                    >
+                      {/* Rank */}
+                      <td style={{ padding: "0.85rem 1rem" }}>
+                        <span
+                          style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            width: "26px",
+                            height: "26px",
+                            borderRadius: "50%",
+                            fontSize: "0.75rem",
+                            fontWeight: 800,
+                            fontFamily: "var(--font-mono)",
+                            background:
+                              rank <= 3
+                                ? isCritical
+                                  ? "rgba(239, 68, 68, 0.25)"
+                                  : "rgba(37, 99, 235, 0.25)"
+                                : "rgba(255, 255, 255, 0.05)",
+                            color:
+                              rank <= 3
+                                ? isCritical
+                                  ? "#EF4444"
+                                  : "#38BDF8"
+                                : "var(--text-muted)",
+                            border:
+                              rank <= 3
+                                ? isCritical
+                                  ? "1px solid rgba(239, 68, 68, 0.5)"
+                                  : "1px solid rgba(56, 189, 248, 0.4)"
+                                : "1px solid rgba(255, 255, 255, 0.1)",
+                          }}
+                        >
+                          #{rank}
+                        </span>
+                      </td>
+
+                      {/* Technical Institution Details */}
+                      <td style={{ padding: "0.85rem 1rem" }}>
+                        <div style={{ display: "flex", flexDirection: "column", gap: "0.2rem" }}>
+                          <span style={{ fontWeight: 700, color: "#FFFFFF", fontSize: "0.85rem" }}>
+                            {inst.name}
+                          </span>
+                          <div style={{ display: "flex", alignItems: "center", gap: "0.4rem", flexWrap: "wrap" }}>
+                            <span
+                              style={{
+                                fontFamily: "var(--font-mono)",
+                                fontSize: "0.7rem",
+                                color: "var(--accent-saffron)",
+                                background: "rgba(249, 115, 22, 0.1)",
+                                padding: "0.1rem 0.35rem",
+                                borderRadius: "4px",
+                                border: "1px solid rgba(249, 115, 22, 0.2)",
+                              }}
+                            >
+                              {inst.aicte_permanent_id}
+                            </span>
+                            <span style={{ fontSize: "0.72rem", color: "var(--text-muted)", display: "flex", alignItems: "center", gap: "0.2rem" }}>
+                              <MapPin size={11} />
+                              {inst.district}, {inst.state}
+                            </span>
+                            <span
+                              style={{
+                                fontSize: "0.68rem",
+                                color: "var(--text-secondary)",
+                                background: "rgba(255, 255, 255, 0.05)",
+                                padding: "0.1rem 0.3rem",
+                                borderRadius: "3px",
+                              }}
+                            >
+                              {inst.institution_type}
+                            </span>
+                          </div>
+                        </div>
+                      </td>
+
+                      {/* Hotspot Regulatory Status */}
+                      <td style={{ padding: "0.85rem 1rem" }}>
+                        {isCritical && (
+                          <div style={{ display: "flex", flexDirection: "column", gap: "0.2rem" }}>
+                            <span
+                              className="badge badge-urgent"
+                              style={{
+                                fontSize: "0.7rem",
+                                padding: "0.2rem 0.5rem",
+                                display: "inline-flex",
+                                alignItems: "center",
+                                gap: "0.3rem",
+                                width: "fit-content",
+                              }}
+                            >
+                              <AlertOctagon size={12} />
+                              <span>CRITICAL INTERVENTION</span>
+                            </span>
+                            <span style={{ fontSize: "0.68rem", color: "#F87171" }}>
+                              Regulatory audit warranted
+                            </span>
+                          </div>
+                        )}
+                        {isWatchlist && (
+                          <div style={{ display: "flex", flexDirection: "column", gap: "0.2rem" }}>
+                            <span
+                              className="badge badge-high"
+                              style={{
+                                fontSize: "0.7rem",
+                                padding: "0.2rem 0.5rem",
+                                display: "inline-flex",
+                                alignItems: "center",
+                                gap: "0.3rem",
+                                width: "fit-content",
+                              }}
+                            >
+                              <AlertTriangle size={12} />
+                              <span>WATCHLIST</span>
+                            </span>
+                            <span style={{ fontSize: "0.68rem", color: "#FDBA74" }}>
+                              Elevated turnaround delay
+                            </span>
+                          </div>
+                        )}
+                        {isCompliant && (
+                          <div style={{ display: "flex", flexDirection: "column", gap: "0.2rem" }}>
+                            <span
+                              style={{
+                                background: "rgba(16, 185, 129, 0.15)",
+                                border: "1px solid rgba(16, 185, 129, 0.3)",
+                                color: "#10B981",
+                                fontSize: "0.7rem",
+                                padding: "0.2rem 0.5rem",
+                                borderRadius: "4px",
+                                display: "inline-flex",
+                                alignItems: "center",
+                                gap: "0.3rem",
+                                fontWeight: 700,
+                                width: "fit-content",
+                              }}
+                            >
+                              <CheckCircle2 size={12} />
+                              <span>COMPLIANT</span>
+                            </span>
+                            <span style={{ fontSize: "0.68rem", color: "var(--text-muted)" }}>
+                              Within standard SLA
+                            </span>
+                          </div>
+                        )}
+                      </td>
+
+                      {/* Complaint Volume Breakdown */}
+                      <td style={{ padding: "0.85rem 1rem" }}>
+                        <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}>
+                          <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.78rem" }}>
+                            <span style={{ fontWeight: 800, color: "#FFFFFF", fontFamily: "var(--font-mono)" }}>
+                              {inst.total_cases} total
+                            </span>
+                            <span style={{ color: "var(--text-secondary)", fontSize: "0.72rem" }}>
+                              {inst.open_cases} open / {inst.resolved_cases} res
+                            </span>
+                          </div>
+                          {/* Mini visual split bar */}
+                          <div
+                            style={{
+                              width: "100%",
+                              height: "4px",
+                              background: "rgba(255, 255, 255, 0.08)",
+                              borderRadius: "2px",
+                              overflow: "hidden",
+                              display: "flex",
+                            }}
+                          >
+                            <div
+                              style={{
+                                width: `${resolvedPct}%`,
+                                height: "100%",
+                                background: "#10B981",
+                              }}
+                              title={`Resolved: ${inst.resolved_cases}`}
+                            />
+                            <div
+                              style={{
+                                width: `${openPct}%`,
+                                height: "100%",
+                                background: "#38BDF8",
+                              }}
+                              title={`Active Open: ${inst.open_cases}`}
+                            />
+                          </div>
+                        </div>
+                      </td>
+
+                      {/* SLA Adherence & Overdue Breaches */}
+                      <td style={{ padding: "0.85rem 1rem" }}>
+                        {inst.overdue_cases > 0 ? (
+                          <div style={{ display: "flex", flexDirection: "column", gap: "0.15rem" }}>
+                            <span
+                              style={{
+                                color: "#EF4444",
+                                fontWeight: 800,
+                                fontSize: "0.82rem",
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "0.3rem",
+                                fontFamily: "var(--font-mono)",
+                              }}
+                            >
+                              <AlertOctagon size={13} color="#EF4444" />
+                              {inst.overdue_cases} Overdue SLA
+                            </span>
+                            {inst.approaching_cases > 0 && (
+                              <span style={{ color: "#F59E0B", fontSize: "0.7rem" }}>
+                                +{inst.approaching_cases} near deadline
+                              </span>
+                            )}
+                          </div>
+                        ) : inst.approaching_cases > 0 ? (
+                          <div style={{ display: "flex", flexDirection: "column", gap: "0.15rem" }}>
+                            <span
+                              style={{
+                                color: "#F59E0B",
+                                fontWeight: 700,
+                                fontSize: "0.8rem",
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "0.3rem",
+                              }}
+                            >
+                              <Clock size={13} color="#F59E0B" />
+                              {inst.approaching_cases} Approaching
+                            </span>
+                            <span style={{ color: "var(--risk-normal)", fontSize: "0.68rem" }}>
+                              0 Overdue breaches
+                            </span>
+                          </div>
+                        ) : (
+                          <span
+                            style={{
+                              color: "var(--risk-normal)",
+                              fontSize: "0.75rem",
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "0.3rem",
+                            }}
+                          >
+                            <CheckCircle2 size={13} />
+                            <span>100% Within SLA</span>
+                          </span>
+                        )}
+                      </td>
+
+                      {/* Resolution Rate % */}
+                      <td style={{ padding: "0.85rem 1rem" }}>
+                        <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}>
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+                            <span
+                              style={{
+                                fontSize: "0.95rem",
+                                fontWeight: 800,
+                                fontFamily: "var(--font-mono)",
+                                color:
+                                  inst.resolution_rate_pct >= 70
+                                    ? "#10B981"
+                                    : inst.resolution_rate_pct >= 40
+                                    ? "#38BDF8"
+                                    : "#EF4444",
+                              }}
+                            >
+                              {inst.resolution_rate_pct.toFixed(1)}%
+                            </span>
+                            <span style={{ fontSize: "0.7rem", color: "var(--text-muted)" }}>
+                              {inst.resolved_cases}/{inst.total_cases}
+                            </span>
+                          </div>
+                          <div
+                            style={{
+                              width: "100%",
+                              height: "4px",
+                              background: "rgba(255, 255, 255, 0.08)",
+                              borderRadius: "2px",
+                              overflow: "hidden",
+                            }}
+                          >
+                            <div
+                              style={{
+                                width: `${Math.min(inst.resolution_rate_pct, 100)}%`,
+                                height: "100%",
+                                background:
+                                  inst.resolution_rate_pct >= 70
+                                    ? "linear-gradient(90deg, #059669, #10B981)"
+                                    : inst.resolution_rate_pct >= 40
+                                    ? "linear-gradient(90deg, #0284C7, #38BDF8)"
+                                    : "linear-gradient(90deg, #DC2626, #EF4444)",
+                                borderRadius: "2px",
+                              }}
+                            />
+                          </div>
+                        </div>
+                      </td>
+
+                      {/* Recurring Malpractice Themes */}
+                      <td style={{ padding: "0.85rem 1rem" }}>
+                        <div style={{ display: "flex", flexWrap: "wrap", gap: "0.3rem" }}>
+                          {inst.top_recurring_categories && inst.top_recurring_categories.length > 0 ? (
+                            inst.top_recurring_categories.map((catItem, cIdx) => (
+                              <span
+                                key={cIdx}
+                                style={{
+                                  fontSize: "0.68rem",
+                                  padding: "0.15rem 0.4rem",
+                                  borderRadius: "4px",
+                                  background: isCritical
+                                    ? "rgba(239, 68, 68, 0.12)"
+                                    : "rgba(255, 255, 255, 0.05)",
+                                  border: isCritical
+                                    ? "1px solid rgba(239, 68, 68, 0.25)"
+                                    : "1px solid rgba(255, 255, 255, 0.1)",
+                                  color: isCritical ? "#FCA5A5" : "var(--text-secondary)",
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                  gap: "0.25rem",
+                                }}
+                              >
+                                <span>{catItem.category}</span>
+                                <strong style={{ color: "#FFFFFF" }}>({catItem.count})</strong>
+                              </span>
+                            ))
+                          ) : (
+                            <span style={{ fontSize: "0.7rem", color: "var(--text-muted)" }}>
+                              No recurrent clusters
+                            </span>
+                          )}
+                        </div>
+                      </td>
+
+                      {/* Actions */}
+                      <td style={{ padding: "0.85rem 1rem", textAlign: "right" }}>
+                        {onNavigateToRegister && (
+                          <button
+                            className="btn btn-secondary"
+                            style={{
+                              fontSize: "0.74rem",
+                              padding: "0.35rem 0.65rem",
+                              gap: "0.3rem",
+                              display: "inline-flex",
+                              alignItems: "center",
+                            }}
+                            onClick={() => onNavigateToRegister(undefined, inst.aicte_permanent_id)}
+                            title={`Filter Case Register for ${inst.name}`}
+                          >
+                            <span>Inspect Dossiers</span>
+                            <ArrowRight size={13} />
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {/* League Table Footer Note */}
+        <div
+          style={{
+            marginTop: "1rem",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            fontSize: "0.75rem",
+            color: "var(--text-muted)",
+            flexWrap: "wrap",
+            gap: "0.5rem",
+          }}
+        >
+          <div>
+            Showing <strong>{filteredInstitutions.length}</strong> of <strong>{institutions.length}</strong> ranked technical institutions
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+            <span style={{ display: "flex", alignItems: "center", gap: "0.3rem" }}>
+              <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#EF4444" }} />
+              Critical: &ge;3 Overdue SLA or &lt;35% resolution
+            </span>
+            <span style={{ display: "flex", alignItems: "center", gap: "0.3rem" }}>
+              <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#F97316" }} />
+              Watchlist: &ge;1 Overdue or &ge;5 pending cases
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Section 5: Categorical Distribution & Priority Profile */}
       <div
         style={{
           display: "grid",

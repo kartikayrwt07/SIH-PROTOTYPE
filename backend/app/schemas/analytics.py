@@ -51,3 +51,28 @@ class BottleneckAnalysis(BaseModel):
     primary_bottleneck_stage: Optional[str] = None
     system_health_status: str
     operational_advisory: Optional[str] = None
+
+
+class RecurringCategoryCount(BaseModel):
+    category: str
+    count: int
+
+
+class InstitutionPerformanceStat(BaseModel):
+    institution_id: str
+    aicte_permanent_id: str
+    name: str
+    state: str
+    district: str
+    institution_type: str
+    total_cases: int
+    open_cases: int
+    pending_cases: int
+    resolved_cases: int
+    overdue_cases: int
+    approaching_cases: int
+    resolution_rate_pct: float
+    top_recurring_categories: List[RecurringCategoryCount]
+    intervention_status: str  # "CRITICAL_INTERVENTION", "WATCHLIST", "COMPLIANT"
+
+    model_config = ConfigDict(from_attributes=True)
