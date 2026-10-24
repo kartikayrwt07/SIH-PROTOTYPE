@@ -56,12 +56,12 @@ export const RoleBanner: React.FC = () => {
       <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
         <Icon size={16} color={badge.color} />
         <span style={{ color: "var(--text-secondary)" }}>
-          Simulated Context: <strong style={{ color: badge.color }}>{badge.label}</strong> &bull; {badge.desc}
+          Active Session: <strong style={{ color: badge.color }}>{badge.label}</strong> &bull; {badge.desc}
         </span>
       </div>
 
-      <div style={{ color: "var(--text-muted)", fontSize: "0.75rem", fontStyle: "italic" }}>
-        Demo RBAC Switcher &bull; Server Enforced
+      <div style={{ color: "var(--text-muted)", fontSize: "0.75rem" }}>
+        AICTE Role-Based Access Control &bull; Server Enforced
       </div>
     </div>
   );

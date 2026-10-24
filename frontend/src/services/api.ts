@@ -72,6 +72,13 @@ class ApiService {
     return this.request("/health");
   }
 
+  async login(credentials: { email: string; password: string }): Promise<StandardResponse<{ access_token: string; token_type: string }>> {
+    return this.request("/auth/login", {
+      method: "POST",
+      body: JSON.stringify(credentials),
+    });
+  }
+
   async getCurrentUser(roleOverride?: UserRole): Promise<StandardResponse<UserProfileResponse>> {
     const headers: Record<string, string> = {};
     if (roleOverride) {

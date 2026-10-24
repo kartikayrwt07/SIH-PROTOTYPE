@@ -546,6 +546,33 @@ export const AppContent: React.FC = () => {
   );
 };
 
+import { LoginPage } from "./components/auth/LoginPage";
+
 export const App: React.FC = () => {
+  const { isAuthenticated, isLoading } = useAuth();
+
+  if (isLoading) {
+    return (
+      <div
+        style={{
+          minHeight: "100vh",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          background: "var(--bg-main)",
+          color: "var(--text-secondary)",
+          fontSize: "0.95rem",
+          fontWeight: 600,
+        }}
+      >
+        Authenticating AICTE Portal Session...
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return <LoginPage />;
+  }
+
   return <AppContent />;
 };
