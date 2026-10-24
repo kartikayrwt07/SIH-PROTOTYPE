@@ -81,14 +81,14 @@ export function DwellTimeChart({ cases, className }: DwellTimeChartProps) {
   }, [bottlenecks]);
 
   return (
-    <div className={cn("p-6 bg-white/85 backdrop-blur-md border border-[#ECE6F4] rounded-[12px] space-y-6 shadow-[0_4px_24px_rgba(112,82,200,0.04)]", className)}>
-      <div className="flex flex-col sm:flex-row sm:items-baseline justify-between gap-4 border-b border-[#ECE6F4] pb-4">
+    <div className={cn("p-6 bg-white/85 dark:bg-[#171226]/85 backdrop-blur-md border border-[#ECE6F4] dark:border-[#2C233E] rounded-[12px] space-y-6 shadow-[0_4px_24px_rgba(112,82,200,0.04)]", className)}>
+      <div className="flex flex-col sm:flex-row sm:items-baseline justify-between gap-4 border-b border-[#ECE6F4] dark:border-[#2C233E] pb-4">
         <div>
           <div className="flex items-center gap-2">
             <h3 className="font-serif text-base font-semibold text-[var(--color-ink)]">
               Where cases wait longest
             </h3>
-            <span className="text-[10px] font-sans font-medium px-2 py-0.5 rounded-full bg-[#FAF8FE] border border-[#ECE6F4] text-[var(--color-action)] shadow-xs">
+            <span className="text-[10px] font-sans font-medium px-2 py-0.5 rounded-full bg-[#FAF8FE] dark:bg-[#1F1833] border border-[#ECE6F4] dark:border-[#2C233E] text-[var(--color-action)] shadow-xs">
               SLA Dwell Analytics
             </span>
           </div>
@@ -103,13 +103,13 @@ export function DwellTimeChart({ cases, className }: DwellTimeChartProps) {
               <Button
                 variant="outline"
                 size="sm"
-                className="h-7 text-xs gap-1.5 px-2.5 border-[#ECE6F4] rounded-[6px] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] bg-white/70 backdrop-blur-sm"
+                className="h-7 text-xs gap-1.5 px-2.5 border-[#ECE6F4] dark:border-[#2C233E] rounded-[6px] text-[var(--color-text-secondary)] dark:text-[#9B91AF] hover:text-[var(--color-text-primary)] dark:hover:text-[#EDE8F5] bg-white/70 dark:bg-[#1E1733]/70 backdrop-blur-sm"
               >
                 <Settings2 className="h-3.5 w-3.5 opacity-70" />
                 <span>Adjust thresholds</span>
               </Button>
             </PopoverTrigger>
-            <PopoverContent align="end" className="w-76 p-4 text-xs space-y-3 bg-white/95 backdrop-blur-md border border-[#ECE6F4] rounded-[10px] shadow-xl">
+            <PopoverContent align="end" className="w-76 p-4 text-xs space-y-3 bg-white/95 dark:bg-[#171226]/95 backdrop-blur-md border border-[#ECE6F4] dark:border-[#2C233E] rounded-[10px] shadow-xl">
               <div className="font-semibold text-[var(--color-ink)]">SLA Bottleneck Thresholds</div>
               <p className="text-[11px] text-[var(--color-text-muted)] leading-relaxed">
                 Define the maximum allowed average dwell hours per stage before triggering supervisory bottleneck warnings:
@@ -186,7 +186,7 @@ export function DwellTimeChart({ cases, className }: DwellTimeChartProps) {
                   </span>
 
                   {item.isBottleneck ? (
-                    <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#54329E] bg-[#F2EDFB] px-2.5 py-0.5 rounded-[6px] border border-[#54329E]/20 shadow-xs">
+                    <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#54329E] dark:text-[#C5B4F3] bg-[#F2EDFB] dark:bg-[#54329E]/25 px-2.5 py-0.5 rounded-[6px] border border-[#54329E]/20 dark:border-[#54329E]/40 shadow-xs">
                       <Clock className="h-3 w-3 shrink-0 text-[#7052C8]" />
                       <span>+{delta} h above target</span>
                     </span>
@@ -200,7 +200,7 @@ export function DwellTimeChart({ cases, className }: DwellTimeChartProps) {
               </div>
 
               {/* Intuitive Dual-Band Progress Gauge */}
-              <div className="relative h-6 bg-[#FAF8FE] border border-[#ECE6F4] rounded-[6px] overflow-hidden">
+              <div className="relative h-6 bg-[#FAF8FE] dark:bg-[#1F1833] border border-[#ECE6F4] dark:border-[#2C233E] rounded-[6px] overflow-hidden">
                 {/* Acceptable SLA Safe Zone Underlay */}
                 <div
                   className="absolute top-0 bottom-0 left-0 bg-[#7052C8]/6 z-0 border-r border-[#7052C8]/20"
@@ -238,7 +238,7 @@ export function DwellTimeChart({ cases, className }: DwellTimeChartProps) {
       </div>
 
       {/* Legend & Summary Footer */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-[var(--color-text-muted)] pt-3 border-t border-[#ECE6F4]">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-[var(--color-text-muted)] pt-3 border-t border-[#ECE6F4] dark:border-[#2C233E]">
         <div className="flex items-center gap-5 flex-wrap">
           <div className="flex items-center gap-1.5">
             <span className="w-2.5 h-2.5 rounded-[3px] bg-[#8A6CD3] shadow-[0_0_6px_rgba(138,108,211,0.3)]" />

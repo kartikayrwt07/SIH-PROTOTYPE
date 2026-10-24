@@ -134,3 +134,57 @@
     scroll-behavior: auto !important;
   }
 }
+
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+.dark {
+  --background: #0E0B16;
+  --foreground: #EDE8F5;
+  --color-page: #0E0B16;
+  --color-surface: #171226;
+  --color-ink: #EDE8F5;
+  --color-rule: #2C233E;
+
+  --color-text-primary: #EDE8F5;
+  --color-text-secondary: #9B91AF;
+  --color-text-muted: #6C6280;
+
+  --color-action: #8E70DE;
+  --color-action-hover: #A085E8;
+
+  --card: #171226;
+  --card-foreground: #EDE8F5;
+  --popover: #171226;
+  --popover-foreground: #EDE8F5;
+  --primary: #8E70DE;
+  --primary-foreground: #FFFFFF;
+  --secondary: #1F1833;
+  --secondary-foreground: #EDE8F5;
+  --muted: #1F1833;
+  --muted-foreground: #9B91AF;
+  --accent: #1F1833;
+  --accent-foreground: #EDE8F5;
+  --border: #2C233E;
+  --input: #2C233E;
+  --ring: #8E70DE;
+
+  --color-sla-overdue: #E26666;
+  --color-sla-overdue-bg: rgba(226, 102, 102, 0.15);
+  --color-sla-approaching: #DDA83B;
+  --color-sla-approaching-bg: rgba(221, 168, 59, 0.15);
+  --color-sla-ontrack: #4EC587;
+  --color-sla-ontrack-bg: rgba(78, 197, 135, 0.15);
+  --color-sla-completed: #9B91AF;
+  --color-sla-completed-bg: rgba(155, 145, 175, 0.15);
+
+  --sla-overdue-text: var(--color-sla-overdue);
+  --sla-overdue-bg: var(--color-sla-overdue-bg);
+  --sla-approaching-text: var(--color-sla-approaching);
+  --sla-approaching-bg: var(--color-sla-approaching-bg);
+  --sla-ontrack-text: var(--color-sla-ontrack);
+  --sla-on-track-text: var(--color-sla-ontrack);
+  --sla-ontrack-bg: var(--color-sla-ontrack-bg);
+  --sla-completed-text: var(--color-sla-completed);
+  --sla-completed-bg: var(--color-sla-completed-bg);
+}

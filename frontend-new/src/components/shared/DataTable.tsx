@@ -38,10 +38,10 @@ export function DataTable<T>({
   className,
 }: DataTableProps<T>) {
   return (
-    <div className={cn("w-full bg-white/85 backdrop-blur-md border border-[#ECE6F4] rounded-[10px] overflow-hidden shadow-[0_4px_24px_rgba(112,82,200,0.03)]", className)}>
+    <div className={cn("w-full bg-white/85 dark:bg-[#171226]/85 backdrop-blur-md border border-[#ECE6F4] dark:border-[#2C233E] rounded-[10px] overflow-hidden shadow-[0_4px_24px_rgba(112,82,200,0.03)]", className)}>
       <div className="overflow-x-auto">
         <table className="w-full text-left text-sm border-collapse">
-          <thead className="sticky top-0 bg-white/90 backdrop-blur-md border-b border-[#ECE6F4] z-10">
+          <thead className="sticky top-0 bg-white/90 dark:bg-[#1B152B]/90 backdrop-blur-md border-b border-[#ECE6F4] dark:border-[#2C233E] z-10">
             <tr>
               {columns.map((col) => (
                 <th
@@ -62,7 +62,7 @@ export function DataTable<T>({
               ))}
             </tr>
           </thead>
-          <tbody className="divide-y divide-[#ECE6F4]">
+          <tbody className="divide-y divide-[#ECE6F4] dark:divide-[#2C233E]">
             {isLoading ? (
               Array.from({ length: skeletonRows }).map((_, rIdx) => (
                 <tr key={`skel-${rIdx}`} className="h-12 bg-surface">
@@ -115,9 +115,9 @@ export function DataTable<T>({
                     tabIndex={isClickable ? 0 : undefined}
                     role={isClickable ? "button" : undefined}
                     className={cn(
-                      "min-h-[46px] bg-surface text-ink transition-colors",
+                      "min-h-[46px] bg-surface dark:bg-[#171226] text-ink dark:text-[#EDE8F5] transition-colors",
                       isClickable &&
-                        "cursor-pointer hover:bg-[#FAF8FE] focus:outline-none focus:bg-[#FAF8FE] focus:ring-1 focus:ring-action",
+                        "cursor-pointer hover:bg-[#FAF8FE] dark:hover:bg-[#7052C8]/10 focus:outline-none focus:bg-[#FAF8FE] dark:focus:bg-[#7052C8]/10 focus:ring-1 focus:ring-action",
                       customClasses,
                     )}
                   >

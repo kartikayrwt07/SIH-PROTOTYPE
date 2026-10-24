@@ -70,13 +70,13 @@ export function StateGraph({
   return (
     <div className="space-y-6">
       {/* Interactive Topology Canvas */}
-      <div className="bg-white/85 backdrop-blur-md border border-[#ECE6F4] rounded-[12px] p-6 space-y-6 shadow-[0_4px_24px_rgba(112,82,200,0.03)]">
+      <div className="bg-white/85 dark:bg-[#171226]/85 backdrop-blur-md border border-[#ECE6F4] dark:border-[#2C233E] rounded-[12px] p-6 space-y-6 shadow-[0_4px_24px_rgba(112,82,200,0.03)]">
         {/* Canvas Header & Legend */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#ECE6F4]">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#ECE6F4] dark:border-[#2C233E]">
           <div>
             <h3 className="font-serif text-base font-semibold text-[var(--color-ink)] flex items-center gap-2">
               <span>Interactive state topology</span>
-              <span className="text-[10px] font-sans font-medium px-2 py-0.5 rounded-full bg-[#FAF8FE] border border-[#ECE6F4] text-[var(--color-action)] shadow-xs">
+              <span className="text-[10px] font-sans font-medium px-2 py-0.5 rounded-full bg-[#FAF8FE] dark:bg-[#1F1833] border border-[#ECE6F4] dark:border-[#2C233E] text-[var(--color-action)] shadow-xs">
                 9 Stages
               </span>
             </h3>
@@ -102,7 +102,7 @@ export function StateGraph({
         </div>
 
         {/* Intuitive Active State Banner */}
-        <div className="p-4 bg-white/70 backdrop-blur-sm border border-[#ECE6F4] rounded-[8px] flex flex-wrap items-center justify-between gap-4 text-xs shadow-xs">
+        <div className="p-4 bg-white/70 dark:bg-[#1A1428]/70 backdrop-blur-sm border border-[#ECE6F4] dark:border-[#2C233E] rounded-[8px] flex flex-wrap items-center justify-between gap-4 text-xs shadow-xs">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-[6px] bg-[var(--color-action)] text-white flex items-center justify-center font-mono font-bold text-xs shadow-[0_0_8px_rgba(112,82,200,0.35)]">
               {STAGE_NUMBERS[selectedStatus]}

@@ -45,7 +45,7 @@ function LoginPage() {
   };
 
   return (
-    <div className="min-h-[calc(100vh-3rem)] flex flex-col items-center justify-center py-12 px-4 bg-gradient-to-br from-[#FCFBFE] via-[#FAF8FD] to-[#F5F2FA]">
+    <div className="min-h-[calc(100vh-3rem)] flex flex-col items-center justify-center py-12 px-4 bg-gradient-to-br from-[#FCFBFE] via-[#FAF8FD] to-[#F5F2FA] dark:from-[#0E0B16] dark:via-[#120D1D] dark:to-[#171124]">
       <div className="w-full max-w-sm space-y-6">
         {/* Wordmark Above */}
         <div className="flex items-center justify-center gap-2.5 select-none">
@@ -56,7 +56,7 @@ function LoginPage() {
         </div>
 
         {/* Centered Form — Modern Frosted Glass Card with Subtle Glow */}
-        <div className="bg-white/85 backdrop-blur-xl border border-[#ECE6F4] p-8 rounded-[12px] space-y-5 shadow-[0_8px_32px_rgba(112,82,200,0.06)]">
+        <div className="bg-white/85 dark:bg-[#171226]/85 backdrop-blur-xl border border-[#ECE6F4] dark:border-[#2C233E] p-8 rounded-[12px] space-y-5 shadow-[0_8px_32px_rgba(112,82,200,0.06)]">
           <div className="space-y-1">
             <h2 className="text-base font-semibold text-ink">Sign in to your account</h2>
             <p className="text-xs text-text-secondary leading-normal">
