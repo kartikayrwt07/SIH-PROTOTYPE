@@ -215,16 +215,42 @@ def compute_lifecycle_dwell_times(
             )
         )
 
-    system_health = (
-        "Attention Required: Severe triage latency detected"
-        if primary_bottleneck
-        else "Optimal: Dwell times within operational tolerance"
-    )
+    health_map = {
+        "Under Triage": "Attention Required: Elevated Triage Backlog",
+        "In Progress": "Attention Required: Active Investigation Bottleneck",
+        "Awaiting Information": "Attention Required: Complainant Evidentiary Delay",
+        "Under Review": "Attention Required: Bureau Committee Review Queue",
+        "Received": "Attention Required: Intake Registration Delay",
+        "Registered": "Attention Required: Docket Indexing Backlog",
+        "Assigned": "Attention Required: Officer Assignment Delay",
+    }
+    advisory_map = {
+        "Under Triage": "Initial grievance assessment and bureau dispatch queues are exceeding baseline velocity. Automated triage acceleration or supervisor assignment is advised.",
+        "In Progress": "Active investigation and ATR (Action Taken Report) collation represent the primary turnaround constraint. Officer workload rebalancing recommended.",
+        "Awaiting Information": "Pending evidentiary submissions from institutions or complainants are delaying lifecycle progression. Automated reminder dispatch recommended.",
+        "Under Review": "Bureau review panels and endorsement sign-offs represent the primary turnaround constraint.",
+        "Received": "Incoming case registration queue is accumulating backlog before initial triage.",
+        "Registered": "Formal case indexing and docket creation is experiencing intake latency.",
+        "Assigned": "Bureau officer assignment and initial case pickup velocity requires supervision.",
+    }
+
+    if primary_bottleneck:
+        system_health = health_map.get(
+            primary_bottleneck, f"Attention Required: Dwell latency in '{primary_bottleneck}'"
+        )
+        advisory = advisory_map.get(
+            primary_bottleneck,
+            f"Processing velocity in '{primary_bottleneck}' exceeds operational baseline. Workload reallocation recommended.",
+        )
+    else:
+        system_health = "Optimal: Pipeline throughput within SLA tolerances"
+        advisory = "All lifecycle pipeline stages are operating within acceptable SLA velocity thresholds."
 
     return BottleneckAnalysis(
         stages=stats,
-        primary_bottleneck_stage=primary_bottleneck or "Under Triage",
+        primary_bottleneck_stage=primary_bottleneck,
         system_health_status=system_health,
+        operational_advisory=advisory,
     )
 
 

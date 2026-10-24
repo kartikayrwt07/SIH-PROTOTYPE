@@ -20,9 +20,12 @@ frontend/dist/
 .env
 .env.*
 backend/.env
+!.env.example
+!backend/.env.example
 
 # Planning, GSD, and Agent Metadata
 .planning/
 .agents/
 .gemini/
+.vector_store/
 

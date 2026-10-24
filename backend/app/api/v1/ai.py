@@ -31,7 +31,7 @@ router = APIRouter()
 @router.post(
     "/duplicates/check",
     response_model=StandardResponse[DuplicateCheckResponse],
-    summary="Check potential duplicate complaints using TF-IDF cosine similarity"
+    summary="Check potential duplicate complaints using dense semantic cosine similarity"
 )
 def check_duplicates(
     request: DuplicateCheckRequest,
@@ -40,7 +40,7 @@ def check_duplicates(
 ):
     """
     Evaluates incoming grievance text against registered database complaints
-    using TF-IDF n-gram vectorization and cosine similarity.
+    using fastembed dense semantic vectorization and calibrated cosine similarity.
     """
     try:
         result = check_duplicate_complaints(db, request)
@@ -59,7 +59,7 @@ def check_duplicates(
 )
 def check_case_duplicates(
     case_ref: str,
-    threshold: float = 0.35,
+    threshold: float = 0.70,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):

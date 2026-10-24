@@ -1,10 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from backend.app.core.database import get_db
-from backend.app.core.security import verify_password, create_access_token
+from backend.app.core.security import verify_password, get_password_hash, create_access_token
 from backend.app.core.auth import get_current_user, get_role_permissions
 from backend.app.models.user import User, UserRole
-from backend.app.schemas.auth import LoginRequest, Token, AuthUserResponse
+from backend.app.models.bureau import Bureau
+from backend.app.schemas.auth import LoginRequest, RegisterRequest, Token, AuthUserResponse
 from backend.app.schemas.common import StandardResponse
 
 router = APIRouter(prefix="/auth")
@@ -13,7 +14,7 @@ router = APIRouter(prefix="/auth")
 @router.post("/login", response_model=StandardResponse[Token])
 def login(request: LoginRequest, db: Session = Depends(get_db)):
     """Authenticate with email and password, returning signed JWT token."""
-    user = db.query(User).filter(User.email == request.email).first()
+    user = db.query(User).filter(User.email == request.email.strip().lower()).first()
     if not user or not verify_password(request.password, user.hashed_password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -25,6 +26,69 @@ def login(request: LoginRequest, db: Session = Depends(get_db)):
 
     access_token = create_access_token(
         data={"sub": user.id, "email": user.email, "role": user.role.value, "bureau_id": user.bureau_id}
+    )
+    return StandardResponse(data=Token(access_token=access_token))
+
+
+@router.post("/register", response_model=StandardResponse[Token])
+def register(request: RegisterRequest, db: Session = Depends(get_db)):
+    """Register a new user account with role assignment and issue JWT access token."""
+    email_clean = request.email.strip().lower()
+    if not email_clean or "@" not in email_clean:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="A valid official email address is required.",
+        )
+    if not request.full_name.strip():
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Full name is required.",
+        )
+    if len(request.password) < 6:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Password must be at least 6 characters.",
+        )
+
+    existing_user = db.query(User).filter(User.email.ilike(email_clean)).first()
+    if existing_user:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="An account with this email address is already registered.",
+        )
+
+    bureau_id = request.bureau_id
+    if bureau_id:
+        bureau = db.query(Bureau).filter(Bureau.id == bureau_id).first()
+        if not bureau:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Selected Bureau does not exist.",
+            )
+    elif request.role == UserRole.OFFICER:
+        first_bureau = db.query(Bureau).filter(Bureau.is_active == True).first()
+        if first_bureau:
+            bureau_id = first_bureau.id
+
+    new_user = User(
+        email=email_clean,
+        full_name=request.full_name.strip(),
+        role=request.role,
+        bureau_id=bureau_id,
+        hashed_password=get_password_hash(request.password),
+        is_active=True,
+    )
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+
+    access_token = create_access_token(
+        data={
+            "sub": new_user.id,
+            "email": new_user.email,
+            "role": new_user.role.value,
+            "bureau_id": new_user.bureau_id,
+        }
     )
     return StandardResponse(data=Token(access_token=access_token))
 

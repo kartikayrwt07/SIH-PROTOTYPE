@@ -23,6 +23,9 @@ import {
   TriageSuggestion,
   TriageApplyRequest,
   TriageApplyResponse,
+  MagicAnalysisResult,
+  MagicIngestRequest,
+  MagicIngestResponse,
 } from "../types";
 
 const API_BASE = "/api/v1";
@@ -36,18 +39,22 @@ export interface UserProfileResponse extends UserSummary {
 class ApiService {
   private async request<T>(endpoint: string, options?: RequestInit): Promise<T> {
     try {
-      const activeRole = localStorage.getItem("aicte_demo_role") || "SUPERVISOR";
+      const token = localStorage.getItem("aicte_token");
       const headers: Record<string, string> = {
         "Content-Type": "application/json",
-        "X-Demo-Role": activeRole,
+        "Cache-Control": "no-cache, no-store, must-revalidate",
+        "Pragma": "no-cache",
       };
 
-      const token = localStorage.getItem("aicte_token");
       if (token) {
         headers["Authorization"] = `Bearer ${token}`;
+      } else {
+        const activeRole = localStorage.getItem("aicte_demo_role") || "SUPERVISOR";
+        headers["X-Demo-Role"] = activeRole;
       }
 
       const response = await fetch(`${API_BASE}${endpoint}`, {
+        cache: "no-store",
         headers: {
           ...headers,
           ...options?.headers,
@@ -72,10 +79,30 @@ class ApiService {
     return this.request("/health");
   }
 
-  async getCurrentUser(roleOverride?: UserRole): Promise<StandardResponse<UserProfileResponse>> {
+  async login(credentials: { email: string; password: string }): Promise<StandardResponse<{ access_token: string; token_type: string }>> {
+    return this.request("/auth/login", {
+      method: "POST",
+      body: JSON.stringify(credentials),
+    });
+  }
+
+  async register(payload: {
+    full_name: string;
+    email: string;
+    password: string;
+    role?: UserRole;
+    bureau_id?: string;
+  }): Promise<StandardResponse<{ access_token: string; token_type: string }>> {
+    return this.request("/auth/register", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  }
+
+  async getCurrentUser(tokenOverride?: string): Promise<StandardResponse<UserProfileResponse>> {
     const headers: Record<string, string> = {};
-    if (roleOverride) {
-      headers["X-Demo-Role"] = roleOverride;
+    if (tokenOverride) {
+      headers["Authorization"] = `Bearer ${tokenOverride}`;
     }
     return this.request("/auth/me", { headers });
   }
@@ -209,38 +236,54 @@ class ApiService {
     });
   }
 
-  async exportCasesCsv(params?: CaseFilterParams): Promise<Blob | null> {
-    try {
+  async exportCasesCsv(params?: CaseFilterParams): Promise<{ blob: Blob; filename: string }> {
+    const token = localStorage.getItem("aicte_token");
+    const headers: Record<string, string> = {};
+    if (token) {
+      headers["Authorization"] = `Bearer ${token}`;
+    } else {
       const activeRole = localStorage.getItem("aicte_demo_role") || "SUPERVISOR";
-      const headers: Record<string, string> = {
-        "X-Demo-Role": activeRole,
-      };
-      const token = localStorage.getItem("aicte_token");
-      if (token) {
-        headers["Authorization"] = `Bearer ${token}`;
-      }
-
-      const query = new URLSearchParams();
-      if (params) {
-        Object.entries(params).forEach(([key, val]) => {
-          if (val !== undefined && val !== null && val !== "" && key !== "page" && key !== "page_size") {
-            query.append(key, String(val));
-          }
-        });
-      }
-      const qs = query.toString() ? `?${query.toString()}` : "";
-
-      const response = await fetch(`${API_BASE}/cases/export/csv${qs}`, {
-        headers,
-      });
-
-      if (!response.ok) {
-        return null;
-      }
-      return await response.blob();
-    } catch {
-      return null;
+      headers["X-Demo-Role"] = activeRole;
     }
+
+    const query = new URLSearchParams();
+    if (params) {
+      Object.entries(params).forEach(([key, val]) => {
+        if (val !== undefined && val !== null && val !== "" && key !== "page" && key !== "page_size") {
+          query.append(key, String(val));
+        }
+      });
+    }
+    const qs = query.toString() ? `?${query.toString()}` : "";
+
+    const response = await fetch(`${API_BASE}/cases/export/csv${qs}`, {
+      headers,
+    });
+
+    if (!response.ok) {
+      let errorMsg = `Export failed with status ${response.status}`;
+      try {
+        const errData = await response.json();
+        if (errData?.error?.message) {
+          errorMsg = errData.error.message;
+        }
+      } catch {
+        // Response wasn't JSON
+      }
+      throw new Error(errorMsg);
+    }
+
+    let filename = `aicte_complaints_${new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19)}.csv`;
+    const disposition = response.headers.get("content-disposition");
+    if (disposition && disposition.includes("filename=")) {
+      const match = disposition.match(/filename=["']?([^"';]+)["']?/);
+      if (match && match[1]) {
+        filename = match[1].trim();
+      }
+    }
+
+    const blob = await response.blob();
+    return { blob, filename };
   }
 
   // -------------------------------------------------------------
@@ -254,7 +297,7 @@ class ApiService {
     });
   }
 
-  async getCaseDuplicates(caseRef: string, threshold: number = 0.35): Promise<StandardResponse<DuplicateCheckResponse>> {
+  async getCaseDuplicates(caseRef: string, threshold: number = 0.70): Promise<StandardResponse<DuplicateCheckResponse>> {
     return this.request(`/ai/duplicates/${caseRef}?threshold=${threshold}`);
   }
 
@@ -319,6 +362,24 @@ class ApiService {
     otp_code: string;
   }): Promise<StandardResponse<{ verification_token: string; masked_identifier: string; full_name: string; complainant_type: string; verification_method: string }>> {
     return this.request("/identity/otp/verify", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  }
+
+  // -------------------------------------------------------------
+  // Magic Zero-Shot Grievance Ingestion
+  // -------------------------------------------------------------
+
+  async magicAnalyze(payload: MagicIngestRequest): Promise<StandardResponse<MagicAnalysisResult>> {
+    return this.request("/cases/magic-analyze", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  }
+
+  async magicIngest(payload: MagicIngestRequest): Promise<StandardResponse<MagicIngestResponse>> {
+    return this.request("/cases/magic-ingest", {
       method: "POST",
       body: JSON.stringify(payload),
     });

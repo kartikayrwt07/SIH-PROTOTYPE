@@ -20,6 +20,14 @@ class LoginRequest(BaseModel):
     password: str
 
 
+class RegisterRequest(BaseModel):
+    full_name: str
+    email: str
+    password: str
+    role: UserRole = UserRole.OFFICER
+    bureau_id: Optional[str] = None
+
+
 class AuthUserResponse(BaseModel):
     id: str
     email: str

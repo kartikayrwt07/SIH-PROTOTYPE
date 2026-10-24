@@ -12,6 +12,8 @@ import {
   Download,
   FileUp,
   Loader2,
+  CheckCircle2,
+  Wand2,
 } from "lucide-react";
 import { ComplaintCase, Bureau, CaseStatus, CasePriority } from "../../types";
 import { api } from "../../services/api";
@@ -21,9 +23,10 @@ import { CsvIngestionModal } from "../ingest/CsvIngestionModal";
 interface CaseRegisterProps {
   onSelectCase: (caseRef: string) => void;
   initialBureauFilter?: string;
+  onOpenMagicIntake?: () => void;
 }
 
-export const CaseRegister: React.FC<CaseRegisterProps> = ({ onSelectCase, initialBureauFilter }) => {
+export const CaseRegister: React.FC<CaseRegisterProps> = ({ onSelectCase, initialBureauFilter, onOpenMagicIntake }) => {
   const [cases, setCases] = useState<ComplaintCase[]>([]);
   const [bureaus, setBureaus] = useState<Bureau[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -33,6 +36,7 @@ export const CaseRegister: React.FC<CaseRegisterProps> = ({ onSelectCase, initia
   const [isImportModalOpen, setIsImportModalOpen] = useState<boolean>(false);
   const [isExporting, setIsExporting] = useState<boolean>(false);
   const [exportError, setExportError] = useState<string | null>(null);
+  const [exportSuccess, setExportSuccess] = useState<string | null>(null);
 
   // Filter & Search states
   const [search, setSearch] = useState<string>("");
@@ -116,13 +120,26 @@ export const CaseRegister: React.FC<CaseRegisterProps> = ({ onSelectCase, initia
   const handleExportCsv = async () => {
     setIsExporting(true);
     setExportError(null);
+    setExportSuccess(null);
     try {
-      await api.exportCasesCsv({
+      const { blob, filename } = await api.exportCasesCsv({
         search: search.trim() || undefined,
         status: statusFilter || undefined,
         priority: priorityFilter || undefined,
         bureau_id: bureauFilter || undefined,
       });
+
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = downloadUrl;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(downloadUrl);
+
+      setExportSuccess(`Successfully downloaded ${filename}`);
+      setTimeout(() => setExportSuccess(null), 4000);
     } catch (err) {
       setExportError(err instanceof Error ? err.message : "Failed to export CSV");
     } finally {
@@ -311,6 +328,31 @@ export const CaseRegister: React.FC<CaseRegisterProps> = ({ onSelectCase, initia
             <RotateCcw size={16} />
           </button>
 
+          {/* Magic AI Intake */}
+          {onOpenMagicIntake && (
+            <button
+              type="button"
+              className="btn btn-primary"
+              onClick={onOpenMagicIntake}
+              title="Launch Zero-Shot Magic AI Grievance Intake"
+              style={{
+                padding: "0.5rem 0.95rem",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "0.45rem",
+                background: "linear-gradient(135deg, var(--accent-saffron) 0%, #EA580C 100%)",
+                color: "#FFFFFF",
+                fontWeight: 700,
+                boxShadow: "0 2px 10px rgba(249, 115, 22, 0.35)",
+                border: "none",
+                cursor: "pointer",
+              }}
+            >
+              <Wand2 size={16} />
+              <span>Magic AI Intake</span>
+            </button>
+          )}
+
           {/* Import CSV Batch (Phase 7) */}
           <button
             className="btn btn-secondary"
@@ -367,6 +409,25 @@ export const CaseRegister: React.FC<CaseRegisterProps> = ({ onSelectCase, initia
         >
           <AlertCircle size={16} />
           <span>{exportError}</span>
+        </div>
+      )}
+
+      {exportSuccess && (
+        <div
+          style={{
+            padding: "0.75rem 1rem",
+            background: "rgba(16, 185, 129, 0.15)",
+            color: "#10b981",
+            borderRadius: "6px",
+            border: "1px solid rgba(16, 185, 129, 0.3)",
+            display: "flex",
+            alignItems: "center",
+            gap: "0.5rem",
+            fontSize: "0.85rem",
+          }}
+        >
+          <CheckCircle2 size={16} />
+          <span>{exportSuccess}</span>
         </div>
       )}
 

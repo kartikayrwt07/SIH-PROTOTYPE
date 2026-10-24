@@ -107,3 +107,55 @@ def test_auditor_confidential_description_sanitization():
     # Officer view keeps confidential details for permitted investigation
     officer_view = sanitize_case_for_role(raw_case, UserRole.OFFICER)
     assert officer_view["description_confidential"] is not None
+
+
+def test_auth_login_endpoint():
+    """Verify standard email/password authentication endpoint."""
+    response = client.post(
+        "/api/v1/auth/login",
+        json={"email": "admin@aicte-demo.gov.in", "password": "Admin@123"}
+    )
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["success"] is True
+    assert "access_token" in payload["data"]
+
+    # Invalid password check
+    bad_res = client.post(
+        "/api/v1/auth/login",
+        json={"email": "admin@aicte-demo.gov.in", "password": "WrongPassword!999"}
+    )
+    assert bad_res.status_code == 401
+
+
+def test_auth_register_endpoint():
+    """Verify new user registration flow."""
+    import time
+    unique_email = f"officer_new_{int(time.time() * 1000)}@aicte-test.gov.in"
+    response = client.post(
+        "/api/v1/auth/register",
+        json={
+            "full_name": "Test Registration Officer",
+            "email": unique_email,
+            "password": "SecurePassword@123",
+            "role": "OFFICER"
+        }
+    )
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["success"] is True
+    assert "access_token" in payload["data"]
+
+    # Verify duplicate email prevention
+    dup_res = client.post(
+        "/api/v1/auth/register",
+        json={
+            "full_name": "Duplicate Officer",
+            "email": unique_email,
+            "password": "SecurePassword@123",
+            "role": "OFFICER"
+        }
+    )
+    assert dup_res.status_code == 400
+    assert "already registered" in dup_res.json()["detail"].lower()
+

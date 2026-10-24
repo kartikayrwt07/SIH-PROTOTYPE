@@ -81,7 +81,7 @@ export const ExecutiveDashboard: React.FC<ExecutiveDashboardProps> = ({
     } finally {
       setIsLoading(false);
     }
-  }, [selectedBureauId]);
+  }, [selectedBureauId, currentUser?.id, currentRole]);
 
   useEffect(() => {
     loadDashboardData();
@@ -385,37 +385,83 @@ export const ExecutiveDashboard: React.FC<ExecutiveDashboardProps> = ({
         {bottlenecks?.primary_bottleneck_stage && (
           <div
             style={{
-              background: "rgba(249, 115, 22, 0.1)",
-              border: "1px solid rgba(249, 115, 22, 0.3)",
+              background: "rgba(249, 115, 22, 0.08)",
+              border: "1px solid rgba(249, 115, 22, 0.28)",
               borderRadius: "8px",
-              padding: "0.75rem 1rem",
+              padding: "0.85rem 1.15rem",
               marginBottom: "1.25rem",
               display: "flex",
               alignItems: "center",
               justifyContent: "space-between",
               flexWrap: "wrap",
-              gap: "0.75rem",
+              gap: "0.85rem",
             }}
           >
-            <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
-              <AlertTriangle size={18} color="var(--accent-saffron)" />
-              <span style={{ fontSize: "0.85rem", color: "#FFFFFF" }}>
-                <strong>Operational Advisory:</strong> Cases dwell longest in the{" "}
-                <span style={{ color: "var(--accent-saffron)", fontWeight: 700 }}>
-                  '{bottlenecks.primary_bottleneck_stage}'
-                </span>{" "}
-                stage. Bureau reviews and committee endorsements represent the primary turnaround constraint.
-              </span>
+            <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", flex: "1 1 520px" }}>
+              <div
+                style={{
+                  width: "32px",
+                  height: "32px",
+                  borderRadius: "6px",
+                  background: "rgba(249, 115, 22, 0.15)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  flexShrink: 0,
+                }}
+              >
+                <AlertTriangle size={18} color="var(--accent-saffron)" />
+              </div>
+              <div>
+                <div
+                  style={{
+                    fontSize: "0.72rem",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.06em",
+                    color: "var(--accent-saffron)",
+                    fontWeight: 700,
+                  }}
+                >
+                  Operational Advisory
+                </div>
+                <div style={{ fontSize: "0.85rem", color: "#F3F4F6", marginTop: "0.15rem", lineHeight: 1.45 }}>
+                  Cases dwell longest in the{" "}
+                  <span style={{ color: "var(--accent-saffron)", fontWeight: 700 }}>
+                    '{bottlenecks.primary_bottleneck_stage}'
+                  </span>{" "}
+                  stage.{" "}
+                  <span style={{ color: "var(--text-secondary)" }}>
+                    {bottlenecks.operational_advisory ||
+                      "Active investigation and committee endorsements represent the primary turnaround constraint."}
+                  </span>
+                </div>
+              </div>
             </div>
-            <span
+            <div
               style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "0.45rem",
+                padding: "0.35rem 0.85rem",
+                borderRadius: "9999px",
+                background: "rgba(249, 115, 22, 0.12)",
+                border: "1px solid rgba(249, 115, 22, 0.3)",
                 fontSize: "0.75rem",
-                color: "var(--text-secondary)",
-                fontFamily: "var(--font-mono)",
+                fontWeight: 600,
+                color: "#FDBA74",
               }}
             >
-              System Health: {bottlenecks.system_health_status.toUpperCase()}
-            </span>
+              <span
+                style={{
+                  width: "6px",
+                  height: "6px",
+                  borderRadius: "50%",
+                  background: "#F97316",
+                  boxShadow: "0 0 6px #F97316",
+                }}
+              />
+              <span>{bottlenecks.system_health_status}</span>
+            </div>
           </div>
         )}
 
