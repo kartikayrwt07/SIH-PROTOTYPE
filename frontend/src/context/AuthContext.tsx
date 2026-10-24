@@ -27,31 +27,34 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
   const fetchProfile = async (currentToken: string | null) => {
+    if (!currentToken) {
+      setCurrentUser(null);
+      setPermissions([]);
+      setIsLoading(false);
+      return;
+    }
     setIsLoading(true);
     try {
-      if (!currentToken) {
-        setCurrentUser(null);
-        setPermissions([]);
-        setIsLoading(false);
-        return;
-      }
-      const res = await api.getCurrentUser();
+      const res = await api.getCurrentUser(currentToken);
       if (res.success && res.data) {
         setCurrentUser(res.data);
         setCurrentRole(res.data.role);
         localStorage.setItem("aicte_demo_role", res.data.role);
         setPermissions(res.data.permissions || []);
       } else {
-        // Token expired or invalid
         localStorage.removeItem("aicte_token");
+        localStorage.removeItem("aicte_demo_role");
         setToken(null);
         setCurrentUser(null);
+        setPermissions([]);
       }
     } catch (e) {
       console.error("Failed to load user profile", e);
       localStorage.removeItem("aicte_token");
+      localStorage.removeItem("aicte_demo_role");
       setToken(null);
       setCurrentUser(null);
+      setPermissions([]);
     } finally {
       setIsLoading(false);
     }
@@ -62,38 +65,61 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [token]);
 
   const login = async (email: string, password: string) => {
+    setIsLoading(true);
     const res = await api.login({ email, password });
     if (res.success && res.data?.access_token) {
       const accessToken = res.data.access_token;
-      localStorage.setItem("aicte_token", accessToken);
-      setToken(accessToken);
-
-      // Fetch fresh profile with new token
       try {
-        const profileRes = await api.getCurrentUser();
+        const profileRes = await api.getCurrentUser(accessToken);
         if (profileRes.success && profileRes.data) {
+          localStorage.setItem("aicte_token", accessToken);
+          localStorage.setItem("aicte_demo_role", profileRes.data.role);
           setCurrentUser(profileRes.data);
           setCurrentRole(profileRes.data.role);
           setPermissions(profileRes.data.permissions || []);
+          setToken(accessToken);
+          setIsLoading(false);
+          return { success: true };
         }
       } catch (err) {
         console.error("Failed loading user profile post-login", err);
       }
-      return { success: true };
     }
+    setIsLoading(false);
     return { success: false, error: res.error };
   };
 
   const logout = () => {
     localStorage.removeItem("aicte_token");
+    localStorage.removeItem("aicte_demo_role");
+    sessionStorage.clear();
     setToken(null);
     setCurrentUser(null);
+    setCurrentRole("SUPERVISOR");
     setPermissions([]);
   };
 
-  const switchRole = (newRole: UserRole) => {
-    localStorage.setItem("aicte_demo_role", newRole);
-    setCurrentRole(newRole);
+  const switchRole = async (newRole: UserRole) => {
+    setIsLoading(true);
+    try {
+      const res = await api.switchDemoRole(newRole);
+      if (res.success && res.data?.token) {
+        const newToken = res.data.token;
+        const profileRes = await api.getCurrentUser(newToken);
+        if (profileRes.success && profileRes.data) {
+          localStorage.setItem("aicte_token", newToken);
+          localStorage.setItem("aicte_demo_role", profileRes.data.role);
+          setCurrentUser(profileRes.data);
+          setCurrentRole(profileRes.data.role);
+          setPermissions(profileRes.data.permissions || []);
+          setToken(newToken);
+        }
+      }
+    } catch (err) {
+      console.error("Role switch failed", err);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const hasPermission = (permission: string) => {

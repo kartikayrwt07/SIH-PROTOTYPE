@@ -31,11 +31,24 @@ export const LoginPage: React.FC<LoginModalProps> = () => {
     }
   };
 
-  const fillQuickCredential = (quickEmail: string) => {
+  const handleQuickLogin = async (quickEmail: string) => {
     setEmail(quickEmail);
     setPassword("Admin@123");
     setError(null);
+    setIsLoading(true);
+
+    try {
+      const res = await login(quickEmail, "Admin@123");
+      if (!res.success) {
+        setError(res.error?.message || "Invalid credentials. Please verify your official AICTE email and password.");
+      }
+    } catch (err: any) {
+      setError(err?.message || "Authentication service failed. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
   };
+
 
   return (
     <div
@@ -212,24 +225,40 @@ export const LoginPage: React.FC<LoginModalProps> = () => {
 
         {/* Quick Accounts selector */}
         <div style={{ marginTop: "2rem", borderTop: "1px solid var(--border-subtle)", paddingTop: "1.25rem" }}>
-          <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", marginBottom: "0.75rem", textTransform: "uppercase", letterSpacing: "0.05em", fontWeight: 700 }}>
-            Standard AICTE Officer Accounts (Password: <code>Admin@123</code>):
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.75rem" }}>
+            <span style={{ fontSize: "0.75rem", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.05em", fontWeight: 700 }}>
+              Standard AICTE Officer Accounts:
+            </span>
+            <span style={{ fontSize: "0.7rem", color: "var(--accent-saffron-light)" }}>
+              One-click instant login
+            </span>
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.5rem" }}>
             <button
               type="button"
-              onClick={() => fillQuickCredential("admin@aicte-demo.gov.in")}
+              disabled={isLoading}
+              onClick={() => handleQuickLogin("admin@aicte-demo.gov.in")}
+              title="One-click login as Platform Admin"
               style={{
                 background: "rgba(255, 255, 255, 0.03)",
                 border: "1px solid var(--border-subtle)",
                 borderRadius: "6px",
-                padding: "0.45rem 0.6rem",
+                padding: "0.55rem 0.65rem",
                 color: "var(--text-secondary)",
                 fontSize: "0.75rem",
                 textAlign: "left",
-                cursor: "pointer",
+                cursor: isLoading ? "not-allowed" : "pointer",
                 display: "flex",
                 flexDirection: "column",
+                transition: "all 0.15s ease",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.borderColor = "var(--accent-saffron)";
+                e.currentTarget.style.background = "rgba(249, 115, 22, 0.08)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.borderColor = "var(--border-subtle)";
+                e.currentTarget.style.background = "rgba(255, 255, 255, 0.03)";
               }}
             >
               <strong style={{ color: "var(--accent-saffron)" }}>Platform Admin</strong>
@@ -237,18 +266,29 @@ export const LoginPage: React.FC<LoginModalProps> = () => {
             </button>
             <button
               type="button"
-              onClick={() => fillQuickCredential("supervisor@aicte-demo.gov.in")}
+              disabled={isLoading}
+              onClick={() => handleQuickLogin("supervisor@aicte-demo.gov.in")}
+              title="One-click login as Central Supervisor"
               style={{
                 background: "rgba(255, 255, 255, 0.03)",
                 border: "1px solid var(--border-subtle)",
                 borderRadius: "6px",
-                padding: "0.45rem 0.6rem",
+                padding: "0.55rem 0.65rem",
                 color: "var(--text-secondary)",
                 fontSize: "0.75rem",
                 textAlign: "left",
-                cursor: "pointer",
+                cursor: isLoading ? "not-allowed" : "pointer",
                 display: "flex",
                 flexDirection: "column",
+                transition: "all 0.15s ease",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.borderColor = "var(--accent-aicte-blue)";
+                e.currentTarget.style.background = "rgba(37, 99, 235, 0.08)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.borderColor = "var(--border-subtle)";
+                e.currentTarget.style.background = "rgba(255, 255, 255, 0.03)";
               }}
             >
               <strong style={{ color: "var(--accent-aicte-blue)" }}>Central Supervisor</strong>
@@ -256,18 +296,29 @@ export const LoginPage: React.FC<LoginModalProps> = () => {
             </button>
             <button
               type="button"
-              onClick={() => fillQuickCredential("officer.appr@aicte-demo.gov.in")}
+              disabled={isLoading}
+              onClick={() => handleQuickLogin("officer.appr@aicte-demo.gov.in")}
+              title="One-click login as Approval Officer"
               style={{
                 background: "rgba(255, 255, 255, 0.03)",
                 border: "1px solid var(--border-subtle)",
                 borderRadius: "6px",
-                padding: "0.45rem 0.6rem",
+                padding: "0.55rem 0.65rem",
                 color: "var(--text-secondary)",
                 fontSize: "0.75rem",
                 textAlign: "left",
-                cursor: "pointer",
+                cursor: isLoading ? "not-allowed" : "pointer",
                 display: "flex",
                 flexDirection: "column",
+                transition: "all 0.15s ease",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.borderColor = "var(--status-assigned)";
+                e.currentTarget.style.background = "rgba(6, 182, 212, 0.08)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.borderColor = "var(--border-subtle)";
+                e.currentTarget.style.background = "rgba(255, 255, 255, 0.03)";
               }}
             >
               <strong style={{ color: "var(--status-assigned)" }}>Approval Officer</strong>
@@ -275,18 +326,29 @@ export const LoginPage: React.FC<LoginModalProps> = () => {
             </button>
             <button
               type="button"
-              onClick={() => fillQuickCredential("auditor@aicte-demo.gov.in")}
+              disabled={isLoading}
+              onClick={() => handleQuickLogin("auditor@aicte-demo.gov.in")}
+              title="One-click login as Read-Only Auditor"
               style={{
                 background: "rgba(255, 255, 255, 0.03)",
                 border: "1px solid var(--border-subtle)",
                 borderRadius: "6px",
-                padding: "0.45rem 0.6rem",
+                padding: "0.55rem 0.65rem",
                 color: "var(--text-secondary)",
                 fontSize: "0.75rem",
                 textAlign: "left",
-                cursor: "pointer",
+                cursor: isLoading ? "not-allowed" : "pointer",
                 display: "flex",
                 flexDirection: "column",
+                transition: "all 0.15s ease",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.borderColor = "#94A3B8";
+                e.currentTarget.style.background = "rgba(148, 163, 184, 0.08)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.borderColor = "var(--border-subtle)";
+                e.currentTarget.style.background = "rgba(255, 255, 255, 0.03)";
               }}
             >
               <strong style={{ color: "var(--text-primary)" }}>Read-Only Auditor</strong>

@@ -35,6 +35,13 @@ export const RoleBanner: React.FC = () => {
           color: "var(--text-secondary)",
           icon: AlertCircle,
         };
+      default:
+        return {
+          label: "Authenticated Officer",
+          desc: "AICTE Portal Role-Enforced Session",
+          color: "var(--accent-aicte-blue)",
+          icon: CheckCircle2,
+        };
     }
   };
 

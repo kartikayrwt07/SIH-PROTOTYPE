@@ -65,7 +65,7 @@ export const AppContent: React.FC = () => {
       }
     };
     fetchHealthAndCases();
-  }, [currentRole]);
+  }, [currentRole, currentUser?.id]);
 
   // Load selected case detail & timeline in simulator
   useEffect(() => {
@@ -549,7 +549,7 @@ export const AppContent: React.FC = () => {
 import { LoginPage } from "./components/auth/LoginPage";
 
 export const App: React.FC = () => {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, currentUser } = useAuth();
 
   if (isLoading) {
     return (
@@ -574,5 +574,5 @@ export const App: React.FC = () => {
     return <LoginPage />;
   }
 
-  return <AppContent />;
+  return <AppContent key={currentUser?.id || "unauthenticated"} />;
 };

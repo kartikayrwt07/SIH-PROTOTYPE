@@ -81,7 +81,7 @@ export const ExecutiveDashboard: React.FC<ExecutiveDashboardProps> = ({
     } finally {
       setIsLoading(false);
     }
-  }, [selectedBureauId]);
+  }, [selectedBureauId, currentUser?.id, currentRole]);
 
   useEffect(() => {
     loadDashboardData();

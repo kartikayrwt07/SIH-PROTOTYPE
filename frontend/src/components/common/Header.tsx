@@ -1,5 +1,5 @@
 import React from "react";
-import { ShieldCheck, LogOut } from "lucide-react";
+import { ShieldCheck, LogOut, UserCheck } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 
 interface HeaderProps {
@@ -7,7 +7,7 @@ interface HeaderProps {
 }
 
 export const Header: React.FC<HeaderProps> = ({ serviceStatus }) => {
-  const { currentUser, logout } = useAuth();
+  const { currentUser, currentRole, switchRole, logout } = useAuth();
 
   return (
     <header className="top-header">
@@ -73,6 +73,45 @@ export const Header: React.FC<HeaderProps> = ({ serviceStatus }) => {
             </div>
           </div>
         )}
+
+        {/* Quick Role Switcher for Evaluation */}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "0.4rem",
+            background: "rgba(18, 28, 56, 0.8)",
+            border: "1px solid var(--border-subtle)",
+            padding: "0.25rem 0.6rem",
+            borderRadius: "8px",
+            fontSize: "0.8rem",
+          }}
+        >
+          <UserCheck size={14} color="var(--accent-saffron)" />
+          <label htmlFor="quick-role-select" style={{ color: "var(--text-muted)", fontSize: "0.75rem", fontWeight: 600 }}>
+            Switch:
+          </label>
+          <select
+            id="quick-role-select"
+            className="role-select"
+            value={currentRole}
+            onChange={(e) => switchRole(e.target.value as any)}
+            style={{
+              background: "transparent",
+              border: "none",
+              color: "var(--text-primary)",
+              fontSize: "0.78rem",
+              fontWeight: 600,
+              padding: "0.15rem 0.3rem",
+              cursor: "pointer",
+            }}
+          >
+            <option value="ADMIN">Platform Admin</option>
+            <option value="SUPERVISOR">Central Supervisor</option>
+            <option value="OFFICER">Approval Officer</option>
+            <option value="AUDITOR">Read-Only Auditor</option>
+          </select>
+        </div>
 
         {/* Real Logout Action */}
         <button

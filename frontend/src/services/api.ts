@@ -39,6 +39,8 @@ class ApiService {
       const token = localStorage.getItem("aicte_token");
       const headers: Record<string, string> = {
         "Content-Type": "application/json",
+        "Cache-Control": "no-cache, no-store, must-revalidate",
+        "Pragma": "no-cache",
       };
 
       if (token) {
@@ -49,6 +51,7 @@ class ApiService {
       }
 
       const response = await fetch(`${API_BASE}${endpoint}`, {
+        cache: "no-store",
         headers: {
           ...headers,
           ...options?.headers,
@@ -80,10 +83,10 @@ class ApiService {
     });
   }
 
-  async getCurrentUser(roleOverride?: UserRole): Promise<StandardResponse<UserProfileResponse>> {
+  async getCurrentUser(tokenOverride?: string): Promise<StandardResponse<UserProfileResponse>> {
     const headers: Record<string, string> = {};
-    if (roleOverride) {
-      headers["X-Demo-Role"] = roleOverride;
+    if (tokenOverride) {
+      headers["Authorization"] = `Bearer ${tokenOverride}`;
     }
     return this.request("/auth/me", { headers });
   }
