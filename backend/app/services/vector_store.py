@@ -23,7 +23,9 @@ from typing import Dict, List, Optional, Tuple, Any
 
 import numpy as np
 from sqlalchemy.orm import Session
-from fastembed import TextEmbedding
+
+# Lazy import TextEmbedding to avoid loading onnxruntime into RAM at module import time
+TextEmbedding = Any
 
 from backend.app.core.database import SessionLocal, engine
 from backend.app.models.case import ComplaintCase
@@ -100,10 +102,11 @@ class PersistentVectorStore:
                     cls._instance = cls()
         return cls._instance
 
-    def _get_model(self) -> TextEmbedding:
+    def _get_model(self) -> Any:
         """Lazy loader for ONNX TextEmbedding model with single-thread limit for low-memory cloud tiers."""
         if self.embedding_model is None:
-            self.embedding_model = TextEmbedding(model_name=self.model_name, threads=1)
+            from fastembed import TextEmbedding as _TextEmbedding
+            self.embedding_model = _TextEmbedding(model_name=self.model_name, threads=1)
         return self.embedding_model
 
     def _normalize(self, vectors: np.ndarray) -> np.ndarray:
