@@ -50,3 +50,4 @@ class BottleneckAnalysis(BaseModel):
     stages: List[StageDwellTimeStat]
     primary_bottleneck_stage: Optional[str] = None
     system_health_status: str
+    operational_advisory: Optional[str] = None

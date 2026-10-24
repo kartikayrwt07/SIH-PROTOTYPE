@@ -189,6 +189,7 @@ export interface BottleneckAnalysis {
   stages: StageDwellTimeStat[];
   primary_bottleneck_stage?: string | null;
   system_health_status: string;
+  operational_advisory?: string | null;
 }
 
 export type SlaRiskLevel = "ON_TRACK" | "APPROACHING" | "OVERDUE" | "COMPLETED";
