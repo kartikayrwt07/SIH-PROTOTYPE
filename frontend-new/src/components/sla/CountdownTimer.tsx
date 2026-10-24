@@ -54,8 +54,8 @@ export function CountdownTimer({ dueDate, className }: CountdownTimerProps) {
       className={cn(
         "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium tabular-nums border",
         isUrgent
-          ? "bg-amber-100/80 border-amber-300 text-amber-900 font-semibold"
-          : "bg-amber-50 border-amber-200 text-amber-800",
+          ? "bg-amber-100/80 dark:bg-amber-950/40 border-amber-300 dark:border-amber-800/50 text-amber-900 dark:text-amber-300 font-semibold"
+          : "bg-amber-50 dark:bg-amber-950/25 border-amber-200 dark:border-amber-900/40 text-amber-800 dark:text-amber-300",
         className,
       )}
       title={`Target due date: ${new Date(dueDate).toLocaleString("en-IN")}`}

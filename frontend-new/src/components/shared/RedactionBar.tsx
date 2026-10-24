@@ -27,7 +27,7 @@ export function RedactionBar({ className, lines = 3 }: RedactionBarProps) {
           <div
             key={i}
             className={cn(
-              "h-3 bg-ink rounded-[1px]",
+              "h-3 bg-[#2E2838] dark:bg-[#1C142A] dark:border dark:border-[#2D1F47] rounded-[1px]",
               i === lines - 1 ? "w-2/3" : "w-full",
             )}
           />

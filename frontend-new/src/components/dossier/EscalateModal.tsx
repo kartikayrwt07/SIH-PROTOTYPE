@@ -128,7 +128,7 @@ export function EscalateModal({
               type="submit"
               size="sm"
               disabled={mutation.isPending || isMaxTier}
-              className="h-8 text-xs font-medium bg-[var(--sla-overdue-text)] text-white hover:bg-[var(--sla-overdue-text)]/90 rounded-[6px]"
+              className="h-8 text-xs font-medium bg-[#DC2626] dark:bg-[#E11D48] text-white hover:bg-[#B91C1C] dark:hover:bg-[#BE123C] rounded-[6px]"
             >
               {mutation.isPending ? "Escalating..." : "Escalate case"}
             </Button>

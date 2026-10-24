@@ -205,7 +205,7 @@ export function Step2Review({ preview, onNext, onBack }: Step2ReviewProps) {
                   <tr
                     key={row.row_number}
                     className={`transition-colors ${
-                      row.is_valid ? "hover:bg-muted/30" : "bg-red-50/20 hover:bg-red-50/30"
+                      row.is_valid ? "hover:bg-muted/30" : "bg-red-50/20 dark:bg-rose-950/20 hover:bg-red-50/30 dark:hover:bg-rose-950/30"
                     }`}
                   >
                     {/* Row Number */}
@@ -216,7 +216,7 @@ export function Step2Review({ preview, onNext, onBack }: Step2ReviewProps) {
                     {/* Status Badge */}
                     <td className="py-3 px-4">
                       {row.is_valid ? (
-                        <Badge className="bg-emerald-100 text-emerald-900 border-emerald-300 text-[10px] uppercase font-bold py-0 px-1.5 hover:bg-emerald-100">
+                        <Badge className="bg-emerald-100 dark:bg-emerald-950/40 text-emerald-900 dark:text-emerald-300 border-emerald-300 dark:border-emerald-800/50 text-[10px] uppercase font-bold py-0 px-1.5 hover:bg-emerald-100">
                           <CheckCircle2 className="h-3 w-3 mr-1 text-emerald-600" />
                           <span>Valid</span>
                         </Badge>
@@ -230,7 +230,7 @@ export function Step2Review({ preview, onNext, onBack }: Step2ReviewProps) {
 
                     {/* AICTE ID */}
                     <td className="py-3 px-4 font-mono text-xs">
-                      <span className={row.is_valid ? "text-foreground font-semibold" : "text-red-600 font-bold"}>
+                      <span className={row.is_valid ? "text-foreground font-semibold" : "text-red-600 dark:text-rose-400 font-bold"}>
                         {row.institution_aicte_id || "MISSING"}
                       </span>
                     </td>
@@ -260,7 +260,7 @@ export function Step2Review({ preview, onNext, onBack }: Step2ReviewProps) {
                     {/* Confidential? */}
                     <td className="py-3 px-4">
                       {row.is_confidential ? (
-                        <Badge variant="outline" className="text-[10px] text-amber-800 bg-amber-50 border-amber-200">
+                        <Badge variant="outline" className="text-[10px] text-amber-800 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/40 border-amber-200 dark:border-amber-800/50">
                           Yes (Lock)
                         </Badge>
                       ) : (
@@ -275,9 +275,9 @@ export function Step2Review({ preview, onNext, onBack }: Step2ReviewProps) {
                           {row.errors.map((err, idx) => (
                             <div
                               key={idx}
-                              className="inline-flex items-center gap-1 text-[11px] font-semibold text-red-700 bg-red-100/90 border border-red-300 px-2 py-0.5 rounded mr-1 mb-1"
+                              className="inline-flex items-center gap-1 text-[11px] font-semibold text-red-700 dark:text-rose-300 bg-red-100/90 dark:bg-rose-950/40 border border-red-300 dark:border-rose-900/50 px-2 py-0.5 rounded mr-1 mb-1"
                             >
-                              <ShieldAlert className="h-3 w-3 shrink-0 text-red-600" />
+                              <ShieldAlert className="h-3 w-3 shrink-0 text-red-600 dark:text-rose-400" />
                               <span>{err.message}</span>
                             </div>
                           ))}

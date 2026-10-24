@@ -66,7 +66,7 @@ export function OverdueTable({
           </div>
         ) : items.length === 0 ? (
           <div className="py-12 px-4 text-center space-y-2">
-            <div className="h-10 w-10 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto">
+            <div className="h-10 w-10 rounded-full bg-emerald-100 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mx-auto">
               <CheckCircle2 className="h-5 w-5" />
             </div>
             <h4 className="text-sm font-semibold text-foreground">Zero Overdue Cases</h4>
@@ -101,7 +101,7 @@ export function OverdueTable({
                   return (
                     <tr
                       key={item.case_reference_id}
-                      className="hover:bg-red-50/20 transition-colors group"
+                      className="hover:bg-red-50/20 dark:hover:bg-rose-950/20 transition-colors group"
                     >
                       {/* Case Ref */}
                       <td className="py-3 px-4 align-top">
@@ -153,7 +153,7 @@ export function OverdueTable({
 
                       {/* Breach Duration */}
                       <td className="py-3 px-4 align-top">
-                        <div className="inline-flex items-center gap-1 text-red-600 font-mono font-bold text-xs bg-red-100/70 border border-red-200 px-2 py-0.5 rounded">
+                        <div className="inline-flex items-center gap-1 text-red-600 dark:text-rose-400 font-mono font-bold text-xs bg-red-100/70 dark:bg-rose-950/40 border border-red-200 dark:border-rose-900/50 px-2 py-0.5 rounded">
                           <span className="h-1.5 w-1.5 rounded-full bg-red-600 animate-pulse" />
                           <span>
                             {hoursOverdue !== null
@@ -170,7 +170,7 @@ export function OverdueTable({
                             Tier 0 (Standard)
                           </Badge>
                         ) : item.escalation_level === 1 ? (
-                          <Badge className="bg-amber-100 text-amber-900 border-amber-300 text-[10px] font-semibold">
+                          <Badge className="bg-amber-100 dark:bg-amber-950/40 text-amber-900 dark:text-amber-300 border-amber-300 dark:border-amber-800/50 text-[10px] font-semibold">
                             Tier 1 (Priority)
                           </Badge>
                         ) : (

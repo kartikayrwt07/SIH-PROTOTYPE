@@ -77,7 +77,7 @@ export function Step3Commit({
                 </div>
 
                 <div className="flex items-center gap-2">
-                  <Badge className="bg-emerald-100 text-emerald-900 border-emerald-300 text-xs font-bold px-2.5 py-1 hover:bg-emerald-100">
+                  <Badge className="bg-emerald-100 dark:bg-emerald-950/40 text-emerald-900 dark:text-emerald-300 border-emerald-300 dark:border-emerald-800/50 text-xs font-bold px-2.5 py-1 hover:bg-emerald-100">
                     {valid_rows} Valid
                   </Badge>
                   {invalid_rows > 0 && (
@@ -155,10 +155,10 @@ export function Step3Commit({
       ) : (
         /* Post-Commit Registered State */
         <Card className="border border-border/60 shadow-none overflow-hidden bg-card">
-          <div className="bg-emerald-50/40 border-b border-emerald-200/80 p-5">
+          <div className="bg-emerald-50/40 dark:bg-emerald-950/20 border-b border-emerald-200/80 dark:border-emerald-900/40 p-5">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
+                <div className="h-10 w-10 rounded-full bg-emerald-100 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 flex items-center justify-center shrink-0">
                   <CheckCircle2 className="h-6 w-6 stroke-[2.5]" />
                 </div>
                 <div>

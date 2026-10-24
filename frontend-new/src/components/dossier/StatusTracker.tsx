@@ -117,7 +117,7 @@ export function StatusTracker({ currentStatus, variant = "banner" }: StatusTrack
       </div>
 
       {isAwaitingInfo && (
-        <div className="px-2.5 py-1.5 text-[11px] rounded bg-amber-50 border border-amber-200 text-amber-900 font-medium">
+        <div className="px-2.5 py-1.5 text-[11px] rounded bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/40 text-amber-900 dark:text-amber-300 font-medium">
           ⚠️ Case in <strong>Awaiting Information</strong> (waiting for complainant response).
         </div>
       )}
@@ -185,7 +185,7 @@ export function StatusTracker({ currentStatus, variant = "banner" }: StatusTrack
                     </span>
                   )}
                   {isCompleted && (
-                    <span className="text-[10px] text-green-700 font-medium">Done</span>
+                    <span className="text-[10px] text-green-700 dark:text-emerald-400 font-medium">Done</span>
                   )}
                 </div>
               </div>

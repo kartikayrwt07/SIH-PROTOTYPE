@@ -55,7 +55,7 @@ export function ApproachingTable({ items, isLoading }: ApproachingTableProps) {
           </div>
         ) : items.length === 0 ? (
           <div className="py-12 px-4 text-center space-y-2">
-            <div className="h-10 w-10 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto">
+            <div className="h-10 w-10 rounded-full bg-emerald-100 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mx-auto">
               <CheckCircle2 className="h-5 w-5" />
             </div>
             <h4 className="text-sm font-semibold text-foreground">No Approaching Breaches</h4>
@@ -82,7 +82,7 @@ export function ApproachingTable({ items, isLoading }: ApproachingTableProps) {
                 {items.map((item) => (
                   <tr
                     key={item.case_reference_id}
-                    className="hover:bg-amber-50/20 transition-colors group"
+                    className="hover:bg-amber-50/20 dark:hover:bg-amber-950/20 transition-colors group"
                   >
                     {/* Case Ref */}
                     <td className="py-3 px-4 align-top">
