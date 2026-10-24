@@ -253,7 +253,7 @@ export function DuplicateCheckTab() {
 
           {matches.length === 0 ? (
             <Card className="border-border p-8 text-center space-y-2">
-              <div className="h-10 w-10 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto">
+              <div className="h-10 w-10 rounded-full bg-[var(--sla-ontrack-bg)] text-[var(--sla-ontrack-text)] flex items-center justify-center mx-auto">
                 <CheckCircle2 className="h-5 w-5" />
               </div>
               <h4 className="text-sm font-semibold">Zero Duplicate Matches Found</h4>
@@ -290,14 +290,14 @@ export function DuplicateCheckTab() {
                           <Badge
                             className={`text-xs font-semibold px-2.5 py-0.5 ${
                               isHigh
-                                ? "bg-red-100 text-red-900 border-red-300 hover:bg-red-100"
+                                ? "bg-[var(--sla-overdue-bg)] text-[var(--sla-overdue-text)] border-[var(--sla-overdue-text)]/30 hover:bg-[var(--sla-overdue-bg)]"
                                 : isModerate
-                                ? "bg-amber-100 text-amber-900 border-amber-300 hover:bg-amber-100"
+                                ? "bg-[var(--sla-approaching-bg)] text-[var(--sla-approaching-text)] border-[var(--sla-approaching-text)]/30 hover:bg-[var(--sla-approaching-bg)]"
                                 : "bg-muted text-foreground border-border hover:bg-muted"
                             }`}
                           >
                             {isHigh ? (
-                              <AlertTriangle className="h-3 w-3 mr-1 text-red-600" />
+                              <AlertTriangle className="h-3 w-3 mr-1 text-[var(--sla-overdue-text)]" />
                             ) : null}
                             <span>{percent}% Match</span>
                           </Badge>

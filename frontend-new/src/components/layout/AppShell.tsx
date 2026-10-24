@@ -68,7 +68,7 @@ export function AppShell() {
 
   return (
     <RoleProvider>
-      <div className="flex h-screen bg-page text-ink overflow-hidden">
+      <div className="flex h-screen bg-gradient-to-br from-[#FCFBFE] via-[#FAF8FD] to-[#F5F2FA] text-ink overflow-hidden">
         {/* Desktop sidebar */}
         <div className="hidden md:flex shrink-0">
           <Sidebar
@@ -83,7 +83,7 @@ export function AppShell() {
             className="fixed inset-0 z-40 md:hidden"
             onClick={() => setMobileOpen(false)}
           >
-            <div className="absolute inset-0 bg-ink/50" />
+            <div className="absolute inset-0 bg-[#1B1233]/25 backdrop-blur-sm" />
             <div
               className="absolute inset-y-0 left-0 z-50 w-60"
               onClick={(e) => e.stopPropagation()}
@@ -95,8 +95,8 @@ export function AppShell() {
 
         {/* Main content area */}
         <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
-          {/* Top bar: white surface with bottom rule */}
-          <header className="flex items-center justify-between h-12 px-6 border-b border-rule bg-surface shrink-0">
+          {/* Top bar: Frosted glass header with subtle ambient glow */}
+          <header className="flex items-center justify-between h-12 px-6 lg:px-8 border-b border-[#ECE6F4] bg-white/75 backdrop-blur-md shadow-[0_1px_12px_rgba(112,82,200,0.02)] shrink-0">
             <div className="flex items-center gap-3">
               {/* Mobile menu button */}
               <Button

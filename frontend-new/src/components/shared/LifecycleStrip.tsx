@@ -124,14 +124,14 @@ export function LifecycleStrip({
               <span
                 className={cn(
                   "h-2 w-2 rounded-full",
-                  isOverdue ? "bg-[var(--sla-overdue-text)]" : "bg-[#1E7B52]",
+                  isOverdue ? "bg-[var(--sla-overdue-text)]" : "bg-[var(--sla-ontrack-text)]",
                 )}
               />
               <span className="font-medium">
                 {isOverdue ? (
                   <span className="text-[var(--sla-overdue-text)] font-semibold">SLA resolution deadline exceeded</span>
                 ) : (
-                  <span className="text-[#1E7B52] font-medium">Within statutory SLA resolution window</span>
+                  <span className="text-[var(--sla-ontrack-text)] font-medium">Within statutory SLA resolution window</span>
                 )}
               </span>
             </div>

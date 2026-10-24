@@ -196,7 +196,7 @@ export function DashboardView() {
           </span>
           <div className="w-24 h-2 bg-[var(--color-page)] border border-[var(--color-rule)] rounded-full overflow-hidden p-[1px]">
             <div
-              className="h-full bg-gradient-to-r from-[var(--color-action)] to-[#8B5CF6] rounded-full transition-all duration-500"
+              className="h-full bg-gradient-to-r from-[var(--color-action)] to-[#8E72D6] rounded-full transition-all duration-500"
               style={{ width: `${b.completionPct}%` }}
             />
           </div>
@@ -206,7 +206,7 @@ export function DashboardView() {
   ];
 
   return (
-    <div className="py-8 px-6 lg:px-8 max-w-7xl mx-auto space-y-10">
+    <div className="py-10 px-6 lg:px-8 max-w-7xl mx-auto space-y-10">
       {/* Header & KPI Summary Sentence */}
       <div className="space-y-4">
         <PageHeader title="Dashboard" />
@@ -214,17 +214,17 @@ export function DashboardView() {
         {isStatsLoading ? (
           <Skeleton className="h-6 w-96 rounded" />
         ) : isStatsError || !stats ? (
-          <div className="flex items-center justify-between p-4 text-xs bg-red-50 text-[var(--sla-overdue-text)] border border-red-200 rounded-[6px]">
+          <div className="flex items-center justify-between p-4 text-xs bg-[var(--sla-overdue-bg)] text-[var(--sla-overdue-text)] border border-[var(--sla-overdue-text)]/20 rounded-[6px]">
             <div className="flex items-center gap-2">
               <AlertCircle className="h-4 w-4" />
               <span>Failed to load summary statistics: {(statsError as Error)?.message || "Unknown error"}</span>
             </div>
-            <Button size="sm" variant="outline" onClick={() => refetchStats()} className="h-7 text-xs border-red-200">
+            <Button size="sm" variant="outline" onClick={() => refetchStats()} className="h-7 text-xs border-[var(--sla-overdue-text)]/30">
               Try again
             </Button>
           </div>
         ) : (
-          <div className="py-3 px-4 bg-surface border border-[var(--color-rule)] rounded-[6px] text-sm text-[var(--color-text-secondary)] flex items-center justify-between">
+          <div className="py-4 px-5 bg-white/80 backdrop-blur-md border border-[#ECE6F4] rounded-[10px] text-sm text-[var(--color-text-secondary)] flex items-center justify-between shadow-[0_4px_20px_rgba(112,82,200,0.03)]">
             <p>
               <span className="font-semibold text-[var(--sla-overdue-text)] tabular-nums">
                 {stats.overdue_cases}

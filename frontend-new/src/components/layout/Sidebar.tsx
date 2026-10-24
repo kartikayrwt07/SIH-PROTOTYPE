@@ -1,7 +1,7 @@
 /**
  * Official Case Register Sidebar
- * Ink background (#12203A), 240px wide, collapsible to 64px icon rail.
- * Wordmark "AICTE Case Monitor" with saffron square mark.
+ * Near-white, soothing frosted glass panel with modern purple accents.
+ * 240px wide, collapsible to 64px icon rail.
  */
 
 import { useState } from "react";
@@ -52,14 +52,14 @@ export function Sidebar({ onClose, collapsed = false, onToggleCollapse }: Sideba
   return (
     <aside
       className={cn(
-        "flex flex-col h-full bg-ink text-white transition-[width] duration-150 select-none",
+        "flex flex-col h-full bg-white/85 backdrop-blur-xl border-r border-[#ECE6F4] text-[var(--color-ink)] transition-[width] duration-200 select-none shadow-[2px_0_24px_rgba(112,82,200,0.03)]",
         collapsed ? "w-16" : "w-60",
       )}
     >
       {/* Brand Wordmark Header */}
       <div
         className={cn(
-          "h-12 border-b border-white/10 flex items-center px-4 shrink-0",
+          "h-12 border-b border-[#ECE6F4]/80 flex items-center px-4 shrink-0 bg-white/40",
           collapsed ? "justify-center" : "justify-between",
         )}
       >
@@ -69,11 +69,14 @@ export function Sidebar({ onClose, collapsed = false, onToggleCollapse }: Sideba
           className="flex items-center gap-2.5 overflow-hidden"
           title="AICTE Case Monitor"
         >
-          {/* Saffron Brand Mark */}
-          <span className="h-2.5 w-2.5 rounded-[1px] bg-saffron shrink-0" aria-hidden="true" />
+          {/* Luminous Purple Brand Mark */}
+          <span
+            className="h-2.5 w-2.5 rounded-[2px] bg-[#7052C8] shrink-0 shadow-[0_0_8px_rgba(112,82,200,0.5)]"
+            aria-hidden="true"
+          />
 
           {!collapsed && (
-            <span className="text-sm font-semibold tracking-tight text-white whitespace-nowrap">
+            <span className="text-sm font-semibold tracking-tight text-[var(--color-ink)] whitespace-nowrap">
               AICTE Case Monitor
             </span>
           )}
@@ -81,7 +84,7 @@ export function Sidebar({ onClose, collapsed = false, onToggleCollapse }: Sideba
       </div>
 
       {/* Nav Links */}
-      <nav className="flex-1 py-3 space-y-0.5 overflow-y-auto overflow-x-hidden">
+      <nav className="flex-1 py-3 px-2 space-y-1 overflow-y-auto overflow-x-hidden">
         {visibleItems.map((item) => {
           const isActive = !!matchRoute({ to: item.to, fuzzy: item.to === "/cases" });
           const Icon = item.icon;
@@ -93,15 +96,20 @@ export function Sidebar({ onClose, collapsed = false, onToggleCollapse }: Sideba
               onClick={onClose}
               title={collapsed ? item.label : undefined}
               className={cn(
-                "relative flex items-center text-sm font-medium transition-none",
-                collapsed ? "justify-center px-0 py-2.5" : "gap-3 px-4 py-2",
+                "relative flex items-center text-xs font-medium rounded-[6px] transition-all duration-150",
+                collapsed ? "justify-center px-0 py-2.5" : "gap-3 px-3 py-2",
                 isActive
-                  ? "text-white bg-white/10 before:absolute before:left-0 before:top-0 before:bottom-0 before:w-[3px] before:bg-saffron"
-                  : "text-white/70 hover:text-white hover:bg-white/5",
+                  ? "text-[#5A38A8] bg-[#7052C8]/10 font-semibold border border-[#7052C8]/15 shadow-[0_2px_8px_rgba(112,82,200,0.06)] before:absolute before:left-0 before:top-1.5 before:bottom-1.5 before:w-[3px] before:rounded-r before:bg-[#7052C8]"
+                  : "text-[var(--color-text-secondary)] hover:text-[var(--color-ink)] hover:bg-[#7052C8]/5 border border-transparent",
               )}
               aria-current={isActive ? "page" : undefined}
             >
-              <Icon className="h-4 w-4 shrink-0" />
+              <Icon
+                className={cn(
+                  "h-4 w-4 shrink-0 transition-colors",
+                  isActive ? "text-[#7052C8]" : "text-[var(--color-text-muted)]",
+                )}
+              />
               {!collapsed && <span className="truncate">{item.label}</span>}
             </Link>
           );
@@ -109,12 +117,12 @@ export function Sidebar({ onClose, collapsed = false, onToggleCollapse }: Sideba
       </nav>
 
       {/* Bottom Rail / Collapse Toggle */}
-      <div className="p-2 border-t border-white/10 flex items-center justify-between text-xs text-white/50">
+      <div className="p-2 border-t border-[#ECE6F4]/80 flex items-center justify-between text-xs text-[var(--color-text-muted)] bg-white/40">
         {!collapsed && onToggleCollapse && (
           <button
             type="button"
             onClick={onToggleCollapse}
-            className="flex items-center gap-2 px-2 py-1.5 text-xs text-white/60 hover:text-white hover:bg-white/5 rounded w-full cursor-pointer"
+            className="flex items-center gap-2 px-2 py-1.5 text-xs text-[var(--color-text-secondary)] hover:text-[var(--color-ink)] hover:bg-[#7052C8]/6 rounded-[6px] w-full cursor-pointer transition-colors"
             title="Collapse sidebar"
           >
             <PanelLeftClose className="h-4 w-4 shrink-0" />
@@ -126,7 +134,7 @@ export function Sidebar({ onClose, collapsed = false, onToggleCollapse }: Sideba
           <button
             type="button"
             onClick={onToggleCollapse}
-            className="flex items-center justify-center p-2 text-white/60 hover:text-white hover:bg-white/5 rounded w-full cursor-pointer"
+            className="flex items-center justify-center p-2 text-[var(--color-text-secondary)] hover:text-[var(--color-ink)] hover:bg-[#7052C8]/6 rounded-[6px] w-full cursor-pointer transition-colors"
             title="Expand sidebar"
           >
             <PanelLeft className="h-4 w-4 shrink-0" />

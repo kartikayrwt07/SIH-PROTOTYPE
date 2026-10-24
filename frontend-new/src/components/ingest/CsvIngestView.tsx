@@ -161,7 +161,7 @@ export function CsvIngestView() {
   ];
 
   return (
-    <div className="py-8 px-6 lg:px-8 max-w-7xl mx-auto space-y-8">
+    <div className="py-10 px-6 lg:px-8 max-w-7xl mx-auto space-y-10">
       <PageHeader
         title="CSV ingestion"
         description="Bulk upload complaint cases from institutional registers."

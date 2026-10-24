@@ -45,18 +45,18 @@ function LoginPage() {
   };
 
   return (
-    <div className="min-h-[calc(100vh-3rem)] flex flex-col items-center justify-center py-12 px-4 bg-page">
+    <div className="min-h-[calc(100vh-3rem)] flex flex-col items-center justify-center py-12 px-4 bg-gradient-to-br from-[#FCFBFE] via-[#FAF8FD] to-[#F5F2FA]">
       <div className="w-full max-w-sm space-y-6">
         {/* Wordmark Above */}
-        <div className="flex items-center justify-center gap-2 select-none">
-          <span className="h-3 w-3 rounded-[1px] bg-saffron shrink-0" aria-hidden="true" />
+        <div className="flex items-center justify-center gap-2.5 select-none">
+          <span className="h-3 w-3 rounded-[3px] bg-[#7052C8] shrink-0 shadow-[0_0_8px_rgba(112,82,200,0.4)]" aria-hidden="true" />
           <span className="font-serif text-xl font-semibold text-ink tracking-tight">
             AICTE Case Monitor
           </span>
         </div>
 
-        {/* Centered Form — Ruled, No Card Shadow */}
-        <div className="bg-surface border border-rule p-8 rounded-lg space-y-5">
+        {/* Centered Form — Modern Frosted Glass Card with Subtle Glow */}
+        <div className="bg-white/85 backdrop-blur-xl border border-[#ECE6F4] p-8 rounded-[12px] space-y-5 shadow-[0_8px_32px_rgba(112,82,200,0.06)]">
           <div className="space-y-1">
             <h2 className="text-base font-semibold text-ink">Sign in to your account</h2>
             <p className="text-xs text-text-secondary leading-normal">
@@ -66,7 +66,7 @@ function LoginPage() {
 
           {error && (
             <div
-              className="p-3 bg-sla-overdue-bg border border-rule rounded text-xs text-sla-overdue"
+              className="p-3 bg-sla-overdue-bg border border-[#ECE6F4] rounded-[6px] text-xs text-sla-overdue"
               role="alert"
             >
               {error}
@@ -85,7 +85,7 @@ function LoginPage() {
                 value={identifier}
                 onChange={(e) => setIdentifier(e.target.value)}
                 placeholder="officer@aicte-india.org"
-                className="h-9 text-xs bg-surface border-rule rounded-md focus:border-action"
+                className="h-9 text-xs bg-white/70 border-[#ECE6F4] rounded-[6px] focus:border-[#7052C8] focus:ring-1 focus:ring-[#7052C8]/30"
               />
             </div>
 
@@ -100,21 +100,21 @@ function LoginPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="h-9 text-xs bg-surface border-rule rounded-md focus:border-action"
+                className="h-9 text-xs bg-white/70 border-[#ECE6F4] rounded-[6px] focus:border-[#7052C8] focus:ring-1 focus:ring-[#7052C8]/30"
               />
             </div>
 
             <Button
               type="submit"
               disabled={isSubmitting}
-              className="w-full h-9 bg-action text-white hover:bg-action/90 text-xs font-medium rounded-md shadow-none cursor-pointer"
+              className="w-full h-9 bg-[#7052C8] hover:bg-[#5E3EA8] text-white text-xs font-medium rounded-[6px] shadow-[0_2px_10px_rgba(112,82,200,0.25)] cursor-pointer transition-all"
             >
               {isSubmitting ? "Signing in..." : "Sign in"}
             </Button>
           </form>
 
           {/* Quick Demo Switcher */}
-          <div className="pt-4 border-t border-rule space-y-2">
+          <div className="pt-4 border-t border-[#ECE6F4] space-y-2">
             <span className="text-[11px] text-text-muted block">
               Quick access demo roles:
             </span>
@@ -122,28 +122,28 @@ function LoginPage() {
               <button
                 type="button"
                 onClick={() => handleQuickRole("ADMIN")}
-                className="py-1.5 px-2 border border-rule rounded bg-page hover:bg-surface text-ink text-left text-[11px] cursor-pointer"
+                className="py-1.5 px-2 border border-[#ECE6F4] rounded-[6px] bg-white/60 hover:bg-white hover:border-[#7052C8]/30 text-ink text-left text-[11px] cursor-pointer transition-colors"
               >
                 Admin
               </button>
               <button
                 type="button"
                 onClick={() => handleQuickRole("SUPERVISOR")}
-                className="py-1.5 px-2 border border-rule rounded bg-page hover:bg-surface text-ink text-left text-[11px] cursor-pointer"
+                className="py-1.5 px-2 border border-[#ECE6F4] rounded-[6px] bg-white/60 hover:bg-white hover:border-[#7052C8]/30 text-ink text-left text-[11px] cursor-pointer transition-colors"
               >
                 Supervisor
               </button>
               <button
                 type="button"
                 onClick={() => handleQuickRole("OFFICER")}
-                className="py-1.5 px-2 border border-rule rounded bg-page hover:bg-surface text-ink text-left text-[11px] cursor-pointer"
+                className="py-1.5 px-2 border border-[#ECE6F4] rounded-[6px] bg-white/60 hover:bg-white hover:border-[#7052C8]/30 text-ink text-left text-[11px] cursor-pointer transition-colors"
               >
                 Officer (Approval)
               </button>
               <button
                 type="button"
                 onClick={() => handleQuickRole("AUDITOR")}
-                className="py-1.5 px-2 border border-rule rounded bg-page hover:bg-surface text-ink text-left text-[11px] cursor-pointer"
+                className="py-1.5 px-2 border border-[#ECE6F4] rounded-[6px] bg-white/60 hover:bg-white hover:border-[#7052C8]/30 text-ink text-left text-[11px] cursor-pointer transition-colors"
               >
                 Auditor
               </button>

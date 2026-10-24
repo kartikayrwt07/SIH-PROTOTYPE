@@ -174,7 +174,7 @@ export function SlaRadarView() {
   ];
 
   return (
-    <div className="py-8 px-6 lg:px-8 max-w-7xl mx-auto space-y-8">
+    <div className="py-10 px-6 lg:px-8 max-w-7xl mx-auto space-y-10">
       {/* Page Header */}
       <div className="space-y-3">
         <PageHeader
@@ -203,12 +203,12 @@ export function SlaRadarView() {
 
       {/* Error notification if failed */}
       {isError && (
-        <div className="flex items-center justify-between p-3.5 text-xs bg-red-50 text-[var(--sla-overdue-text)] border border-red-200 rounded-[6px]">
+        <div className="flex items-center justify-between p-3.5 text-xs bg-[var(--sla-overdue-bg)] text-[var(--sla-overdue-text)] border border-[var(--sla-overdue-text)]/20 rounded-[6px]">
           <div className="flex items-center gap-2">
             <AlertCircle className="h-4 w-4 shrink-0" />
             <span>Failed to load SLA radar data: {(error as Error)?.message || "Unknown error"}</span>
           </div>
-          <Button size="sm" variant="outline" onClick={() => refetch()} className="h-7 text-xs border-red-200">
+          <Button size="sm" variant="outline" onClick={() => refetch()} className="h-7 text-xs border-[var(--sla-overdue-text)]/30">
             Try again
           </Button>
         </div>

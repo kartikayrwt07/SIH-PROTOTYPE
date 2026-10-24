@@ -70,13 +70,13 @@ export function StateGraph({
   return (
     <div className="space-y-6">
       {/* Interactive Topology Canvas */}
-      <div className="bg-surface border border-[var(--color-rule)] rounded-[8px] p-6 space-y-6 shadow-xs">
+      <div className="bg-white/85 backdrop-blur-md border border-[#ECE6F4] rounded-[12px] p-6 space-y-6 shadow-[0_4px_24px_rgba(112,82,200,0.03)]">
         {/* Canvas Header & Legend */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[var(--color-rule)]">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#ECE6F4]">
           <div>
             <h3 className="font-serif text-base font-semibold text-[var(--color-ink)] flex items-center gap-2">
               <span>Interactive state topology</span>
-              <span className="text-[10px] font-sans font-medium px-2 py-0.5 rounded-full bg-[var(--color-page)] border border-[var(--color-rule)] text-[var(--color-action)]">
+              <span className="text-[10px] font-sans font-medium px-2 py-0.5 rounded-full bg-[#FAF8FE] border border-[#ECE6F4] text-[var(--color-action)] shadow-xs">
                 9 Stages
               </span>
             </h3>
@@ -87,7 +87,7 @@ export function StateGraph({
 
           <div className="flex flex-wrap items-center gap-4 text-xs text-[var(--color-text-secondary)]">
             <span className="flex items-center gap-1.5">
-              <span className="w-2.5 h-2.5 rounded-[2px] bg-[var(--color-action)] shadow-xs" />
+              <span className="w-2.5 h-2.5 rounded-[2px] bg-[var(--color-action)] shadow-[0_0_6px_rgba(112,82,200,0.35)]" />
               <span className="font-medium text-[var(--color-ink)]">Selected stage</span>
             </span>
             <span className="flex items-center gap-1.5">
@@ -102,9 +102,9 @@ export function StateGraph({
         </div>
 
         {/* Intuitive Active State Banner */}
-        <div className="p-4 bg-gradient-to-r from-[var(--color-page)] via-[var(--color-page)] to-surface border border-[var(--color-rule)] rounded-[6px] flex flex-wrap items-center justify-between gap-4 text-xs">
+        <div className="p-4 bg-white/70 backdrop-blur-sm border border-[#ECE6F4] rounded-[8px] flex flex-wrap items-center justify-between gap-4 text-xs shadow-xs">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-[6px] bg-[var(--color-action)] text-white flex items-center justify-center font-mono font-bold text-xs shadow-xs">
+            <div className="w-8 h-8 rounded-[6px] bg-[var(--color-action)] text-white flex items-center justify-center font-mono font-bold text-xs shadow-[0_0_8px_rgba(112,82,200,0.35)]">
               {STAGE_NUMBERS[selectedStatus]}
             </div>
             <div>
@@ -131,7 +131,7 @@ export function StateGraph({
                     key={next}
                     type="button"
                     onClick={() => onSelectStatus(next)}
-                    className="px-2.5 py-1 bg-[#E4F4EC] border border-[#1E7B52]/40 text-[#1E7B52] rounded-[4px] text-xs font-semibold hover:bg-[#D3EFE1] flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs"
+                    className="px-2.5 py-1 bg-[#F0F9F4] border border-[#257D4E]/30 text-[#257D4E] rounded-[4px] text-xs font-semibold hover:bg-[#E6F5EC] flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs"
                     title={`Click to inspect transition to ${next}`}
                   >
                     <span>{STAGE_NUMBERS[next]}. {next}</span>
@@ -153,7 +153,7 @@ export function StateGraph({
           <div className="space-y-3">
             <div className="flex items-center justify-between text-xs">
               <div className="text-[11px] font-semibold uppercase tracking-wider text-[var(--color-text-muted)] flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-[var(--color-action)]" />
+                <span className="w-2 h-2 rounded-full bg-[var(--color-action)] shadow-[0_0_6px_rgba(112,82,200,0.4)]" />
                 <span className="text-[var(--color-ink)] font-bold">Phase 1</span>
                 <span>·</span>
                 <span>Intake & Jurisdictional Triage</span>
@@ -173,12 +173,12 @@ export function StateGraph({
                     key={status}
                     type="button"
                     onClick={() => onSelectStatus(status)}
-                    className={`relative text-left p-4.5 rounded-[6px] border transition-all cursor-pointer flex flex-col justify-between min-h-[112px] group ${
+                    className={`relative text-left p-4.5 rounded-[8px] border transition-all cursor-pointer flex flex-col justify-between min-h-[112px] group ${
                       isSelected
-                        ? "bg-gradient-to-br from-[#6B3CE0] to-[#5527C7] text-white border-[#6B3CE0] shadow-md ring-2 ring-[#6B3CE0]/30"
+                        ? "bg-gradient-to-br from-[#7052C8] to-[#5939A7] text-white border-[#7052C8] shadow-[0_4px_16px_rgba(112,82,200,0.25)] ring-2 ring-[#7052C8]/30"
                         : isNext
-                        ? "bg-[#E4F4EC] border-[#1E7B52] shadow-xs hover:bg-[#D3EFE1]"
-                        : "bg-surface border-[var(--color-rule)] hover:border-[var(--color-action)]/50 hover:bg-[var(--color-page)]"
+                        ? "bg-[#F0F9F4] border-[#257D4E]/30 shadow-xs hover:bg-[#E6F5EC]"
+                        : "bg-white/60 border-[#ECE6F4] hover:border-[#7052C8]/40 hover:bg-white/90 shadow-xs"
                     }`}
                   >
                     {/* Top Row: Icon + Stage Name + Step Number */}
@@ -189,7 +189,7 @@ export function StateGraph({
                             isSelected
                               ? "bg-white/20 text-white"
                               : isNext
-                              ? "bg-[#1E7B52] text-white"
+                              ? "bg-[#F0F9F4] text-[#257D4E] border border-[#257D4E]/30"
                               : "bg-[var(--color-page)] text-[var(--color-text-secondary)] border border-[var(--color-rule)] group-hover:text-[var(--color-action)]"
                           }`}
                         >
@@ -209,7 +209,7 @@ export function StateGraph({
                                 isSelected
                                   ? "text-white"
                                   : isNext
-                                  ? "text-[#1E7B52]"
+                                  ? "text-[#257D4E]"
                                   : "text-[var(--color-text-primary)]"
                               }`}
                             >
@@ -243,7 +243,7 @@ export function StateGraph({
                     {/* Bottom Status / Guidance Cue */}
                     <div className="pt-3 border-t border-black/5 mt-2">
                       {isNext ? (
-                        <div className="flex items-center justify-between text-[11px] text-[#1E7B52] font-semibold">
+                        <div className="flex items-center justify-between text-[11px] text-[#257D4E] font-semibold">
                           <span className="flex items-center gap-1">
                             <ArrowRight className="h-3.5 w-3.5" />
                             <span>Permitted next stage</span>
@@ -297,14 +297,12 @@ export function StateGraph({
                       key={status}
                       type="button"
                       onClick={() => onSelectStatus(status)}
-                      className={`relative text-left p-4.5 rounded-[6px] border transition-all cursor-pointer flex flex-col justify-between min-h-[112px] group ${
+                      className={`relative text-left p-4.5 rounded-[8px] border transition-all cursor-pointer flex flex-col justify-between min-h-[112px] group ${
                         isSelected
-                          ? "bg-gradient-to-br from-[#6B3CE0] to-[#5527C7] text-white border-[#6B3CE0] shadow-md ring-2 ring-[#6B3CE0]/30"
+                          ? "bg-gradient-to-br from-[#7052C8] to-[#5939A7] text-white border-[#7052C8] shadow-[0_4px_16px_rgba(112,82,200,0.25)] ring-2 ring-[#7052C8]/30"
                           : isNext
-                          ? "bg-[#E4F4EC] border-[#1E7B52] shadow-xs hover:bg-[#D3EFE1]"
-                          : isLoop
-                          ? "bg-surface border-[var(--color-rule)] hover:border-[var(--color-action)]/50 hover:bg-[var(--color-page)]"
-                          : "bg-surface border-[var(--color-rule)] hover:border-[var(--color-action)]/50 hover:bg-[var(--color-page)]"
+                          ? "bg-[#F0F9F4] border-[#257D4E]/30 shadow-xs hover:bg-[#E6F5EC]"
+                          : "bg-white/60 border-[#ECE6F4] hover:border-[#7052C8]/40 hover:bg-white/90 shadow-xs"
                       }`}
                     >
                       {/* Top Row: Icon + Stage Name */}
@@ -315,7 +313,7 @@ export function StateGraph({
                               isSelected
                                 ? "bg-white/20 text-white"
                                 : isNext
-                                ? "bg-[#1E7B52] text-white"
+                                ? "bg-[#F0F9F4] text-[#257D4E] border border-[#257D4E]/30"
                                 : "bg-[var(--color-page)] text-[var(--color-text-secondary)] border border-[var(--color-rule)] group-hover:text-[var(--color-action)]"
                             }`}
                           >
@@ -335,7 +333,7 @@ export function StateGraph({
                                   isSelected
                                     ? "text-white"
                                     : isNext
-                                    ? "text-[#1E7B52]"
+                                    ? "text-[#257D4E]"
                                     : "text-[var(--color-text-primary)]"
                                 }`}
                               >
@@ -369,7 +367,7 @@ export function StateGraph({
                       {/* Bottom Status / Guidance Cue */}
                       <div className="pt-3 border-t border-black/5 mt-2">
                         {isNext ? (
-                          <div className="flex items-center justify-between text-[11px] text-[#1E7B52] font-semibold">
+                          <div className="flex items-center justify-between text-[11px] text-[#257D4E] font-semibold">
                             <span className="flex items-center gap-1">
                               <ArrowRight className="h-3.5 w-3.5" />
                               <span>Permitted next stage</span>
@@ -431,12 +429,12 @@ export function StateGraph({
                     key={status}
                     type="button"
                     onClick={() => onSelectStatus(status)}
-                    className={`relative text-left p-4.5 rounded-[6px] border transition-all cursor-pointer flex flex-col justify-between min-h-[112px] group ${
+                    className={`relative text-left p-4.5 rounded-[8px] border transition-all cursor-pointer flex flex-col justify-between min-h-[112px] group ${
                       isSelected
-                        ? "bg-gradient-to-br from-[#6B3CE0] to-[#5527C7] text-white border-[#6B3CE0] shadow-md ring-2 ring-[#6B3CE0]/30"
+                        ? "bg-gradient-to-br from-[#7052C8] to-[#5939A7] text-white border-[#7052C8] shadow-[0_4px_16px_rgba(112,82,200,0.25)] ring-2 ring-[#7052C8]/30"
                         : isNext
-                        ? "bg-[#E4F4EC] border-[#1E7B52] shadow-xs hover:bg-[#D3EFE1]"
-                        : "bg-surface border-[var(--color-rule)] hover:border-[var(--color-action)]/50 hover:bg-[var(--color-page)]"
+                        ? "bg-[#F0F9F4] border-[#257D4E]/30 shadow-xs hover:bg-[#E6F5EC]"
+                        : "bg-white/60 border-[#ECE6F4] hover:border-[#7052C8]/40 hover:bg-white/90 shadow-xs"
                     }`}
                   >
                     {/* Top Row: Icon + Stage Name */}
@@ -447,7 +445,7 @@ export function StateGraph({
                             isSelected
                               ? "bg-white/20 text-white"
                               : isNext
-                              ? "bg-[#1E7B52] text-white"
+                              ? "bg-[#F0F9F4] text-[#257D4E] border border-[#257D4E]/30"
                               : isTerminal
                               ? "bg-[var(--color-page)] text-[var(--color-text-muted)] border border-[var(--color-rule)]"
                               : "bg-[var(--color-page)] text-[var(--sla-ontrack-text)] border border-[var(--color-rule)]"
@@ -469,7 +467,7 @@ export function StateGraph({
                                 isSelected
                                   ? "text-white"
                                   : isNext
-                                  ? "text-[#1E7B52]"
+                                  ? "text-[#257D4E]"
                                   : "text-[var(--color-text-primary)]"
                               }`}
                             >
@@ -503,7 +501,7 @@ export function StateGraph({
                     {/* Bottom Status / Guidance Cue */}
                     <div className="pt-3 border-t border-black/5 mt-2">
                       {isNext ? (
-                        <div className="flex items-center justify-between text-[11px] text-[#1E7B52] font-semibold">
+                        <div className="flex items-center justify-between text-[11px] text-[#257D4E] font-semibold">
                           <span className="flex items-center gap-1">
                             <ArrowRight className="h-3.5 w-3.5" />
                             <span>Permitted next stage</span>

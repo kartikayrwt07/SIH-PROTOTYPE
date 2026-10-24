@@ -13,27 +13,27 @@
   --font-serif: "Source Serif 4", Georgia, Cambria, "Times New Roman", Times, serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
 
-  /* Official AICTE Case Register Tokens — Regal Purple Theme */
-  --color-ink: #1B1233;
-  --color-page: #FAF9FD;
+  /* Official AICTE Case Register Tokens — Fresh, Soothing & Luminous Palette (Closer to White) */
+  --color-ink: #2E2838;
+  --color-page: #FCFBFE;
   --color-surface: #FFFFFF;
-  --color-rule: #DDD8EC;
+  --color-rule: #E8E3EE;
 
-  --color-text-primary: #1B1233;
-  --color-text-secondary: #4B4365;
-  --color-text-muted: #6E6585;
+  --color-text-primary: #2E2838;
+  --color-text-secondary: #5C556B;
+  --color-text-muted: #857E94;
 
-  --color-action: #6B3CE0;
+  --color-action: #7052C8;
   --color-saffron: #E8710A;
 
-  --color-sla-overdue: #C62828;
-  --color-sla-overdue-bg: #FDECEC;
-  --color-sla-approaching: #B26A00;
-  --color-sla-approaching-bg: #FFF4DB;
-  --color-sla-ontrack: #1E7B52;
-  --color-sla-ontrack-bg: #E4F4EC;
-  --color-sla-completed: #6E6585;
-  --color-sla-completed-bg: #F0EDF8;
+  --color-sla-overdue: #B83A3A;
+  --color-sla-overdue-bg: #FDF3F3;
+  --color-sla-approaching: #9B6712;
+  --color-sla-approaching-bg: #FEF9EE;
+  --color-sla-ontrack: #257D4E;
+  --color-sla-ontrack-bg: #F0F9F4;
+  --color-sla-completed: #756D85;
+  --color-sla-completed-bg: #F6F4FA;
 
   /* Semantic UI tokens */
   --color-background: var(--background);
@@ -64,36 +64,47 @@
 
 :root {
   --radius: 0.375rem;
-  --background: #FAF9FD;
-  --foreground: #1B1233;
+  --background: #FCFBFE;
+  --foreground: #2E2838;
   --card: #FFFFFF;
-  --card-foreground: #1B1233;
+  --card-foreground: #2E2838;
   --popover: #FFFFFF;
-  --popover-foreground: #1B1233;
-  --primary: #6B3CE0;
+  --popover-foreground: #2E2838;
+  --primary: #7052C8;
   --primary-foreground: #FFFFFF;
-  --secondary: #F2EEFD;
-  --secondary-foreground: #1B1233;
-  --muted: #F2EEFD;
-  --muted-foreground: #6E6585;
-  --accent: #F2EEFD;
-  --accent-foreground: #1B1233;
-  --destructive: #C62828;
+  --secondary: #F6F4FA;
+  --secondary-foreground: #2E2838;
+  --muted: #F6F4FA;
+  --muted-foreground: #857E94;
+  --accent: #F6F4FA;
+  --accent-foreground: #2E2838;
+  --destructive: #B83A3A;
   --destructive-foreground: #FFFFFF;
-  --border: #DDD8EC;
-  --input: #DDD8EC;
-  --ring: #6B3CE0;
+  --border: #E8E3EE;
+  --input: #E8E3EE;
+  --ring: #7052C8;
 
-  /* Status Tokens */
-  --status-received: #64748B;
-  --status-registered: #3B82F6;
-  --status-under-triage: #8B5CF6;
-  --status-assigned: #06B6D4;
-  --status-in-progress: #6B3CE0;
-  --status-awaiting-information: #D97706;
-  --status-under-review: #EC4899;
-  --status-resolved: #10B981;
-  --status-closed: #475569;
+  /* SLA Semantic Tokens — Closer to White Backgrounds */
+  --sla-overdue-text: var(--color-sla-overdue);
+  --sla-overdue-bg: var(--color-sla-overdue-bg);
+  --sla-approaching-text: var(--color-sla-approaching);
+  --sla-approaching-bg: var(--color-sla-approaching-bg);
+  --sla-ontrack-text: var(--color-sla-ontrack);
+  --sla-on-track-text: var(--color-sla-ontrack);
+  --sla-ontrack-bg: var(--color-sla-ontrack-bg);
+  --sla-completed-text: var(--color-sla-completed);
+  --sla-completed-bg: var(--color-sla-completed-bg);
+
+  /* Status Tokens — Fresh, Soothing & Defined */
+  --status-received: #727B8E;
+  --status-registered: #4972A8;
+  --status-under-triage: #7A57C1;
+  --status-assigned: #368199;
+  --status-in-progress: #7052C8;
+  --status-awaiting-information: #9E6E1D;
+  --status-under-review: #974E79;
+  --status-resolved: #257D4E;
+  --status-closed: #625A70;
 }
 
 @layer base {

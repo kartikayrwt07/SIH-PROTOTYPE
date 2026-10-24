@@ -71,7 +71,7 @@ export function StateDetailsPanel({
               Active Stage
             </span>
           ) : (
-            <span className="text-[10px] text-[var(--sla-ontrack-text)] font-semibold bg-[#E4F4EC] px-2 py-0.5 rounded">
+            <span className="text-[10px] text-[var(--sla-ontrack-text)] font-semibold bg-[var(--sla-ontrack-bg)] px-2 py-0.5 rounded">
               Determined
             </span>
           )}

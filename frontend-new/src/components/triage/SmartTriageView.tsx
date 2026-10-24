@@ -108,7 +108,7 @@ export function SmartTriageView() {
   };
 
   return (
-    <div className="py-8 px-6 lg:px-8 max-w-7xl mx-auto space-y-8">
+    <div className="py-10 px-6 lg:px-8 max-w-7xl mx-auto space-y-10">
       <PageHeader
         title="Smart triage"
         description="Test classification and check for duplicates before registering a case."
@@ -172,7 +172,7 @@ export function SmartTriageView() {
                 Classification result
               </h3>
 
-              <div className="p-5 bg-surface border border-[var(--color-rule)] rounded-[6px] space-y-4">
+              <div className="p-6 bg-white/85 backdrop-blur-md border border-[#ECE6F4] rounded-[12px] space-y-5 shadow-[0_4px_24px_rgba(112,82,200,0.04)]">
                 {/* Recommended Bureau */}
                 <div className="flex flex-wrap items-baseline justify-between gap-2 pb-3 border-b border-[var(--color-rule)]">
                   <div>
@@ -183,7 +183,7 @@ export function SmartTriageView() {
                       {triageResult.recommended_bureau_name}
                     </div>
                   </div>
-                  <div className="text-xs font-semibold text-[var(--color-action)] bg-[var(--color-page)] px-2.5 py-1 border border-[var(--color-rule)] rounded-[4px] tabular-nums">
+                  <div className="text-xs font-semibold text-[var(--color-action)] bg-gradient-to-r from-[var(--color-page)] to-surface px-3 py-1 border border-[var(--color-rule)] rounded-[6px] tabular-nums shadow-xs">
                     {Math.round(triageResult.confidence * 100)}% confidence
                   </div>
                 </div>
@@ -298,7 +298,7 @@ export function SmartTriageView() {
                       <span
                         className={`text-xs font-semibold tabular-nums px-2 py-0.5 rounded-[4px] ${
                           isHighRisk
-                            ? "text-[var(--sla-overdue-text)] bg-[#FDECEC]"
+                            ? "text-[var(--sla-overdue-text)] bg-[var(--sla-overdue-bg)]"
                             : "text-[var(--color-text-secondary)] bg-[var(--color-page)] border border-[var(--color-rule)]"
                         }`}
                       >

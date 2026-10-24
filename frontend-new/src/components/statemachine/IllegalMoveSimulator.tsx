@@ -213,14 +213,14 @@ export function IllegalMoveSimulator() {
                 onClick={() => handleApplyPreset(p)}
                 className={`text-xs font-medium border rounded-md px-2.5 py-1 text-left transition-colors cursor-pointer flex items-center gap-1.5 ${
                   p.isExpectedValid
-                    ? "bg-emerald-50/50 hover:bg-emerald-100/70 border-emerald-300 text-emerald-950"
-                    : "bg-red-50/50 hover:bg-red-100/70 border-red-300 text-red-950"
+                    ? "bg-[var(--sla-ontrack-bg)] hover:bg-[var(--sla-ontrack-bg)]/80 border-[var(--sla-ontrack-text)]/25 text-[var(--color-text-primary)]"
+                    : "bg-[var(--sla-overdue-bg)] hover:bg-[var(--sla-overdue-bg)]/80 border-[var(--sla-overdue-text)]/25 text-[var(--color-text-primary)]"
                 }`}
               >
                 {p.isExpectedValid ? (
-                  <ShieldCheck className="h-3 w-3 text-emerald-600 shrink-0" />
+                  <ShieldCheck className="h-3 w-3 text-[var(--sla-ontrack-text)] shrink-0" />
                 ) : (
-                  <ShieldAlert className="h-3 w-3 text-red-600 shrink-0" />
+                  <ShieldAlert className="h-3 w-3 text-[var(--sla-overdue-text)] shrink-0" />
                 )}
                 <span>{p.label}</span>
               </button>
@@ -300,23 +300,23 @@ export function IllegalMoveSimulator() {
           <div className="pt-2">
             {result.isValid ? (
               /* Valid Transition Result */
-              <div className="bg-emerald-50 border border-emerald-300 rounded-lg p-4 space-y-2 text-xs">
+              <div className="bg-[var(--sla-ontrack-bg)] border border-[var(--sla-ontrack-text)]/25 rounded-lg p-4 space-y-2 text-xs">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2 font-bold text-emerald-950">
-                    <CheckCircle2 className="h-5 w-5 text-emerald-600" />
+                  <div className="flex items-center gap-2 font-bold text-[var(--color-text-primary)]">
+                    <CheckCircle2 className="h-5 w-5 text-[var(--sla-ontrack-text)]" />
                     <span>Transition Validation Passed</span>
                   </div>
-                  <Badge className="bg-emerald-600 text-white font-mono text-xs">
+                  <Badge className="bg-[var(--sla-ontrack-text)] text-white font-mono text-xs">
                     HTTP {result.statusCode} OK
                   </Badge>
                 </div>
 
-                <p className="text-emerald-900 leading-relaxed font-medium">
+                <p className="text-[var(--color-text-secondary)] leading-relaxed font-medium">
                   {result.message}
                 </p>
 
-                <div className="bg-emerald-100/60 p-2.5 rounded border border-emerald-200 text-[11px] text-emerald-900 flex items-center gap-2">
-                  <span className="font-semibold">Workflow Rule:</span>
+                <div className="bg-white/70 p-2.5 rounded border border-[var(--sla-ontrack-text)]/20 text-[11px] text-[var(--color-text-secondary)] flex items-center gap-2">
+                  <span className="font-semibold text-[var(--color-text-primary)]">Workflow Rule:</span>
                   <span>
                     Moving from <strong>{result.from}</strong> to <strong>{result.to}</strong> is legally recognized in the AICTE finite state machine.
                   </span>
@@ -324,26 +324,26 @@ export function IllegalMoveSimulator() {
               </div>
             ) : (
               /* Illegal Transition Blocked Result */
-              <div className="bg-red-50 border border-red-300 rounded-lg p-4 space-y-2 text-xs">
+              <div className="bg-[var(--sla-overdue-bg)] border border-[var(--sla-overdue-text)]/25 rounded-lg p-4 space-y-2 text-xs">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2 font-bold text-red-950">
-                    <XCircle className="h-5 w-5 text-red-600" />
+                  <div className="flex items-center gap-2 font-bold text-[var(--color-text-primary)]">
+                    <XCircle className="h-5 w-5 text-[var(--sla-overdue-text)]" />
                     <span>Transition Blocked by State Machine Guard</span>
                   </div>
-                  <Badge variant="destructive" className="font-mono text-xs">
+                  <Badge className="bg-[var(--sla-overdue-text)] text-white font-mono text-xs">
                     HTTP {result.statusCode} Unprocessable Entity
                   </Badge>
                 </div>
 
-                <div className="bg-red-100/80 p-2.5 rounded border border-red-200 font-mono text-[11px] text-red-950 space-y-1">
-                  <div className="font-bold text-red-900">
+                <div className="bg-white/70 p-2.5 rounded border border-[var(--sla-overdue-text)]/20 font-mono text-[11px] text-[var(--color-text-primary)] space-y-1">
+                  <div className="font-bold text-[var(--sla-overdue-text)]">
                     Error Code: {result.errorCode}
                   </div>
                   <div>{result.message}</div>
                 </div>
 
-                <div className="text-[11px] text-red-900/90 leading-relaxed pt-1">
-                  <strong>AICTE Regulatory Guard:</strong> Arbitrary lifecycle state skipping is blocked to guarantee procedural integrity, audit transparency, and prevent uninvestigated closures.
+                <div className="text-[11px] text-[var(--color-text-secondary)] leading-relaxed pt-1">
+                  <strong className="text-[var(--color-text-primary)]">AICTE Regulatory Guard:</strong> Arbitrary lifecycle state skipping is blocked to guarantee procedural integrity, audit transparency, and prevent uninvestigated closures.
                 </div>
               </div>
             )}

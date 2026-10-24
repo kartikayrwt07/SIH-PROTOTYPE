@@ -34,7 +34,7 @@ export function CasePreviewDrawer({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
         side="right"
-        className="w-full sm:max-w-md bg-[var(--color-surface)] border-l border-[var(--color-rule)] rounded-l-[8px] shadow-2xl p-6 flex flex-col justify-between overflow-y-auto"
+        className="w-full sm:max-w-md bg-white/95 backdrop-blur-xl border-l border-[#ECE6F4] rounded-l-[12px] shadow-[0_8px_32px_rgba(112,82,200,0.12)] p-6 flex flex-col justify-between overflow-y-auto"
       >
         <div className="space-y-5">
           {/* Header */}

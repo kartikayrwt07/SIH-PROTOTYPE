@@ -38,17 +38,17 @@ export function DataTable<T>({
   className,
 }: DataTableProps<T>) {
   return (
-    <div className={cn("w-full bg-surface border border-rule rounded-[6px] overflow-hidden", className)}>
+    <div className={cn("w-full bg-white/85 backdrop-blur-md border border-[#ECE6F4] rounded-[10px] overflow-hidden shadow-[0_4px_24px_rgba(112,82,200,0.03)]", className)}>
       <div className="overflow-x-auto">
         <table className="w-full text-left text-sm border-collapse">
-          <thead className="sticky top-0 bg-page border-b border-rule z-10">
+          <thead className="sticky top-0 bg-white/90 backdrop-blur-md border-b border-[#ECE6F4] z-10">
             <tr>
               {columns.map((col) => (
                 <th
                   key={col.key}
                   style={{ width: col.width }}
                   className={cn(
-                    "h-10 px-4 py-2.5 text-xs font-semibold text-text-secondary select-none",
+                    "h-10.5 px-4.5 py-2.5 text-xs font-semibold text-text-secondary select-none",
                     col.align === "right"
                       ? "text-right tabular-nums"
                       : col.align === "center"
@@ -62,15 +62,15 @@ export function DataTable<T>({
               ))}
             </tr>
           </thead>
-          <tbody className="divide-y divide-rule">
+          <tbody className="divide-y divide-[#ECE6F4]">
             {isLoading ? (
               Array.from({ length: skeletonRows }).map((_, rIdx) => (
-                <tr key={`skel-${rIdx}`} className="h-11 bg-surface">
+                <tr key={`skel-${rIdx}`} className="h-12 bg-surface">
                   {columns.map((col, cIdx) => (
                     <td
                       key={`skel-c-${cIdx}`}
                       className={cn(
-                        "px-4 py-3",
+                        "px-4.5 py-3.5",
                         col.align === "right" ? "text-right" : "text-left",
                       )}
                     >
@@ -115,9 +115,9 @@ export function DataTable<T>({
                     tabIndex={isClickable ? 0 : undefined}
                     role={isClickable ? "button" : undefined}
                     className={cn(
-                      "min-h-[44px] bg-surface text-ink transition-colors",
+                      "min-h-[46px] bg-surface text-ink transition-colors",
                       isClickable &&
-                        "cursor-pointer hover:bg-page focus:outline-none focus:bg-page focus:ring-1 focus:ring-action",
+                        "cursor-pointer hover:bg-[#FAF8FE] focus:outline-none focus:bg-[#FAF8FE] focus:ring-1 focus:ring-action",
                       customClasses,
                     )}
                   >
@@ -125,7 +125,7 @@ export function DataTable<T>({
                       <td
                         key={col.key}
                         className={cn(
-                          "px-4 py-3 text-xs",
+                          "px-4.5 py-3.5 text-xs",
                           col.align === "right"
                             ? "text-right tabular-nums"
                             : col.align === "center"
