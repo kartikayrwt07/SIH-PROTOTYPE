@@ -2,7 +2,8 @@
  * API endpoint URL paths aligned 100% with FastAPI backend v1 routes.
  */
 
-const BASE = (import.meta.env.VITE_API_BASE_URL as string | undefined) ?? "http://127.0.0.1:8001";
+const RAW_BASE = (import.meta.env["VITE_API_BASE_URL"] as string | undefined) ?? "http://127.0.0.1:8001";
+const BASE = RAW_BASE.trim().replace(/\/+$/, "");
 
 export const ENDPOINTS = {
   // Health
