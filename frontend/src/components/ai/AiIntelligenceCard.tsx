@@ -43,7 +43,7 @@ export const AiIntelligenceCard: React.FC<AiIntelligenceCardProps> = ({
     setApplyError(null);
 
     Promise.allSettled([
-      api.getCaseDuplicates(currentCase.case_reference_id, 0.35),
+      api.getCaseDuplicates(currentCase.case_reference_id, 0.70),
       api.getCaseTriageSuggestion(currentCase.case_reference_id),
     ]).then(([dupResult, triageResult]) => {
       if (!isMounted) return;
@@ -130,14 +130,16 @@ export const AiIntelligenceCard: React.FC<AiIntelligenceCardProps> = ({
               <div>
                 <div className="flex items-center gap-2">
                   <h4 className="text-sm font-bold text-amber-900">
-                    Potential Duplicate Detected ({duplicateSimilarityPct}% Similarity)
+                    {duplicateSimilarityPct >= 78 ? "High-Confidence Duplicate" : "Thematically Related Case"} ({duplicateSimilarityPct}% Semantic Match)
                   </h4>
-                  <span className="px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider bg-amber-200/80 text-amber-900 rounded-full">
+                  <span className={`px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-full ${
+                    duplicateSimilarityPct >= 78 ? "bg-red-200/90 text-red-900" : "bg-amber-200/80 text-amber-900"
+                  }`}>
                     {topDuplicate.status}
                   </span>
                 </div>
                 <p className="text-xs text-amber-800 mt-1">
-                  High lexical similarity with registered case{" "}
+                  Dense semantic similarity (BGE ONNX Embeddings) with registered case{" "}
                   <span className="font-mono font-semibold">{topDuplicate.case_reference_id}</span> at{" "}
                   <span className="font-semibold">{topDuplicate.institution_name}</span>.
                 </p>

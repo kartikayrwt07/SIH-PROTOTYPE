@@ -26,7 +26,7 @@ class DuplicateCheckRequest(BaseModel):
     description: str = Field(..., min_length=10, description="Grievance narrative")
     institution_aicte_id: Optional[str] = Field(None, description="Optional AICTE ID to boost institutional affinity")
     exclude_case_ref: Optional[str] = Field(None, description="Case reference to exclude (e.g. self-comparison)")
-    threshold: float = Field(0.35, ge=0.1, le=1.0, description="Minimum similarity score threshold")
+    threshold: float = Field(0.70, ge=0.1, le=1.0, description="Calibrated semantic similarity threshold (>=0.78 High Duplicate, >=0.65 Related)")
 
 
 class DuplicateCheckResponse(BaseModel):

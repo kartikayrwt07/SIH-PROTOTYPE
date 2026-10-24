@@ -265,7 +265,7 @@ class ApiService {
     });
   }
 
-  async getCaseDuplicates(caseRef: string, threshold: number = 0.35): Promise<StandardResponse<DuplicateCheckResponse>> {
+  async getCaseDuplicates(caseRef: string, threshold: number = 0.70): Promise<StandardResponse<DuplicateCheckResponse>> {
     return this.request(`/ai/duplicates/${caseRef}?threshold=${threshold}`);
   }
 

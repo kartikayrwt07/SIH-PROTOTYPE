@@ -21,24 +21,24 @@ export const DuplicateComparisonModal: React.FC<DuplicateComparisonModalProps> =
   const similarityPct = Math.round(duplicateMatch.similarity_score * 100);
 
   const getSimilarityBadge = (pct: number) => {
-    if (pct >= 75) {
+    if (pct >= 78) {
       return {
         bg: "bg-red-50 text-red-700 border-red-200",
         bar: "bg-red-600",
-        label: "Critical Similarity (Potential Duplicate)",
+        label: "Critical Match (High Confidence Duplicate)",
       };
     }
-    if (pct >= 50) {
+    if (pct >= 65) {
       return {
         bg: "bg-amber-50 text-amber-700 border-amber-200",
         bar: "bg-amber-500",
-        label: "Moderate Similarity (Related Matter)",
+        label: "Moderate Match (Thematically Related Cluster)",
       };
     }
     return {
       bg: "bg-blue-50 text-blue-700 border-blue-200",
       bar: "bg-blue-500",
-      label: "Low Similarity (Thematic Affinity)",
+      label: "Low Match (Marginal Affinity)",
     };
   };
 
@@ -61,7 +61,7 @@ export const DuplicateComparisonModal: React.FC<DuplicateComparisonModalProps> =
                 </span>
               </h2>
               <p className="text-xs text-slate-500">
-                AICTE Deterministic Scikit-Learn TF-IDF Cosine Vector Analysis
+                AICTE Dense Semantic Vector Embedding Analysis (BGE-Small ONNX)
               </p>
             </div>
           </div>
