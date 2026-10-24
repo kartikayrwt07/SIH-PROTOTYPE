@@ -28,17 +28,22 @@ async def lifespan(app: FastAPI):
         except Exception as e:
             print(f"[Migration] check deferred: {e}")
 
-    # Warm up in-memory vector similarity index in background thread to avoid blocking server boot
-    def _warmup():
-        db = SessionLocal()
-        try:
-            vector_index.initialize_index(db)
-        except Exception as e:
-            print(f"[VectorIndexCache] Warmup deferred: {e}")
-        finally:
-            db.close()
+    # Warm up in-memory vector similarity index only if explicitly enabled (saves ~250MB RAM on free tier)
+    if os.getenv("ENABLE_EMBEDDING_WARMUP", "false").lower() in ("true", "1"):
+        def _warmup():
+            db = SessionLocal()
+            try:
+                vector_index.initialize_index(db)
+            except Exception as e:
+                print(f"[VectorIndexCache] Warmup deferred: {e}")
+            finally:
+                db.close()
 
-    threading.Thread(target=_warmup, daemon=True).start()
+        threading.Thread(target=_warmup, daemon=True, name="VectorIndexWarmup").start()
+
+    # Free build/startup garbage to minimize RAM footprint
+    import gc
+    gc.collect()
 
     # Launch background Telegram Bot poller daemon if configured and enabled
     telegram_token = os.getenv("TELEGRAM_BOT_TOKEN", settings.TELEGRAM_BOT_TOKEN)

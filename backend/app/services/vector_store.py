@@ -101,9 +101,9 @@ class PersistentVectorStore:
         return cls._instance
 
     def _get_model(self) -> TextEmbedding:
-        """Lazy loader for ONNX TextEmbedding model to optimize startup."""
+        """Lazy loader for ONNX TextEmbedding model with single-thread limit for low-memory cloud tiers."""
         if self.embedding_model is None:
-            self.embedding_model = TextEmbedding(model_name=self.model_name)
+            self.embedding_model = TextEmbedding(model_name=self.model_name, threads=1)
         return self.embedding_model
 
     def _normalize(self, vectors: np.ndarray) -> np.ndarray:

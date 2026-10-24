@@ -20,5 +20,15 @@ services:
         sync: false
       - key: ENABLE_TELEGRAM_POLLER
         value: "true"
+      - key: ENABLE_EMBEDDING_WARMUP
+        value: "false"
+      - key: MALLOC_ARENA_MAX
+        value: "2"
+      - key: OMP_NUM_THREADS
+        value: "1"
+      - key: OPENBLAS_NUM_THREADS
+        value: "1"
+      - key: MKL_NUM_THREADS
+        value: "1"
       - key: RUN_STARTUP_MIGRATIONS
         value: "false"
