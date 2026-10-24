@@ -174,7 +174,7 @@ export function CaseRegister({ initialBureauId }: CaseRegisterProps) {
       width: "220px",
       cell: (c) => (
         <div className="flex items-center">
-          <LifecycleStrip currentStatus={c.status} variant="compact" />
+          <LifecycleStrip status={c.status} currentStatus={c.status} variant="compact" />
         </div>
       ),
     },

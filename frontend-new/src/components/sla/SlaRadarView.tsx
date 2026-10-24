@@ -113,7 +113,7 @@ export function SlaRadarView() {
       width: "220px",
       cell: (item) => (
         <div className="flex items-center">
-          <LifecycleStrip currentStatus={item.status} variant="compact" />
+          <LifecycleStrip status={item.status} currentStatus={item.status} variant="compact" />
         </div>
       ),
     },

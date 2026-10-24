@@ -164,6 +164,7 @@ export function CaseDossierView({ caseRef }: CaseDossierViewProps) {
         {/* Full LifecycleStrip directly under header */}
         <div className="pt-3">
           <LifecycleStrip
+            status={caseItem.status}
             currentStatus={caseItem.status}
             dueDate={caseItem.due_date}
             isResolved={isResolvedOrClosed}
