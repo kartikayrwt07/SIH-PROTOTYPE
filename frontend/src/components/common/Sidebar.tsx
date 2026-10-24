@@ -1,5 +1,5 @@
 import React from "react";
-import { LayoutDashboard, FileSpreadsheet, Sparkles, AlertTriangle, UploadCloud, Shield } from "lucide-react";
+import { LayoutDashboard, FileSpreadsheet, Wand2, Sparkles, AlertTriangle, UploadCloud, Shield } from "lucide-react";
 
 interface SidebarProps {
   activeTab: string;
@@ -10,6 +10,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange }) => {
   const navItems = [
     { id: "dashboard", label: "Executive Dashboard", icon: LayoutDashboard },
     { id: "cases", label: "Case Register", icon: FileSpreadsheet },
+    { id: "magic_intake", label: "Magic Intake (AI)", icon: Wand2 },
     { id: "smart_triage", label: "Smart Triage & AI", icon: Sparkles },
     { id: "sla_radar", label: "SLA Risk Radar", icon: AlertTriangle },
     { id: "ingest", label: "CSV Ingestion", icon: UploadCloud },

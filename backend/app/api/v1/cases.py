@@ -28,6 +28,11 @@ from backend.app.schemas.csv_io import (
     CsvCommitResponse,
 )
 from backend.app.schemas.attachment import CaseAttachmentRead
+from backend.app.schemas.magic_ingest import (
+    MagicAnalysisResult,
+    MagicIngestRequest,
+    MagicIngestResponse,
+)
 from backend.app.services.lifecycle import execute_transition, reopen_case
 from backend.app.services.audit import get_case_audit_trail, log_case_event
 from backend.app.services.assignment import assign_case
@@ -36,6 +41,10 @@ from backend.app.services.csv_io import (
     parse_and_validate_csv,
     commit_csv_batch,
     export_cases_to_csv,
+)
+from backend.app.services.magic_ingest import (
+    analyze_grievance_magic,
+    ingest_magic_grievance,
 )
 
 router = APIRouter(prefix="/cases")
@@ -682,5 +691,26 @@ async def upload_case_attachment(
     )
 
     return StandardResponse(data=CaseAttachmentRead.model_validate(attachment))
+
+
+@router.post("/magic-analyze", response_model=StandardResponse[MagicAnalysisResult])
+def magic_analyze_endpoint(
+    request: MagicIngestRequest,
+    db: Session = Depends(get_db),
+):
+    """Zero-shot AI extraction: extracts college, category, priority, and bureau routing."""
+    analysis = analyze_grievance_magic(request.grievance_text, db)
+    return StandardResponse(data=analysis)
+
+
+@router.post("/magic-ingest", response_model=StandardResponse[MagicIngestResponse])
+def magic_ingest_endpoint(
+    request: MagicIngestRequest,
+    db: Session = Depends(get_db),
+):
+    """Instantly dockets grievance case with zero-shot extracted institution and automated bureau routing."""
+    result = ingest_magic_grievance(request, db)
+    return StandardResponse(data=result)
+
 
 

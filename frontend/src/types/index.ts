@@ -369,3 +369,69 @@ export interface TriageApplyResponse {
   audit_event_id: string;
   applied_at: string;
 }
+
+// -------------------------------------------------------------
+// Magic Zero-Shot Grievance Ingestion Types
+// -------------------------------------------------------------
+
+export interface ExtractedInstitution {
+  name: string;
+  id?: string | null;
+  aicte_permanent_id?: string | null;
+  state?: string | null;
+  district?: string | null;
+  confidence: number;
+  is_database_match: boolean;
+  matched_phrase: string;
+}
+
+export interface CategorizationResult {
+  category: string;
+  confidence: number;
+  detected_signals: string[];
+}
+
+export interface PriorityAssignment {
+  priority: CasePriority | string;
+  urgency_signals: string[];
+  sla_hours: number;
+  rationale: string;
+}
+
+export interface BureauRouting {
+  bureau_id: string;
+  bureau_code: string;
+  bureau_name: string;
+  confidence: number;
+  routing_rationale: string;
+  all_scores: Record<string, number>;
+  key_evidence_tokens: string[];
+}
+
+export interface MagicAnalysisResult {
+  extracted_college: ExtractedInstitution;
+  categorization: CategorizationResult;
+  priority_assignment: PriorityAssignment;
+  bureau_routing: BureauRouting;
+  generated_subject: string;
+  summary_insight: string;
+}
+
+export interface MagicIngestRequest {
+  grievance_text: string;
+  student_name?: string | null;
+  student_email?: string | null;
+  student_phone?: string | null;
+  auto_docket?: boolean;
+}
+
+export interface MagicIngestResponse {
+  analysis: MagicAnalysisResult;
+  case_created: boolean;
+  case_reference_id?: string | null;
+  case_id?: string | null;
+  status?: string | null;
+  due_date?: string | null;
+  created_at?: string | null;
+  docket_message: string;
+}

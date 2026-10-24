@@ -8,6 +8,7 @@ import { SlaRiskRadar } from "./components/sla/SlaRiskRadar";
 import { ExecutiveDashboard } from "./components/dashboard/ExecutiveDashboard";
 import { CsvIngestionModal } from "./components/ingest/CsvIngestionModal";
 import { SmartTriageView } from "./components/ai/SmartTriageView";
+import { MagicIntakeView } from "./components/ingest/MagicIntakeView";
 import {
   ShieldAlert,
   Key,
@@ -70,6 +71,7 @@ export const AppContent: React.FC = () => {
             <CaseRegister
               initialBureauFilter={filterBureauId}
               onSelectCase={(ref) => setSelectedCaseDetailRef(ref)}
+              onOpenMagicIntake={() => setActiveTab("magic_intake")}
             />
           </div>
         )
@@ -85,6 +87,20 @@ export const AppContent: React.FC = () => {
           }}
           onNavigateToSlaRadar={() => {
             setActiveTab("sla_radar");
+          }}
+        />
+      )}
+
+      {/* 2.5 Magic Intake (AI) Tab */}
+      {activeTab === "magic_intake" && (
+        <MagicIntakeView
+          onSelectCase={(caseRef) => {
+            setSelectedCaseDetailRef(caseRef);
+            setActiveTab("cases");
+          }}
+          onNavigateToRegister={() => {
+            setSelectedCaseDetailRef(null);
+            setActiveTab("cases");
           }}
         />
       )}

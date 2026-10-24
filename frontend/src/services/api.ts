@@ -23,6 +23,9 @@ import {
   TriageSuggestion,
   TriageApplyRequest,
   TriageApplyResponse,
+  MagicAnalysisResult,
+  MagicIngestRequest,
+  MagicIngestResponse,
 } from "../types";
 
 const API_BASE = "/api/v1";
@@ -359,6 +362,24 @@ class ApiService {
     otp_code: string;
   }): Promise<StandardResponse<{ verification_token: string; masked_identifier: string; full_name: string; complainant_type: string; verification_method: string }>> {
     return this.request("/identity/otp/verify", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  }
+
+  // -------------------------------------------------------------
+  // Magic Zero-Shot Grievance Ingestion
+  // -------------------------------------------------------------
+
+  async magicAnalyze(payload: MagicIngestRequest): Promise<StandardResponse<MagicAnalysisResult>> {
+    return this.request("/cases/magic-analyze", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  }
+
+  async magicIngest(payload: MagicIngestRequest): Promise<StandardResponse<MagicIngestResponse>> {
+    return this.request("/cases/magic-ingest", {
       method: "POST",
       body: JSON.stringify(payload),
     });

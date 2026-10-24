@@ -13,6 +13,7 @@ import {
   FileUp,
   Loader2,
   CheckCircle2,
+  Wand2,
 } from "lucide-react";
 import { ComplaintCase, Bureau, CaseStatus, CasePriority } from "../../types";
 import { api } from "../../services/api";
@@ -22,9 +23,10 @@ import { CsvIngestionModal } from "../ingest/CsvIngestionModal";
 interface CaseRegisterProps {
   onSelectCase: (caseRef: string) => void;
   initialBureauFilter?: string;
+  onOpenMagicIntake?: () => void;
 }
 
-export const CaseRegister: React.FC<CaseRegisterProps> = ({ onSelectCase, initialBureauFilter }) => {
+export const CaseRegister: React.FC<CaseRegisterProps> = ({ onSelectCase, initialBureauFilter, onOpenMagicIntake }) => {
   const [cases, setCases] = useState<ComplaintCase[]>([]);
   const [bureaus, setBureaus] = useState<Bureau[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -325,6 +327,31 @@ export const CaseRegister: React.FC<CaseRegisterProps> = ({ onSelectCase, initia
           >
             <RotateCcw size={16} />
           </button>
+
+          {/* Magic AI Intake */}
+          {onOpenMagicIntake && (
+            <button
+              type="button"
+              className="btn btn-primary"
+              onClick={onOpenMagicIntake}
+              title="Launch Zero-Shot Magic AI Grievance Intake"
+              style={{
+                padding: "0.5rem 0.95rem",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "0.45rem",
+                background: "linear-gradient(135deg, var(--accent-saffron) 0%, #EA580C 100%)",
+                color: "#FFFFFF",
+                fontWeight: 700,
+                boxShadow: "0 2px 10px rgba(249, 115, 22, 0.35)",
+                border: "none",
+                cursor: "pointer",
+              }}
+            >
+              <Wand2 size={16} />
+              <span>Magic AI Intake</span>
+            </button>
+          )}
 
           {/* Import CSV Batch (Phase 7) */}
           <button
