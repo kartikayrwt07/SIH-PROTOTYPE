@@ -52,10 +52,10 @@ export function LifecycleStrip({
                 className={cn(
                   "h-1.5 w-2.5 rounded-[1px] transition-colors",
                   isFilledInk
-                    ? "bg-ink border border-ink"
+                    ? "bg-[var(--color-ink)]"
                     : isCurrentAction
-                    ? "bg-action border border-action"
-                    : "bg-transparent border border-rule",
+                    ? "bg-[var(--color-action)] shadow-xs"
+                    : "bg-[var(--color-rule)]/70",
                 )}
                 role="img"
                 aria-label={`Stage ${idx + 1}: ${stage} (${
@@ -66,7 +66,7 @@ export function LifecycleStrip({
             );
           })}
         </div>
-        <span className="text-xs text-text-secondary font-medium truncate max-w-[140px]">
+        <span className="text-xs text-[var(--color-text-secondary)] font-medium truncate max-w-[140px]">
           {status}
         </span>
       </div>
@@ -75,10 +75,10 @@ export function LifecycleStrip({
 
   // Full variant (dossier header)
   return (
-    <div className={cn("w-full space-y-2 pt-1", className)}>
+    <div className={cn("w-full space-y-3 pt-1", className)}>
       {/* 9 Stage Segments Bar */}
       <div className="relative">
-        <div className="grid grid-cols-9 gap-1.5">
+        <div className="grid grid-cols-9 gap-2">
           {ALL_STATUSES.map((stage, idx) => {
             const isFilledInk = isComplete || idx < currentIndex;
             const isCurrentAction = !isComplete && idx === currentIndex;
@@ -87,12 +87,12 @@ export function LifecycleStrip({
               <div key={stage} className="flex flex-col gap-1.5">
                 <div
                   className={cn(
-                    "h-2 w-full rounded-[2px]",
+                    "h-2 w-full rounded-[2px] transition-all",
                     isFilledInk
-                      ? "bg-ink border border-ink"
+                      ? "bg-[var(--color-ink)]"
                       : isCurrentAction
-                      ? "bg-action border border-action"
-                      : "bg-transparent border border-rule",
+                      ? "bg-[var(--color-action)] shadow-xs ring-2 ring-[var(--color-action)]/25"
+                      : "bg-[var(--color-rule)]/50 border border-[var(--color-rule)]",
                   )}
                   role="img"
                   aria-label={`Stage ${idx + 1}: ${stage} (${
@@ -103,12 +103,13 @@ export function LifecycleStrip({
                   className={cn(
                     "text-[11px] leading-tight line-clamp-2",
                     isCurrentAction
-                      ? "text-ink font-semibold"
+                      ? "text-[var(--color-action)] font-bold"
                       : isFilledInk
-                      ? "text-text-primary font-medium"
-                      : "text-text-muted",
+                      ? "text-[var(--color-ink)] font-semibold"
+                      : "text-[var(--color-text-muted)]",
                   )}
                 >
+                  <span className="font-mono text-[9px] mr-1 opacity-70">{idx + 1}.</span>
                   {stage}
                 </span>
               </div>
@@ -118,24 +119,24 @@ export function LifecycleStrip({
 
         {/* SLA Timeline Marker (hidden when Resolved or Closed) */}
         {!isComplete && dueDate && (
-          <div className="mt-3 flex items-center justify-between text-xs pt-2 border-t border-rule text-text-secondary">
+          <div className="mt-4 flex items-center justify-between text-xs pt-3 border-t border-[var(--color-rule)] text-[var(--color-text-secondary)]">
             <div className="flex items-center gap-2">
               <span
                 className={cn(
                   "h-2 w-2 rounded-full",
-                  isOverdue ? "bg-sla-overdue" : "bg-sla-ontrack",
+                  isOverdue ? "bg-[var(--sla-overdue-text)]" : "bg-[#1E7B52]",
                 )}
               />
               <span className="font-medium">
                 {isOverdue ? (
-                  <span className="text-sla-overdue">SLA target exceeded</span>
+                  <span className="text-[var(--sla-overdue-text)] font-semibold">SLA resolution deadline exceeded</span>
                 ) : (
-                  <span>Within SLA resolution window</span>
+                  <span className="text-[#1E7B52] font-medium">Within statutory SLA resolution window</span>
                 )}
               </span>
             </div>
             {slaPercentage !== null && (
-              <span className="tabular-nums text-text-muted text-[11px]">
+              <span className="tabular-nums font-mono text-[var(--color-text-muted)] text-[11px]">
                 {slaPercentage}% of elapsed SLA time used
               </span>
             )}

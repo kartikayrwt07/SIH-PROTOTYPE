@@ -9,7 +9,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Settings2 } from "lucide-react";
+import { Settings2, AlertTriangle, CheckCircle2, Clock } from "lucide-react";
 
 interface DwellTimeChartProps {
   cases: ComplaintCase[];
@@ -68,11 +68,11 @@ export function DwellTimeChart({ cases, className }: DwellTimeChartProps) {
   }, [cases, thresholds]);
 
   const bottlenecks = chartData.filter((d) => d.isBottleneck);
-  const maxScale = Math.max(100, ...chartData.map((d) => Math.max(d.dwellHours, d.thresholdHours) * 1.15));
+  const maxScale = Math.max(100, ...chartData.map((d) => Math.max(d.dwellHours, d.thresholdHours) * 1.2));
 
   const summarySentence = useMemo(() => {
     if (bottlenecks.length === 0) {
-      return "All workflow stages are currently operating within established SLA dwell thresholds.";
+      return "All workflow stages are currently operating within established statutory dwell thresholds.";
     }
     const descriptions = bottlenecks.map(
       (b) => `${b.stage} is averaging ${b.dwellHours} hours against a ${b.thresholdHours}-hour threshold`,
@@ -81,13 +81,18 @@ export function DwellTimeChart({ cases, className }: DwellTimeChartProps) {
   }, [bottlenecks]);
 
   return (
-    <div className={cn("p-6 bg-surface border border-[var(--color-rule)] rounded-[6px] space-y-6", className)}>
-      <div className="flex flex-col sm:flex-row sm:items-baseline justify-between gap-3 border-b border-[var(--color-rule)] pb-4">
+    <div className={cn("p-6 bg-surface border border-[var(--color-rule)] rounded-[8px] space-y-6 shadow-xs", className)}>
+      <div className="flex flex-col sm:flex-row sm:items-baseline justify-between gap-4 border-b border-[var(--color-rule)] pb-4">
         <div>
-          <h3 className="font-serif text-base font-semibold text-[var(--color-ink)]">
-            Where cases wait longest
-          </h3>
-          <p className="text-xs text-[var(--color-text-secondary)] mt-0.5">
+          <div className="flex items-center gap-2">
+            <h3 className="font-serif text-base font-semibold text-[var(--color-ink)]">
+              Where cases wait longest
+            </h3>
+            <span className="text-[10px] font-sans font-medium px-2 py-0.5 rounded-full bg-[var(--color-page)] border border-[var(--color-rule)] text-[var(--color-action)]">
+              SLA Dwell Analytics
+            </span>
+          </div>
+          <p className="text-xs text-[var(--color-text-secondary)] mt-1 max-w-3xl leading-relaxed">
             {summarySentence}
           </p>
         </div>
@@ -98,22 +103,22 @@ export function DwellTimeChart({ cases, className }: DwellTimeChartProps) {
               <Button
                 variant="outline"
                 size="sm"
-                className="h-7 text-xs gap-1.5 px-2.5 border-[var(--color-rule)] rounded-[6px] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]"
+                className="h-7 text-xs gap-1.5 px-2.5 border-[var(--color-rule)] rounded-[6px] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] bg-surface"
               >
                 <Settings2 className="h-3.5 w-3.5 opacity-70" />
                 <span>Adjust thresholds</span>
               </Button>
             </PopoverTrigger>
-            <PopoverContent align="end" className="w-72 p-4 text-xs space-y-3 bg-surface border border-[var(--color-rule)] rounded-[8px] shadow-xl">
+            <PopoverContent align="end" className="w-76 p-4 text-xs space-y-3 bg-surface border border-[var(--color-rule)] rounded-[8px] shadow-lg">
               <div className="font-semibold text-[var(--color-ink)]">SLA Bottleneck Thresholds</div>
-              <p className="text-[11px] text-[var(--color-text-muted)]">
-                Define the maximum allowed average dwell hours before triggering a bottleneck warning:
+              <p className="text-[11px] text-[var(--color-text-muted)] leading-relaxed">
+                Define the maximum allowed average dwell hours per stage before triggering supervisory bottleneck warnings:
               </p>
-              <div className="space-y-2.5 pt-1">
+              <div className="space-y-3 pt-1">
                 {Object.keys(DEFAULT_THRESHOLDS).map((k) => (
                   <div key={k} className="flex items-center justify-between gap-2">
                     <Label className="text-xs text-[var(--color-text-secondary)] flex-1">{k}</Label>
-                    <div className="flex items-center gap-1 w-20">
+                    <div className="flex items-center gap-1 w-24">
                       <Input
                         type="number"
                         min="1"
@@ -125,7 +130,7 @@ export function DwellTimeChart({ cases, className }: DwellTimeChartProps) {
                         }}
                         className="h-7 text-xs px-2 bg-surface border-[var(--color-rule)] rounded-[4px]"
                       />
-                      <span className="text-[10px] text-[var(--color-text-muted)]">h</span>
+                      <span className="text-[11px] text-[var(--color-text-muted)]">hours</span>
                     </div>
                   </div>
                 ))}
@@ -133,10 +138,10 @@ export function DwellTimeChart({ cases, className }: DwellTimeChartProps) {
               <Button
                 variant="ghost"
                 size="sm"
-                className="w-full text-xs h-7 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]"
+                className="w-full text-xs h-7 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] mt-1"
                 onClick={() => setThresholds(DEFAULT_THRESHOLDS)}
               >
-                Reset to defaults
+                Reset to default thresholds
               </Button>
             </PopoverContent>
           </Popover>
@@ -147,55 +152,83 @@ export function DwellTimeChart({ cases, className }: DwellTimeChartProps) {
         {chartData.map((item) => {
           const dwellWidthPct = Math.min(100, Math.round((item.dwellHours / maxScale) * 100));
           const thresholdPct = Math.min(100, Math.round((item.thresholdHours / maxScale) * 100));
+          const delta = Math.abs(item.dwellHours - item.thresholdHours).toFixed(1);
 
           return (
             <div key={item.stage} className="space-y-2">
-              <div className="flex items-baseline justify-between text-xs">
-                <span className="font-medium text-[var(--color-text-primary)]">
-                  {item.stage}
-                </span>
-                <div className="flex items-center gap-3.5 tabular-nums text-xs">
+              {/* Row Header with Stage Name, Active Cases, and Intuitive Delta Pill */}
+              <div className="flex flex-wrap items-baseline justify-between gap-2 text-xs">
+                <div className="flex items-center gap-2">
+                  <span className="font-semibold text-[var(--color-ink)]">
+                    {item.stage}
+                  </span>
+                  <span className="text-[11px] text-[var(--color-text-muted)] font-mono">
+                    ({item.caseCount} active {item.caseCount === 1 ? "case" : "cases"})
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-3 tabular-nums text-xs">
                   <span className="text-[var(--color-text-secondary)]">
                     <strong
                       className={cn(
                         item.isBottleneck
-                          ? "text-[var(--sla-overdue-text)] font-semibold"
-                          : "text-[var(--color-text-primary)] font-medium",
+                          ? "text-[var(--sla-overdue-text)] font-bold"
+                          : "text-[var(--color-ink)] font-semibold",
                       )}
                     >
                       {item.dwellHours} h
                     </strong>{" "}
                     average
                   </span>
-                  <span className="text-[var(--color-text-muted)]">
-                    threshold {item.thresholdHours} h
+
+                  <span className="text-[var(--color-text-muted)] font-mono text-[11px]">
+                    target {item.thresholdHours} h
                   </span>
-                  {item.isBottleneck && (
-                    <span className="text-[var(--sla-overdue-text)] font-medium bg-[#FDECEC] px-1.5 py-0.5 rounded text-[11px]">
-                      Slower than expected
+
+                  {item.isBottleneck ? (
+                    <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-[var(--sla-overdue-text)] bg-[#FDECEC] px-2 py-0.5 rounded-[4px] border border-[var(--sla-overdue-text)]/20">
+                      <AlertTriangle className="h-3 w-3 shrink-0" />
+                      <span>+{delta} h above target</span>
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#1E7B52] bg-[#E4F4EC] px-2 py-0.5 rounded-[4px] border border-[#1E7B52]/20">
+                      <CheckCircle2 className="h-3 w-3 shrink-0" />
+                      <span>{delta} h within limit</span>
                     </span>
                   )}
                 </div>
               </div>
 
-              {/* Bar track */}
-              <div className="relative h-5 bg-[var(--color-page)] border border-[var(--color-rule)] rounded-[3px] overflow-hidden">
-                {/* Horizontal dwell bar */}
+              {/* Intuitive Dual-Band Progress Gauge */}
+              <div className="relative h-6 bg-[var(--color-page)] border border-[var(--color-rule)] rounded-[5px] overflow-hidden">
+                {/* Acceptable SLA Safe Zone Underlay */}
                 <div
-                  className={cn(
-                    "h-full transition-all duration-300 rounded-r-[2px]",
-                    item.isBottleneck
-                      ? "bg-[var(--sla-overdue-text)]"
-                      : "bg-[var(--color-action)]",
-                  )}
-                  style={{ width: `${dwellWidthPct}%` }}
+                  className="absolute top-0 bottom-0 left-0 bg-[var(--color-action)]/8 z-0 border-r border-[var(--color-rule)]"
+                  style={{ width: `${thresholdPct}%` }}
+                  title={`Acceptable SLA Target Zone: up to ${item.thresholdHours} hours`}
                 />
 
-                {/* Threshold vertical indicator line */}
+                {/* Actual Average Dwell Bar */}
                 <div
-                  className="absolute top-0 bottom-0 w-[2px] bg-[var(--color-ink)] opacity-80 z-10"
+                  className={cn(
+                    "h-full transition-all duration-500 rounded-r-[3px] relative z-10 flex items-center justify-end pr-2",
+                    item.isBottleneck
+                      ? "bg-gradient-to-r from-[var(--color-action)] via-[var(--color-action)] to-[var(--sla-overdue-text)] shadow-xs"
+                      : "bg-gradient-to-r from-[var(--color-action)] to-[#8B5CF6] shadow-xs",
+                  )}
+                  style={{ width: `${dwellWidthPct}%` }}
+                >
+                  {dwellWidthPct > 15 && (
+                    <span className="text-[10px] font-mono text-white font-bold tabular-nums">
+                      {item.dwellHours}h
+                    </span>
+                  )}
+                </div>
+
+                {/* Threshold Vertical Indicator Flag */}
+                <div
+                  className="absolute top-0 bottom-0 w-[2px] bg-[var(--color-ink)] z-20"
                   style={{ left: `${thresholdPct}%` }}
-                  title={`Threshold: ${item.thresholdHours}h`}
                 />
               </div>
             </div>
@@ -203,25 +236,25 @@ export function DwellTimeChart({ cases, className }: DwellTimeChartProps) {
         })}
       </div>
 
-      {/* Legend */}
-      <div className="flex items-center justify-between text-[11px] text-[var(--color-text-muted)] pt-3 border-t border-[var(--color-rule)]">
-        <div className="flex items-center gap-5">
+      {/* Legend & Summary Footer */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-[var(--color-text-muted)] pt-3 border-t border-[var(--color-rule)]">
+        <div className="flex items-center gap-5 flex-wrap">
           <div className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-[2px] bg-[var(--color-action)]" />
-            <span>On track</span>
+            <span className="w-2.5 h-2.5 rounded-[2px] bg-gradient-to-r from-[var(--color-action)] to-[#8B5CF6]" />
+            <span className="text-[var(--color-text-secondary)] font-medium">On track (within target)</span>
           </div>
           <div className="flex items-center gap-1.5">
             <span className="w-2.5 h-2.5 rounded-[2px] bg-[var(--sla-overdue-text)]" />
-            <span>Slower than expected</span>
+            <span className="text-[var(--color-text-secondary)] font-medium">Slower than expected (bottleneck)</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <span className="w-0.5 h-3 bg-[var(--color-ink)]" />
-            <span>Target threshold</span>
+            <span className="w-0.5 h-3.5 bg-[var(--color-ink)]" />
+            <span className="text-[var(--color-text-secondary)] font-medium">Target threshold pin</span>
           </div>
         </div>
 
-        <span className="tabular-nums text-[11px]">
-          Thresholds: Triage ({thresholds["Under Triage"]}h) · Info ({thresholds["Awaiting Information"]}h) · Review ({thresholds["Under Review"]}h)
+        <span className="tabular-nums font-mono text-[11px] text-[var(--color-text-secondary)]">
+          Limits: Triage ({thresholds["Under Triage"]}h) · Clarification ({thresholds["Awaiting Information"]}h) · Review ({thresholds["Under Review"]}h)
         </span>
       </div>
     </div>

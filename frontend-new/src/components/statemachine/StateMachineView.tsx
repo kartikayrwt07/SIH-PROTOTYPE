@@ -190,7 +190,7 @@ export function StateMachineView() {
             <div className="space-y-3 pt-2">
               {checkedResult.isLegal ? (
                 /* Legal green alert */
-                <div className="p-4 bg-[var(--sla-on-track-bg)] border border-[var(--sla-on-track-text)]/30 rounded-[4px] text-xs text-[var(--sla-on-track-text)] space-y-2">
+                <div className="p-4 bg-[#E4F4EC] border border-[#1E7B52]/30 rounded-[6px] text-xs text-[#1E7B52] space-y-2">
                   <div className="flex items-center gap-2 font-semibold">
                     <CheckCircle2 className="h-4 w-4 shrink-0" />
                     <span>Permitted transition</span>
@@ -199,7 +199,7 @@ export function StateMachineView() {
                     {checkedResult.message}
                   </p>
                   {checkedResult.rules.length > 0 && (
-                    <div className="space-y-1 pt-1.5 border-t border-[var(--sla-on-track-text)]/20 text-[11px] text-[var(--color-text-secondary)]">
+                    <div className="space-y-1 pt-1.5 border-t border-[#1E7B52]/20 text-[11px] text-[var(--color-text-secondary)]">
                       <span className="font-medium text-[var(--color-text-primary)] block">Condition rules:</span>
                       {checkedResult.rules.map((rule, idx) => (
                         <div key={idx}>• {rule}</div>

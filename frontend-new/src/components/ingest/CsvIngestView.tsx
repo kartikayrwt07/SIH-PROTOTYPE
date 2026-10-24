@@ -161,7 +161,6 @@ export function CsvIngestView() {
   ];
 
   return (
-    <div className="py-6 px-6 lg:px-8 max-w-7xl mx-auto space-y-6">
     <div className="py-8 px-6 lg:px-8 max-w-7xl mx-auto space-y-8">
       <PageHeader
         title="CSV ingestion"
@@ -169,7 +168,6 @@ export function CsvIngestView() {
       />
 
       {/* Ruled Stepper: 1. Upload, 2. Review, 3. Commit */}
-      <div className="flex items-center gap-6 py-2 border-b border-[var(--color-rule)] text-xs">
       <div className="flex items-center gap-6 py-2.5 border-b border-[var(--color-rule)] text-xs">
         <div
           onClick={() => step > 1 && setStep(1)}

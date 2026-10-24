@@ -63,15 +63,15 @@ export function StateDetailsPanel({
         <div className="flex items-center gap-2">
           <span className="font-semibold text-[var(--color-text-primary)] text-sm">{status}</span>
           {terminal ? (
-            <span className="text-[10px] text-[var(--color-text-muted)] border border-[var(--color-rule)] px-1.5 py-0.2 rounded">
+            <span className="text-[10px] text-[var(--color-text-muted)] border border-[var(--color-rule)] px-1.5 py-0.5 rounded">
               Terminal
             </span>
           ) : active ? (
-            <span className="text-[10px] text-[var(--color-action)] font-medium">
+            <span className="text-[10px] text-[var(--color-action)] font-semibold bg-[var(--color-page)] px-2 py-0.5 rounded border border-[var(--color-rule)]">
               Active Stage
             </span>
           ) : (
-            <span className="text-[10px] text-[var(--sla-on-track-text)] font-medium">
+            <span className="text-[10px] text-[var(--sla-ontrack-text)] font-semibold bg-[#E4F4EC] px-2 py-0.5 rounded">
               Determined
             </span>
           )}

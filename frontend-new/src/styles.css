@@ -13,17 +13,17 @@
   --font-serif: "Source Serif 4", Georgia, Cambria, "Times New Roman", Times, serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
 
-  /* Official AICTE Case Register Tokens */
-  --color-ink: #12203A;
-  --color-page: #FAFBFC;
+  /* Official AICTE Case Register Tokens — Regal Purple Theme */
+  --color-ink: #1B1233;
+  --color-page: #FAF9FD;
   --color-surface: #FFFFFF;
-  --color-rule: #D5DBE5;
+  --color-rule: #DDD8EC;
 
-  --color-text-primary: #12203A;
-  --color-text-secondary: #44526B;
-  --color-text-muted: #5B6880;
+  --color-text-primary: #1B1233;
+  --color-text-secondary: #4B4365;
+  --color-text-muted: #6E6585;
 
-  --color-action: #1F4FD8;
+  --color-action: #6B3CE0;
   --color-saffron: #E8710A;
 
   --color-sla-overdue: #C62828;
@@ -32,8 +32,8 @@
   --color-sla-approaching-bg: #FFF4DB;
   --color-sla-ontrack: #1E7B52;
   --color-sla-ontrack-bg: #E4F4EC;
-  --color-sla-completed: #5B6880;
-  --color-sla-completed-bg: #F0F2F5;
+  --color-sla-completed: #6E6585;
+  --color-sla-completed-bg: #F0EDF8;
 
   /* Semantic UI tokens */
   --color-background: var(--background);
@@ -64,25 +64,36 @@
 
 :root {
   --radius: 0.375rem;
-  --background: #FAFBFC;
-  --foreground: #12203A;
+  --background: #FAF9FD;
+  --foreground: #1B1233;
   --card: #FFFFFF;
-  --card-foreground: #12203A;
+  --card-foreground: #1B1233;
   --popover: #FFFFFF;
-  --popover-foreground: #12203A;
-  --primary: #1F4FD8;
+  --popover-foreground: #1B1233;
+  --primary: #6B3CE0;
   --primary-foreground: #FFFFFF;
-  --secondary: #F0F2F5;
-  --secondary-foreground: #12203A;
-  --muted: #F0F2F5;
-  --muted-foreground: #5B6880;
-  --accent: #F0F2F5;
-  --accent-foreground: #12203A;
+  --secondary: #F2EEFD;
+  --secondary-foreground: #1B1233;
+  --muted: #F2EEFD;
+  --muted-foreground: #6E6585;
+  --accent: #F2EEFD;
+  --accent-foreground: #1B1233;
   --destructive: #C62828;
   --destructive-foreground: #FFFFFF;
-  --border: #D5DBE5;
-  --input: #D5DBE5;
-  --ring: #1F4FD8;
+  --border: #DDD8EC;
+  --input: #DDD8EC;
+  --ring: #6B3CE0;
+
+  /* Status Tokens */
+  --status-received: #64748B;
+  --status-registered: #3B82F6;
+  --status-under-triage: #8B5CF6;
+  --status-assigned: #06B6D4;
+  --status-in-progress: #6B3CE0;
+  --status-awaiting-information: #D97706;
+  --status-under-review: #EC4899;
+  --status-resolved: #10B981;
+  --status-closed: #475569;
 }
 
 @layer base {

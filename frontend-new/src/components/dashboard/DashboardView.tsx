@@ -191,12 +191,12 @@ export function DashboardView() {
       width: "180px",
       cell: (b) => (
         <div className="flex items-center justify-end gap-3 py-0.5">
-          <span className="tabular-nums text-xs text-[var(--color-text-secondary)] font-medium">
+          <span className="tabular-nums text-xs text-[var(--color-ink)] font-semibold">
             {b.completionPct}%
           </span>
-          <div className="w-20 h-1.5 bg-[var(--color-page)] border border-[var(--color-rule)] rounded-[2px] overflow-hidden">
+          <div className="w-24 h-2 bg-[var(--color-page)] border border-[var(--color-rule)] rounded-full overflow-hidden p-[1px]">
             <div
-              className="h-full bg-[var(--color-action)] transition-all duration-300"
+              className="h-full bg-gradient-to-r from-[var(--color-action)] to-[#8B5CF6] rounded-full transition-all duration-500"
               style={{ width: `${b.completionPct}%` }}
             />
           </div>
