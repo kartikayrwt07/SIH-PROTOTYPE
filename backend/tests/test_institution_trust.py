@@ -140,3 +140,47 @@ def test_execute_regulatory_action(db: Session):
     assert res.institution_id == inst.id
     assert "AICTE/REG/" in res.reference_number
     assert "Show-Cause Notice" in res.message
+
+
+def test_execute_regulatory_action_with_action_code(db: Session):
+    """Verify request with action_code and summary is normalized and processed properly."""
+    inst = db.query(Institution).first()
+    assert inst is not None
+    req = RegulatoryActionRequest(
+        action_code="SHOW_CAUSE_SUMMONS",
+        summary="Statutory summons for board hearing.",
+    )
+    assert req.action_type == "SHOW_CAUSE_SUMMONS"
+    assert req.directive_notes == "Statutory summons for board hearing."
+
+    res = execute_regulatory_action(inst.id, req, db)
+    assert res.success is True
+    assert res.action_type == "SHOW_CAUSE_SUMMONS"
+    assert res.action_code == "SHOW_CAUSE_SUMMONS"
+    assert res.status == "DISPATCHED"
+    assert res.reference_number == res.dispatch_reference
+    assert "AICTE/REG/" in res.dispatch_reference
+    assert res.action_id.startswith("ACT-")
+
+
+def test_api_regulatory_action_payload_validation(client: TestClient, db: Session):
+    """Verify POST /api/v1/institutions/{id}/action accepts frontend { action_code, summary } payload."""
+    inst = db.query(Institution).first()
+    assert inst is not None
+    payload = {
+        "action_code": "MANDATORY_INSPECTION_FREEZE",
+        "summary": "Urgent freeze on academic intake quota.",
+    }
+    res = client.post(
+        f"/api/v1/institutions/{inst.id}/action",
+        json=payload,
+        headers={"X-Demo-Role": "ADMIN"},
+    )
+    assert res.status_code == 200
+    data = res.json()
+    assert data["success"] is True
+    assert data["data"]["action_code"] == "MANDATORY_INSPECTION_FREEZE"
+    assert data["data"]["action_type"] == "MANDATORY_INSPECTION_FREEZE"
+    assert data["data"]["status"] == "DISPATCHED"
+    assert data["data"]["dispatch_reference"] is not None
+    assert "Executive Order" in data["data"]["message"]

@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, status, Request, Response
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import or_
 from backend.app.core.database import get_db
 from backend.app.core.auth import get_current_user, assert_bureau_access, sanitize_case_for_role
@@ -167,7 +167,10 @@ def get_sla_radar(
     """Real-time SLA aging surveillance radar: categorizes active cases by breach risk."""
     query = (
         db.query(ComplaintCase)
-        .join(Institution, ComplaintCase.institution_id == Institution.id, isouter=True)
+        .options(
+            joinedload(ComplaintCase.bureau),
+            joinedload(ComplaintCase.institution),
+        )
         .filter(ComplaintCase.status.notin_([CaseStatus.RESOLVED, CaseStatus.CLOSED]))
     )
 

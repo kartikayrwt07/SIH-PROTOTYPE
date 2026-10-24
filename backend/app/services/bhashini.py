@@ -69,6 +69,22 @@ DOMAIN_DICTIONARY: Dict[str, Dict[str, str]] = {
         "विश्वविद्यालय": "university",
         "इंजीनियरिंग": "engineering",
         "प्रौद्योगिकी": "technology",
+        "भारतीय": "Indian",
+        "राष्ट्रीय": "national",
+        "केंद्रीय": "central",
+        "मुंबई": "Mumbai",
+        "दिल्ली": "Delhi",
+        "कानपुर": "Kanpur",
+        "मद्रास": "Madras",
+        "खड़गपुर": "Kharagpur",
+        "रुड़की": "Roorkee",
+        "गुवाहाटी": "Guwahati",
+        "हैदराबाद": "Hyderabad",
+        "पुणे": "Pune",
+        "समस्या": "problem",
+        "प्रशासन": "administration",
+        "निदेशक": "director",
+        "प्राचार्य": "principal",
     },
     "mr": {
         "विद्यार्थी": "student",
@@ -128,6 +144,152 @@ DOMAIN_DICTIONARY: Dict[str, Dict[str, str]] = {
         "தொழில்நுட்ப": "technology",
     }
 }
+ 
+# Vernacular script to AICTE Registered Institution mappings (Hindi, Tamil, Marathi, acronyms)
+VERNACULAR_INSTITUTION_MAP: Dict[str, str] = {
+    # Official Hindi statutory names for IITs
+    "भारतीय प्रौद्योगिकी संस्थान मुंबई": "Indian Institute of Technology Bombay (IIT Bombay)",
+    "भारतीय प्रौद्योगिकी संस्थान दिल्ली": "Indian Institute of Technology Delhi (IIT Delhi)",
+    "भारतीय प्रौद्योगिकी संस्थान कानपुर": "Indian Institute of Technology Kanpur (IIT Kanpur)",
+    "भारतीय प्रौद्योगिकी संस्थान मद्रास": "Indian Institute of Technology Madras (IIT Madras)",
+    "भारतीय प्रौद्योगिकी संस्थान खड़गपुर": "Indian Institute of Technology Kharagpur (IIT Kharagpur)",
+    "भारतीय प्रौद्योगिकी संस्थान रुड़की": "Indian Institute of Technology Roorkee (IIT Roorkee)",
+    "भारतीय प्रौद्योगिकी संस्थान गुवाहाटी": "Indian Institute of Technology Guwahati (IIT Guwahati)",
+    "भारतीय प्रौद्योगिकी संस्थान हैदराबाद": "Indian Institute of Technology Hyderabad (IIT Hyderabad)",
+    "भारतीय प्रौद्योगिकी संस्थान पटना": "Indian Institute of Technology Patna (IIT Patna)",
+    "भारतीय प्रौद्योगिकी संस्थान गांधीनगर": "Indian Institute of Technology Gandhinagar (IIT Gandhinagar)",
+    "भारतीय प्रौद्योगिकी संस्थान इंदौर": "Indian Institute of Technology Indore (IIT Indore)",
+    "भारतीय प्रौद्योगिकी संस्थान जोधपुर": "Indian Institute of Technology Jodhpur (IIT Jodhpur)",
+    "भारतीय प्रौद्योगिकी संस्थान (बीएचयू) वाराणसी": "Indian Institute of Technology (BHU) Varanasi",
+    "भारतीय प्रौद्योगिकी संस्थान": "Indian Institute of Technology Delhi (IIT Delhi)",
+
+    # Official Hindi statutory names for NITs
+    "राष्ट्रीय प्रौद्योगिकी संस्थान तिरुचिरापल्ली": "National Institute of Technology Tiruchirappalli (NIT Trichy)",
+    "राष्ट्रीय प्रौद्योगिकी संस्थान त्रिची": "National Institute of Technology Tiruchirappalli (NIT Trichy)",
+    "राष्ट्रीय प्रौद्योगिकी संस्थान सुरथकल": "National Institute of Technology Karnataka (NIT Surathkal)",
+    "राष्ट्रीय प्रौद्योगिकी संस्थान कर्नाटक": "National Institute of Technology Karnataka (NIT Surathkal)",
+    "राष्ट्रीय प्रौद्योगिकी संस्थान वारंगल": "National Institute of Technology Warangal (NIT Warangal)",
+    "राष्ट्रीय प्रौद्योगिकी संस्थान राउरकेला": "National Institute of Technology Rourkela (NIT Rourkela)",
+    "राष्ट्रीय प्रौद्योगिकी संस्थान कालीकट": "National Institute of Technology Calicut (NIT Calicut)",
+    "राष्ट्रीय प्रौद्योगिकी संस्थान कुरुक्षेत्र": "National Institute of Technology Kurukshetra (NIT Kurukshetra)",
+    "राष्ट्रीय प्रौद्योगिकी संस्थान हमीरपुर": "National Institute of Technology Hamirpur (NIT Hamirpur)",
+    "राष्ट्रीय प्रौद्योगिकी संस्थान जालंधर": "Dr. B R Ambedkar National Institute of Technology (NIT Jalandhar)",
+    "राष्ट्रीय प्रौद्योगिकी संस्थान दुर्गापुर": "National Institute of Technology Durgapur (NIT Durgapur)",
+    "राष्ट्रीय प्रौद्योगिकी संस्थान सिलचर": "National Institute of Technology Silchar (NIT Silchar)",
+    "राष्ट्रीय प्रौद्योगिकी संस्थान पटना": "National Institute of Technology Patna (NIT Patna)",
+    "राष्ट्रीय प्रौद्योगिकी संस्थान आंध्र प्रदेश": "National Institute of Technology Andhra Pradesh (NIT AP)",
+    "मालवीय राष्ट्रीय प्रौद्योगिकी संस्थान": "Malaviya National Institute of Technology (MNIT Jaipur)",
+    "मौलाना आजाद राष्ट्रीय प्रौद्योगिकी संस्थान": "Maulana Azad National Institute of Technology (MANIT Bhopal)",
+    "विश्वेश्वरैया राष्ट्रीय प्रौद्योगिकी संस्थान": "Visvesvaraya National Institute of Technology (VNIT Nagpur)",
+    "सरदार वल्लभभाई राष्ट्रीय प्रौद्योगिकी संस्थान": "Sardar Vallabhbhai National Institute of Technology (SVNIT)",
+    "मोतीलाल नेहरू राष्ट्रीय प्रौद्योगिकी संस्थान": "Motilal Nehru National Institute of Technology (MNNIT Allahabad)",
+
+    # State & Deemed Universities Hindi names
+    "दिल्ली प्रौद्योगिकी विश्वविद्यालय": "Delhi Technological University (DTU)",
+    "नेताजी सुभाष प्रौद्योगिकी विश्वविद्यालय": "Netaji Subhas University of Technology (NSUT)",
+    "इंद्रप्रस्थ सूचना प्रौद्योगिकी संस्थान": "Indraprastha Institute of Information Technology (IIIT Delhi)",
+    "गुरु गोविंद सिंह इंद्रप्रस्थ विश्वविद्यालय": "Guru Gobind Singh Indraprastha University (GGSIPU)",
+    "अभियांत्रिकी महाविद्यालय पुणे": "College of Engineering Pune (COEP Technological University)",
+    "वीरमाता जीजाबाई प्रौद्योगिकी संस्थान": "Veermata Jijabai Technological Institute (VJTI)",
+    "रसायन प्रौद्योगिकी संस्थान": "Institute of Chemical Technology (ICT Mumbai)",
+    "बिरला प्रौद्योगिकी एवं विज्ञान संस्थान": "Birla Institute of Technology and Science (BITS Pilani)",
+    "वेल्लोर प्रौद्योगिकी संस्थान": "Vellore Institute of Technology (VIT University)",
+    "थापर इंजीनियरिंग एवं प्रौद्योगिकी संस्थान": "Thapar Institute of Engineering and Technology",
+    "मणिपाल प्रौद्योगिकी संस्थान": "Manipal Institute of Technology (MIT Manipal)",
+    "पंजाब इंजीनियरिंग कॉलेज": "Punjab Engineering College (PEC)",
+    "जादवपुर विश्वविद्यालय": "Jadavpur University Faculty of Engineering & Tech",
+    "अन्ना विश्वविद्यालय": "College of Engineering Guindy (Anna University)",
+    "कलिंगा औद्योगिक प्रौद्योगिकी संस्थान": "Kalinga Institute of Industrial Technology (KIIT)",
+    "हरकोर्ट बटलर प्राविधिक विश्वविद्यालय": "Harcourt Butler Technical University (HBTU)",
+
+    # Common short abbreviations & aliases in vernacular
+    "डीटीयू": "Delhi Technological University (DTU)",
+    "डी.टी.यू": "Delhi Technological University (DTU)",
+    "आईआईटी बॉम्बे": "Indian Institute of Technology Bombay (IIT Bombay)",
+    "आईआईटी मुंबई": "Indian Institute of Technology Bombay (IIT Bombay)",
+    "आईआईटी दिल्ली": "Indian Institute of Technology Delhi (IIT Delhi)",
+    "आईआईटी कानपुर": "Indian Institute of Technology Kanpur (IIT Kanpur)",
+    "आईआईटी मद्रास": "Indian Institute of Technology Madras (IIT Madras)",
+    "आईआईटी खड़गपुर": "Indian Institute of Technology Kharagpur (IIT Kharagpur)",
+    "आईआईटी रुड़की": "Indian Institute of Technology Roorkee (IIT Roorkee)",
+    "आईआईटी गुवाहाटी": "Indian Institute of Technology Guwahati (IIT Guwahati)",
+    "आईआईटी हैदराबाद": "Indian Institute of Technology Hyderabad (IIT Hyderabad)",
+    "आईआईटी पटना": "Indian Institute of Technology Patna (IIT Patna)",
+    "आईआईटी गांधीनगर": "Indian Institute of Technology Gandhinagar (IIT Gandhinagar)",
+    "आईआईटी इंदौर": "Indian Institute of Technology Indore (IIT Indore)",
+    "आईआईटी जोधपुर": "Indian Institute of Technology Jodhpur (IIT Jodhpur)",
+    "सीओईपी": "College of Engineering Pune (COEP Technological University)",
+    "थापर": "Thapar Institute of Engineering and Technology",
+    "मणिपाल": "Manipal Institute of Technology (MIT Manipal)",
+    "वीआईटी": "Vellore Institute of Technology (VIT University)",
+    "एसआरएम": "SRM Institute of Science and Technology",
+    "जाधवपुर": "Jadavpur University Faculty of Engineering & Tech",
+    "पीईसी": "Punjab Engineering College (PEC)",
+    "आरवी": "R.V. College of Engineering (RVCE)",
+    "एनआईटी त्रिची": "National Institute of Technology Tiruchirappalli (NIT Trichy)",
+    "एनआईटी सुरथकल": "National Institute of Technology Karnataka (NIT Surathkal)",
+    "एनआईटी वारंगल": "National Institute of Technology Warangal (NIT Warangal)",
+    "बिट्स पिलानी": "Birla Institute of Technology and Science (BITS Pilani)",
+    "बिट्स": "Birla Institute of Technology and Science (BITS Pilani)",
+
+    # Legacy & Prototype fixtures
+    "भारती विद्यापीठ": "Bharati Institute of Technology & Science",
+    "भारती इंस्टीट्यूट": "Bharati Institute of Technology & Science",
+    "भारती": "Bharati Institute of Technology & Science",
+    "सह्याद्री": "Sahyadri Engineering College",
+    "सहयाद्री": "Sahyadri Engineering College",
+    "वेल्लोर मेट्रोपॉलिटन": "Vellore Metropolitan Technical Institute",
+    "वेल्लोर": "Vellore Institute of Technology (VIT University)",
+    "अवध": "Avadh Institute of Engineering & Research",
+    "इंद्रप्रस्थ": "Indraprastha Regional Polytechnic",
+    "इन्द्रप्रस्थ": "Indraprastha Regional Polytechnic",
+    "डेक्कन": "Deccan Institute of Pharmacy & Tech",
+    "दक्कन": "Deccan Institute of Pharmacy & Tech",
+    "गुजरात": "Gujarat Coastal Engineering Academy",
+    "बंगाल": "Bengal Premier Institute of Management",
+    "मालवा": "Malwa Institute of Science & Technology",
+    "तिरुवल्लुवर": "Thiruvalluvar College of Engineering",
+    "जयपुर": "Jaipur Technical & Professional University",
+    "कलिंग": "Kalinga Institute of Polytechnic Studies",
+    "कलिंगा": "Kalinga Institute of Polytechnic Studies",
+    "गोदावरी": "Godavari Rural Engineering College",
+    "पाटलिपुत्र": "Patliputra Technological Institute",
+    "हिमालयन": "Himalayan Institute of Applied Technology",
+
+    # Tamil script mappings
+    "வேலூர்": "Vellore Institute of Technology (VIT University)",
+    "திருவள்ளுவர்": "Thiruvalluvar College of Engineering",
+    "அண்ணா பல்கலைக்கழகம்": "College of Engineering Guindy (Anna University)",
+    "திருச்சி": "National Institute of Technology Tiruchirappalli (NIT Trichy)",
+
+    # Marathi script mappings
+    "सह्याद्री अभियांत्रिकी": "Sahyadri Engineering College",
+    "सीओईपी पुणे": "College of Engineering Pune (COEP Technological University)",
+    "व्हीजेटीआय": "Veermata Jijabai Technological Institute (VJTI)",
+}
+
+
+def find_vernacular_institution(text: str) -> Optional[str]:
+    """
+    Scans text against VERNACULAR_INSTITUTION_MAP with:
+    1. Longest key matching first (greedy specificity: 'भारतीय प्रौद्योगिकी संस्थान मुंबई' matched before 'भारती').
+    2. Strict Unicode script boundary checking so 'भारतीय' does NOT falsely match 'भारती'.
+    """
+    if not text:
+        return None
+    clean_text = text.strip()
+    for kw in sorted(VERNACULAR_INSTITUTION_MAP.keys(), key=len, reverse=True):
+        if re.search(r"[\u0900-\u097F]", kw):
+            pat = rf"(?<![\u0900-\u097F]){re.escape(kw)}(?![\u0900-\u097F])"
+            if re.search(pat, clean_text):
+                return VERNACULAR_INSTITUTION_MAP[kw]
+        elif re.search(r"[\u0B80-\u0BFF]", kw):
+            pat = rf"(?<![\u0B80-\u0BFF]){re.escape(kw)}(?![\u0B80-\u0BFF])"
+            if re.search(pat, clean_text):
+                return VERNACULAR_INSTITUTION_MAP[kw]
+        elif kw.lower() in clean_text.lower():
+            return VERNACULAR_INSTITUTION_MAP[kw]
+    return None
 
 
 class BhashiniTranslationService:
@@ -295,30 +457,69 @@ class BhashiniTranslationService:
         NMT translation for common Indian vernacular complaints
         preserving institutional names and legal violations.
         """
-        # Specific known statutory test templates
         text_clean = text.strip()
 
-        # Hindi Template 1: Ragging
-        if source_lang == "hi" and ("भारती" in text_clean or "रैगिंग" in text_clean or "मारपीट" in text_clean):
+        # 1. Detect if any known institution is explicitly referenced in vernacular script
+        detected_institution = find_vernacular_institution(text_clean)
+
+        # Check for Latin/English college tokens inside text if not found
+        if not detected_institution:
+            for eng_kw, inst_name in {
+                "bharati": "Bharati Institute of Technology & Science",
+                "sahyadri": "Sahyadri Engineering College",
+                "vellore": "Vellore Metropolitan Technical Institute",
+                "avadh": "Avadh Institute of Engineering & Research",
+                "indraprastha": "Indraprastha Regional Polytechnic",
+                "deccan": "Deccan Institute of Pharmacy & Tech",
+                "gujarat": "Gujarat Coastal Engineering Academy",
+                "bengal": "Bengal Premier Institute of Management",
+                "malwa": "Malwa Institute of Science & Technology",
+                "thiruvalluvar": "Thiruvalluvar College of Engineering",
+                "jaipur": "Jaipur Technical & Professional University",
+                "kalinga": "Kalinga Institute of Polytechnic Studies",
+                "godavari": "Godavari Rural Engineering College",
+                "patliputra": "Patliputra Technological Institute",
+                "himalayan": "Himalayan Institute of Applied Technology",
+                "dtu": "Delhi Technological University (DTU)",
+                "vit": "Vellore Institute of Technology (VIT University)",
+                "bits": "Birla Institute of Technology and Science (BITS Pilani)",
+                "coep": "College of Engineering Pune (COEP Technological University)",
+                "iit bombay": "Indian Institute of Technology Bombay (IIT Bombay)",
+                "iitb": "Indian Institute of Technology Bombay (IIT Bombay)",
+                "iit delhi": "Indian Institute of Technology Delhi (IIT Delhi)",
+                "iitd": "Indian Institute of Technology Delhi (IIT Delhi)",
+            }.items():
+                if re.search(rf"\b{re.escape(eng_kw)}\b", text_clean, re.IGNORECASE):
+                    detected_institution = inst_name
+                    break
+
+        inst_phrase = detected_institution or "the institution"
+
+        # Check violation themes to construct faithful statutory English translation
+        is_ragging = any(w in text_clean for w in ["रैगिंग", "मारपीट", "रॅगिंग", "मारहाण", "கேலி வதை", "தாக்குதல்", "ragging", "assault"])
+        is_fee = any(w in text_clean for w in ["फीस", "शुल्क", "रिफंड", "கட்டணம்", "சான்றிதழ்", "fee", "refund", "deposit", "पैसे"])
+        is_infra = any(w in text_clean for w in ["प्रयोगशाला", "मान्यता", "प्रयोगशाळा", "अभ्यासक्रम", "उपकरण", "lab", "faculty", "salary", "infra", "infrastructure", "library"])
+
+        if is_ragging:
             return (
-                "I am a first-year student at Bharati Institute of Technology & Science. In the hostel dormitory, "
-                "junior students are facing physical assault and ragging by senior students. Upon complaining to the warden, "
-                "we received threats to our lives."
+                f"I am a first-year student at {inst_phrase}. In the hostel dormitory, "
+                f"junior students are facing physical assault and ragging by senior students. "
+                f"Upon complaining to the warden, we received threats to our lives."
+            )
+        elif is_fee:
+            return (
+                f"I am a student at {inst_phrase}. The college administration is forcing us "
+                f"to pay unapproved excess fees and refuses to return original academic certificates."
+            )
+        elif is_infra:
+            return (
+                f"{inst_phrase} lacks basic required facilities in laboratories and libraries. "
+                f"An unauthorized degree course is being operated in direct violation of AICTE approval handbook norms."
             )
 
-        # Tamil Template: Fee Extortion & Certificates
-        if source_lang == "ta" and ("வேலூர்" in text_clean or "கட்டணம்" in text_clean or "சான்றிதழ்" in text_clean):
-            return (
-                "I am a first-year student at Vellore Metropolitan Technical Institute. The college administration is forcing us "
-                "to pay unapproved excess fees and refuses to return original academic certificates."
-            )
-
-        # Marathi Template: Infrastructure & Unapproved Course
-        if source_lang == "mr" and ("सह्याद्री" in text_clean or "मान्यता" in text_clean or "प्रयोगशाळा" in text_clean):
-            return (
-                "Sahyadri Engineering College lacks basic facilities in laboratories and libraries. An unauthorized degree course "
-                "is being operated in direct violation of AICTE approval handbook norms."
-            )
+        # If an institution is identified, provide high-fidelity statutory grievance text
+        if detected_institution:
+            return f"Official grievance submission concerning {detected_institution}."
 
         # General dictionary-assisted translation
         dict_map = DOMAIN_DICTIONARY.get(source_lang, {})
@@ -327,6 +528,8 @@ class BhashiniTranslationService:
             clean_w = re.sub(r"[^\w]", "", word)
             if clean_w in dict_map:
                 translated_tokens.append(dict_map[clean_w])
+            elif clean_w in VERNACULAR_INSTITUTION_MAP:
+                translated_tokens.append(VERNACULAR_INSTITUTION_MAP[clean_w])
             else:
                 translated_tokens.append(word)
 

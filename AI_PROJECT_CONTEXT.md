@@ -330,6 +330,10 @@ The state machine implements rigid procedural validity checks. Illegal jumps (su
   | **400 – 549** | **BBB** | Tier 4 (Watchlist) | Formal AICTE advisory warning issued | `SHOW_CAUSE_SUMMONS` |
   | **250 – 399** | **B** | Tier 5 (High Risk) | Automated Show-Cause Notice issued to Governing Board | `SHOW_CAUSE_SUMMONS` |
   | **< 250** | **C** | Tier 6 (Critical Red Zone) | Mandatory On-Site Inspection & Academic Intake Freeze | `MANDATORY_INSPECTION_FREEZE` |
+- **Regulatory Sanction Dispatch Engine (`POST /api/v1/institutions/{id}/action`)**:
+  - **Schema Validation Resilience**: `RegulatoryActionRequest` features dynamic pre-validation aliasing accepting both `{ action_code, summary }` (frontend modal payload) and canonical `{ action_type, directive_notes }`, guaranteeing immunity against HTTP 422 Unprocessable Content.
+  - **Comprehensive Action Support**: Full support for all modal directives: `SHOW_CAUSE_SUMMONS`, `MANDATORY_INSPECTION_FREEZE`, `HEIGHTENED_MONITORING`, `ROUTINE_COMPLIANCE`, as well as legacy `SHOW_CAUSE_NOTICE`, `FREEZE_INTAKE`, and `SCHEDULE_INSPECTION`.
+  - **Statutory Audit Log Response**: Generates unique tracking UUID (`ACT-XXXXXXXX`), official AICTE docket reference (`AICTE/REG/YYYYMM/<aicte_id>`), formatted timestamp, and regulatory directive terms returned with dual-field compatibility (`dispatch_reference` & `reference_number`, `dispatched_at` & `issued_at`, `summary` & `message`).
 
 ### 6. Executive Dashboard & Real-Time Analytics
 - **Dynamic Scoping**: Filter metrics nationally, by specific Bureau, or by an **individual Institution**.

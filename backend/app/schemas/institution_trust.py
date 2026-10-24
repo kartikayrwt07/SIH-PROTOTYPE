@@ -2,8 +2,8 @@
 Pydantic Schemas for Institution Dynamic Trust / Credit Score.
 """
 
-from typing import Optional, List, Dict
-from pydantic import BaseModel, ConfigDict, Field
+from typing import Optional, List, Dict, Any
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 from backend.app.schemas.analytics import RecurringCategoryCount
 
 
@@ -103,15 +103,35 @@ class TrustLeaderboardSummary(BaseModel):
 
 
 class RegulatoryActionRequest(BaseModel):
-    action_type: str = Field(..., description="'SHOW_CAUSE_NOTICE' | 'FREEZE_INTAKE' | 'SCHEDULE_INSPECTION' | 'DISMISS_ALERT'")
-    directive_notes: str
+    action_type: Optional[str] = Field(None, description="'SHOW_CAUSE_NOTICE' | 'FREEZE_INTAKE' | 'SCHEDULE_INSPECTION' | 'DISMISS_ALERT' | 'SHOW_CAUSE_SUMMONS' | 'MANDATORY_INSPECTION_FREEZE' | 'HEIGHTENED_MONITORING' | 'ROUTINE_COMPLIANCE'")
+    action_code: Optional[str] = Field(None, description="Frontend alias for action_type")
+    directive_notes: Optional[str] = Field(None, description="Detailed directive notes")
+    summary: Optional[str] = Field(None, description="Frontend alias for directive_notes")
     authorized_by: Optional[str] = None
+
+    @model_validator(mode="before")
+    @classmethod
+    def normalize_fields(cls, data: Any) -> Any:
+        if isinstance(data, dict):
+            act = data.get("action_type") or data.get("action_code") or "SHOW_CAUSE_NOTICE"
+            notes = data.get("directive_notes") or data.get("summary") or "Regulatory action dispatched."
+            data["action_type"] = act
+            data["action_code"] = act
+            data["directive_notes"] = notes
+            data["summary"] = notes
+        return data
 
 
 class RegulatoryActionResponse(BaseModel):
-    success: bool
+    success: bool = True
     institution_id: str
     action_type: str
+    action_code: Optional[str] = None
+    action_id: Optional[str] = None
+    status: str = "DISPATCHED"
     reference_number: str
+    dispatch_reference: Optional[str] = None
     issued_at: str
+    dispatched_at: Optional[str] = None
     message: str
+    summary: Optional[str] = None

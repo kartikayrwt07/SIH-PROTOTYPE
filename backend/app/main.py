@@ -15,38 +15,45 @@ from backend.app.db.migrate_storage_url import migrate_storage_url
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Ensure pgvector extension and case_embeddings table exist
-    try:
-        migrate_pgvector()
-    except Exception as e:
-        print(f"[Migration] pgvector extension / table check deferred: {e}")
+    import os
+    import threading
 
-    # Ensure storage URLs exist on case_attachments
-    try:
-        migrate_storage_url()
-    except Exception as e:
-        print(f"[Migration] storage_url check deferred: {e}")
+    # Run DDL migrations only if explicitly enabled (tables already provisioned)
+    if os.getenv("RUN_STARTUP_MIGRATIONS", "false").lower() in ("true", "1"):
+        try:
+            migrate_pgvector()
+            migrate_storage_url()
+            migrate_multilingual_columns()
+            migrate_master_ticket_tables()
+        except Exception as e:
+            print(f"[Migration] check deferred: {e}")
 
-    # Ensure multilingual schema columns exist
-    try:
-        migrate_multilingual_columns()
-    except Exception as e:
-        print(f"[Migration] Multilingual columns check deferred: {e}")
+    # Warm up in-memory vector similarity index in background thread to avoid blocking server boot
+    def _warmup():
+        db = SessionLocal()
+        try:
+            vector_index.initialize_index(db)
+        except Exception as e:
+            print(f"[VectorIndexCache] Warmup deferred: {e}")
+        finally:
+            db.close()
 
-    # Ensure master ticket tables exist
-    try:
-        migrate_master_ticket_tables()
-    except Exception as e:
-        print(f"[Migration] Master ticket tables check deferred: {e}")
+    threading.Thread(target=_warmup, daemon=True).start()
 
-    # Warm up in-memory vector similarity index
-    db = SessionLocal()
-    try:
-        vector_index.initialize_index(db)
-    except Exception as e:
-        print(f"[VectorIndexCache] Warmup deferred: {e}")
-    finally:
-        db.close()
+    # Launch background Telegram Bot poller daemon if configured and enabled
+    telegram_token = os.getenv("TELEGRAM_BOT_TOKEN", settings.TELEGRAM_BOT_TOKEN)
+    enable_poller = os.getenv("ENABLE_TELEGRAM_POLLER", "true").lower() in ("true", "1")
+    if enable_poller and telegram_token and telegram_token != "DEMO_TELEGRAM_BOT_TOKEN":
+        def _poller_worker():
+            try:
+                from backend.app.services.telegram_poller import run_poller
+                print("[TelegramPoller] Starting background poller thread in FastAPI lifespan...")
+                run_poller(bot_token=telegram_token)
+            except Exception as e:
+                print(f"[TelegramPoller] Poller thread error: {e}")
+
+        threading.Thread(target=_poller_worker, daemon=True, name="TelegramPollerLifespan").start()
+
     yield
 
 app = FastAPI(
@@ -59,10 +66,11 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# CORS Configuration
+# CORS Configuration - permits local dev, Vercel deployments, Render, and Railway
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.CORS_ORIGINS,
+    allow_origin_regex=r"^https?://(localhost|127\.0\.0\.1)(:[0-9]+)?$|^https://.*\.vercel\.app$|^https://.*\.onrender\.com$|^https://.*\.railway\.app$",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

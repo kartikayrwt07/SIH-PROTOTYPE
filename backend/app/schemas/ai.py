@@ -65,9 +65,14 @@ class TriageSuggestion(BaseModel):
 class TriageApplyRequest(BaseModel):
     case_reference_id: str = Field(..., description="Target case reference to update")
     bureau_id: Optional[str] = Field(None, description="Bureau ID to assign")
+    bureau_code: Optional[str] = Field(None, description="Bureau code to assign")
+    target_bureau_code: Optional[str] = Field(None, description="Bureau code to assign (alias)")
     category: Optional[str] = Field(None, description="Grievance category to apply")
+    target_category: Optional[str] = Field(None, description="Grievance category to apply (alias)")
     priority: Optional[str] = Field(None, description="Priority to update")
+    target_priority: Optional[str] = Field(None, description="Priority to update (alias)")
     justification: Optional[str] = Field("Accepted explainable AI triage recommendation", description="Audit justification")
+    officer_rationale: Optional[str] = Field(None, description="Audit justification (alias)")
 
 
 class TriageApplyResponse(BaseModel):

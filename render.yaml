@@ -1,0 +1,24 @@
+services:
+  - type: web
+    name: aicte-dashboard-backend
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn backend.app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PYTHONPATH
+        value: .
+      - key: ENVIRONMENT
+        value: production
+      - key: DATABASE_URL
+        sync: false
+      - key: SECRET_KEY
+        generateValue: true
+      - key: ACCESS_TOKEN_EXPIRE_MINUTES
+        value: "1440"
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false
+      - key: ENABLE_TELEGRAM_POLLER
+        value: "true"
+      - key: RUN_STARTUP_MIGRATIONS
+        value: "false"

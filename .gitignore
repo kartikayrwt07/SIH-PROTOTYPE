@@ -12,8 +12,16 @@ ENV/
 *.sqlite3
 
 # Node / Frontend
-frontend/node_modules/
-frontend/dist/
+node_modules/
+**/node_modules/
+dist/
+**/dist/
+.output/
+**/.output/
+.vercel/
+**/.vercel/
+.wrangler/
+**/.wrangler/
 *.log
 
 # Environment variables

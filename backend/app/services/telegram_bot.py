@@ -39,29 +39,36 @@ def extract_case_reference(text: str) -> Optional[str]:
     """
     Extracts a Case Reference ID or Master Ticket ID from user message.
     Supports formats like:
-      - 'AIC-2026-0001'
-      - '/status AIC-2026-0001'
-      - 'What is the status of AIC-2026-0005?'
-      - 'MT-1A2B3C4D'
+      - 'AICTE-2026-1001'
+      - 'AIC-2026-1001'
+      - '/status AICTE-2026-1001'
+      - 'What is the status of AICTE-2026-1002?'
+      - 'MT-DD4A3444'
+      - '1001'
     """
     if not text:
         return None
 
     cleaned = text.strip()
 
-    # Direct command like /status AIC-2026-0001
+    # Direct command like /status AICTE-2026-1001
     if cleaned.startswith("/status"):
         parts = cleaned.split()
         if len(parts) > 1:
             return parts[1].strip().upper()
 
-    # Search for regex match
+    # Search for regex match (AIC-..., AICTE-..., MT-...)
     match = CASE_REF_REGEX.search(cleaned)
     if match:
         return match.group(1).upper()
 
-    # If the user typed a raw alphanumeric case ref directly (must contain a digit or hyphen)
-    if re.match(r"^[A-Za-z0-9-]+$", cleaned) and (any(c.isdigit() for c in cleaned) or "-" in cleaned) and len(cleaned) >= 5:
+    # If the user typed a 4-6 digit complaint number like "1001"
+    num_match = re.search(r"\b(\d{4,6})\b", cleaned)
+    if num_match:
+        return f"AICTE-2026-{num_match.group(1)}"
+
+    # If the user typed a raw alphanumeric case ref directly
+    if re.match(r"^[A-Za-z0-9-]+$", cleaned) and (any(c.isdigit() for c in cleaned) or "-" in cleaned) and len(cleaned) >= 4:
         return cleaned.upper()
 
     return None
@@ -72,16 +79,17 @@ def format_welcome_message(first_name: Optional[str] = None) -> str:
     greeting = f"Namaste {html.escape(first_name)}! 🙏" if first_name else "Namaste! 🙏"
     return (
         f"<b>{greeting}</b>\n\n"
-        "🏛️ <b>AICTE Grievance Status Tracker Bot</b>\n"
+        "🏛️ <b>AICTE Grievance Status Tracker Bot (@aictesih_bot)</b>\n"
         "━━━━━━━━━━━━━━━━━━━━━━\n"
         "Check your grievance case status instantly without logging into any web portal.\n\n"
         "👉 <b>How to check:</b>\n"
-        "Simply text your <b>Case Reference ID</b> to this chat.\n\n"
-        "<i>Examples:</i>\n"
-        "• <code>AIC-2026-0001</code>\n"
-        "• <code>AIC-2026-0012</code>\n"
-        "• <code>/status AIC-2026-0005</code>\n\n"
-        "🔒 <i>Note: Complainant confidential personal details (PII) are strictly masked for privacy.</i>"
+        "Simply text your <b>Case Reference ID</b> or <b>Master Ticket ID</b> to this chat.\n\n"
+        "<i>Working Examples to try:</i>\n"
+        "• <code>AICTE-2026-1001</code> (Tuition Fee Dispute)\n"
+        "• <code>AICTE-2026-1003</code> (Hostel Ragging Incident)\n"
+        "• <code>MT-DD4A3444</code> (Master Ticket Cluster)\n"
+        "• <code>/status AICTE-2026-1002</code>\n\n"
+        "🔒 <i>Note: Complainant confidential personal details (PII) are strictly masked for student privacy.</i>"
     )
 
 
@@ -237,10 +245,26 @@ def process_telegram_update(update: Dict[str, Any], db: Session) -> Dict[str, An
             "parse_mode": "HTML",
         }
 
-    # 3. Query Database for ComplaintCase
+    # 3. Query Database for ComplaintCase (Flexible prefix & number matching)
     case = db.query(ComplaintCase).filter(
         ComplaintCase.case_reference_id.ilike(case_ref)
     ).first()
+
+    if not case and case_ref.startswith("AIC-"):
+        # Try with AICTE- prefix
+        alt_ref = "AICTE-" + case_ref[4:]
+        case = db.query(ComplaintCase).filter(ComplaintCase.case_reference_id.ilike(alt_ref)).first()
+
+    if not case and case_ref.startswith("AICTE-"):
+        # Try with AIC- prefix
+        alt_ref = "AIC-" + case_ref[6:]
+        case = db.query(ComplaintCase).filter(ComplaintCase.case_reference_id.ilike(alt_ref)).first()
+
+    if not case:
+        # Match trailing digits e.g. 1001
+        digits = re.findall(r"\d+", case_ref)
+        if digits:
+            case = db.query(ComplaintCase).filter(ComplaintCase.case_reference_id.ilike(f"%{digits[-1]}")).first()
 
     if case:
         reply_text = format_case_status_message(case, db)
@@ -256,6 +280,11 @@ def process_telegram_update(update: Dict[str, Any], db: Session) -> Dict[str, An
         MasterTicket.ticket_reference_id.ilike(case_ref)
     ).first()
 
+    if not master and not case_ref.startswith("MT-"):
+        master = db.query(MasterTicket).filter(
+            MasterTicket.ticket_reference_id.ilike(f"MT-{case_ref}")
+        ).first()
+
     if master:
         reply_text = format_master_ticket_message(master)
         return {
@@ -269,11 +298,11 @@ def process_telegram_update(update: Dict[str, Any], db: Session) -> Dict[str, An
     reply_text = (
         f"🔍 <b>Case ID Not Found:</b> <code>{html.escape(case_ref)}</code>\n\n"
         "We could not find any active or historical grievance matching this reference number.\n\n"
-        "<b>Tips:</b>\n"
-        "• Check for typos in your reference number (e.g. <code>AIC-2026-XXXX</code>)\n"
-        "• Reference IDs are case-insensitive\n"
-        "• Newly submitted complaints appear immediately upon portal confirmation\n\n"
-        "If you believe this is an error, please visit the AICTE Grievance Portal or contact support."
+        "<b>Try these sample active cases from the system:</b>\n"
+        "• <code>AICTE-2026-1001</code> (Tuition Fee Hike Dispute)\n"
+        "• <code>AICTE-2026-1003</code> (Hostel Ragging Complaint)\n"
+        "• <code>MT-DD4A3444</code> (Master Ticket - 15 Grouped Cases)\n\n"
+        "<i>Reference IDs are case-insensitive. Send /help for instructions.</i>"
     )
 
     return {

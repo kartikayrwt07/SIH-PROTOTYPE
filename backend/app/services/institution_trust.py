@@ -9,6 +9,7 @@ Automates Super Admin regulatory oversight by calculating a high-risk leaderboar
 of the worst-performing technical colleges and generating automated regulatory directives.
 """
 
+import uuid
 from datetime import datetime, timedelta, timezone
 from typing import List, Dict, Any, Optional, Tuple
 from sqlalchemy.orm import Session
@@ -106,17 +107,22 @@ def calculate_institution_trust_score(
     institution: Institution,
     db: Session,
     now: Optional[datetime] = None,
+    preloaded_cases: Optional[List[ComplaintCase]] = None,
+    preloaded_master_tickets: Optional[List[MasterTicket]] = None,
 ) -> InstitutionTrustScoreDetail:
     """
     Dynamically computes the credit score (out of 1000) for a given technical college
     by analyzing all historical and active complaint cases, SLA performance, and repeat clusters.
     """
     now = now or datetime.now(timezone.utc)
-    cases: List[ComplaintCase] = (
-        db.query(ComplaintCase)
-        .filter(ComplaintCase.institution_id == institution.id)
-        .all()
-    )
+    if preloaded_cases is not None:
+        cases = preloaded_cases
+    else:
+        cases = (
+            db.query(ComplaintCase)
+            .filter(ComplaintCase.institution_id == institution.id)
+            .all()
+        )
 
     base_score = 1000
     sla_breaches_count = 0
@@ -234,11 +240,14 @@ def calculate_institution_trust_score(
             )
 
     # 6. Master Ticket Clusters (Systemic repeat student complaints against the college)
-    master_tickets: List[MasterTicket] = (
-        db.query(MasterTicket)
-        .filter(MasterTicket.institution_id == institution.id)
-        .all()
-    )
+    if preloaded_master_tickets is not None:
+        master_tickets = preloaded_master_tickets
+    else:
+        master_tickets = (
+            db.query(MasterTicket)
+            .filter(MasterTicket.institution_id == institution.id)
+            .all()
+        )
     master_cluster_count = len(master_tickets)
     master_cluster_points = master_cluster_count * 60
 
@@ -326,6 +335,10 @@ def calculate_institution_trust_score(
     )
 
 
+_LEADERBOARD_CACHE: Dict[str, Tuple[float, Any]] = {}
+CACHE_TTL_SECONDS = 30.0
+
+
 def get_trust_score_leaderboard(
     db: Session,
     sort_order: str = "worst_first",  # 'worst_first' (ascending score) or 'best_first' (descending score)
@@ -336,16 +349,47 @@ def get_trust_score_leaderboard(
     """
     Ranks technical institutions across India by their Dynamic Credit / Trust Score.
     By default, lists 'worst_first' to power the Super Admin High-Risk Regulatory Leaderboard.
+    Uses batch preloading and 30s TTL caching to respond in milliseconds.
     """
+    import time
+    from collections import defaultdict
+
+    cache_key = f"{sort_order}:{state}:{risk_level}:{limit}"
+    now_ts = time.time()
+    if cache_key in _LEADERBOARD_CACHE:
+        cached_ts, cached_val = _LEADERBOARD_CACHE[cache_key]
+        if now_ts - cached_ts < CACHE_TTL_SECONDS:
+            return cached_val
+
     query = db.query(Institution).filter(Institution.is_active == True)
     if state and state.upper() != "ALL":
         query = query.filter(Institution.state.ilike(f"%{state.strip()}%"))
 
     institutions = query.all()
+
+    # Batch preload all cases & master tickets in 2 single queries instead of N*2 round-trips
+    all_cases = db.query(ComplaintCase).all()
+    all_master_tickets = db.query(MasterTicket).all()
+
+    cases_by_inst = defaultdict(list)
+    for c in all_cases:
+        cases_by_inst[c.institution_id].append(c)
+
+    masters_by_inst = defaultdict(list)
+    for m in all_master_tickets:
+        masters_by_inst[m.institution_id].append(m)
+
     results: List[InstitutionTrustScoreDetail] = []
+    now = datetime.now(timezone.utc)
 
     for inst in institutions:
-        detail = calculate_institution_trust_score(inst, db)
+        detail = calculate_institution_trust_score(
+            inst,
+            db,
+            now=now,
+            preloaded_cases=cases_by_inst[inst.id],
+            preloaded_master_tickets=masters_by_inst[inst.id],
+        )
         if risk_level and risk_level.upper() != "ALL":
             if detail.risk_level.upper() != risk_level.strip().upper():
                 continue
@@ -380,7 +424,9 @@ def get_trust_score_leaderboard(
         total_penalties_deducted=total_penalties,
     )
 
-    return results[:limit], summary
+    final_results = results[:limit]
+    _LEADERBOARD_CACHE[cache_key] = (now_ts, (final_results, summary))
+    return final_results, summary
 
 
 def get_institution_trust_detail(institution_id: str, db: Session) -> Optional[InstitutionTrustScoreDetail]:
@@ -402,28 +448,47 @@ def execute_regulatory_action(
     Executes an automated regulatory oversight action (e.g., dispatching formal Show-Cause Notice
     or scheduling mandatory AICTE inspection) triggered from the high-risk leaderboard.
     """
-    inst = db.query(Institution).filter(Institution.id == institution_id).first()
+    inst = db.query(Institution).filter(
+        or_(Institution.id == institution_id, Institution.aicte_permanent_id == institution_id)
+    ).first()
     if not inst:
         raise ValueError(f"Institution with ID '{institution_id}' not found")
 
     now_ts = datetime.now(timezone.utc)
     ref_no = f"AICTE/REG/{now_ts.strftime('%Y%m')}/{inst.aicte_permanent_id}"
     issued_date = now_ts.strftime("%d %b %Y, %I:%M %p UTC")
+    action_key = (action.action_type or action.action_code or "SHOW_CAUSE_NOTICE").upper()
 
     messages = {
         "SHOW_CAUSE_NOTICE": f"Formal Show-Cause Notice ({ref_no}) dispatched to {inst.name}. 14-day explanation response window initiated.",
+        "SHOW_CAUSE_SUMMONS": f"Statutory Show-Cause Summons ({ref_no}) dispatched to Governing Board of {inst.name}. Response mandated within 14 days.",
         "FREEZE_INTAKE": f"Urgent Executive Order ({ref_no}) issued: AICTE academic intake quota freeze recommended pending inquiry.",
+        "MANDATORY_INSPECTION_FREEZE": f"Executive Order ({ref_no}) issued: Mandatory AICTE inspection scheduled with academic intake freeze on {inst.name}.",
         "SCHEDULE_INSPECTION": f"Surprise On-Site AICTE Inspection Panel ({ref_no}) constituted for {inst.name}.",
+        "HEIGHTENED_MONITORING": f"Heightened Regulatory Monitoring directive ({ref_no}) enacted for {inst.name}. Mandatory bi-weekly compliance filings enforced.",
+        "ROUTINE_COMPLIANCE": f"Routine Compliance Directive ({ref_no}) recorded for {inst.name}. Standard verification cycle active.",
         "DISMISS_ALERT": f"Regulatory alert flagged for {inst.name} acknowledged and logged for compliance auditing.",
     }
 
-    msg = messages.get(action.action_type, f"Regulatory action '{action.action_type}' logged successfully.")
+    notes = action.directive_notes or action.summary
+    default_msg = f"Regulatory action '{action_key}' ({ref_no}) dispatched to {inst.name}."
+    if notes and notes != "Regulatory action dispatched.":
+        default_msg += f" Terms: {notes}"
+    msg = messages.get(action_key, default_msg)
+
+    action_uuid = f"ACT-{uuid.uuid4().hex[:8].upper()}"
 
     return RegulatoryActionResponse(
         success=True,
-        institution_id=institution_id,
-        action_type=action.action_type,
+        institution_id=str(inst.id),
+        action_type=action_key,
+        action_code=action_key,
+        action_id=action_uuid,
+        status="DISPATCHED",
         reference_number=ref_no,
+        dispatch_reference=ref_no,
         issued_at=issued_date,
+        dispatched_at=issued_date,
         message=msg,
+        summary=msg,
     )

@@ -20,7 +20,7 @@ from typing import Dict, List, Optional, Tuple
 from collections import defaultdict
 
 import numpy as np
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import func
 
 from backend.app.models.case import ComplaintCase, CaseStatus
@@ -532,7 +532,10 @@ def list_master_tickets(
     bureau_id: Optional[str] = None,
 ) -> List[MasterTicketSummary]:
     """Lists all master tickets with optional filtering."""
-    query = db.query(MasterTicket)
+    query = db.query(MasterTicket).options(
+        joinedload(MasterTicket.institution),
+        joinedload(MasterTicket.bureau),
+    )
 
     if status_filter:
         try:
@@ -548,14 +551,12 @@ def list_master_tickets(
 
     results = []
     for t in tickets:
-        inst = db.query(Institution).filter(Institution.id == t.institution_id).first()
-        bureau = db.query(Bureau).filter(Bureau.id == t.bureau_id).first()
         results.append(MasterTicketSummary(
             id=t.id,
             ticket_reference_id=t.ticket_reference_id,
-            institution_name=inst.name if inst else "Unknown",
-            bureau_code=bureau.code if bureau else "N/A",
-            bureau_name=bureau.name if bureau else "Unassigned",
+            institution_name=t.institution.name if t.institution else "Unknown",
+            bureau_code=t.bureau.code if t.bureau else "N/A",
+            bureau_name=t.bureau.name if t.bureau else "Unassigned",
             consolidated_subject=t.consolidated_subject,
             category=t.category,
             child_count=t.child_count,
@@ -644,15 +645,22 @@ def get_per_institution_recurring_breakdown(
     )
     case_to_master: Dict[str, str] = {c_id: mt_ref for c_id, mt_ref in existing_children}
 
-    results: List[InstitutionViolationBreakdown] = []
-
-    for inst in institutions:
-        cases = (
+    inst_ids = [inst.id for inst in institutions]
+    cases_by_inst: Dict[str, List[ComplaintCase]] = defaultdict(list)
+    if inst_ids:
+        all_cases = (
             db.query(ComplaintCase)
-            .filter(ComplaintCase.institution_id == inst.id)
+            .filter(ComplaintCase.institution_id.in_(inst_ids))
             .order_by(ComplaintCase.created_at.desc())
             .all()
         )
+        for c in all_cases:
+            cases_by_inst[c.institution_id].append(c)
+
+    results: List[InstitutionViolationBreakdown] = []
+
+    for inst in institutions:
+        cases = cases_by_inst.get(inst.id, [])
         total_cases = len(cases)
         if total_cases < min_cases:
             continue

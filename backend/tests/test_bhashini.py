@@ -133,3 +133,68 @@ def test_magic_ingest_tamil_fee_extortion_with_evidence():
 
     # Verify description_redacted contains English translation for central triage
     assert "Vellore" in case_detail["description_redacted"] or "fees" in case_detail["description_redacted"].lower()
+
+
+def test_hindi_custom_college_extraction():
+    """Verify that entering another college in Hindi does NOT default to Bharati Institute."""
+    hindi_avadh = "मैं अवध इंस्टीट्यूट का छात्र हूँ। यहाँ छात्रावास में सीनियर्स द्वारा मारपीट और रैगिंग की जा रही है।"
+    response = client.post(
+        "/api/v1/cases/magic-analyze",
+        json={"grievance_text": hindi_avadh}
+    )
+    assert response.status_code == 200
+    data = response.json()["data"]
+    assert "Avadh" in data["extracted_college"]["name"]
+    assert "Bharati" not in data["extracted_college"]["name"]
+
+
+def test_magic_ingest_user_institution_override():
+    """Verify that a user-specified institution_id overrides any AI deduction."""
+    inst_res = client.get("/api/v1/institutions/all")
+    assert inst_res.status_code == 200
+    institutions = inst_res.json()["data"]
+    assert len(institutions) >= 2
+    chosen_inst = institutions[1]  # Pick the second institution
+
+    response = client.post(
+        "/api/v1/cases/magic-ingest",
+        json={
+            "grievance_text": "Random grievance narrative with no college mention at all regarding laboratory fees.",
+            "student_name": "Test Complainant",
+            "institution_id": chosen_inst["id"],
+            "auto_docket": True,
+        }
+    )
+    assert response.status_code == 200
+    res_data = response.json()["data"]
+    assert res_data["case_created"] is True
+    assert res_data["analysis"]["extracted_college"]["id"] == chosen_inst["id"]
+    assert res_data["analysis"]["extracted_college"]["name"] == chosen_inst["name"]
+
+
+def test_iit_bombay_hindi_statutory_extraction():
+    """
+    CRITICAL: Verify that entering 'भारतीय प्रौद्योगिकी संस्थान मुंबई' correctly extracts
+    Indian Institute of Technology Bombay (IIT Bombay) with permanent ID 1-3001011,
+    and produces a clean certified English translation without substring false-matching 'भारती'.
+    """
+    hindi_iitb = "भारतीय प्रौद्योगिकी संस्थान मुंबई"
+    response = client.post(
+        "/api/v1/cases/magic-analyze",
+        json={"grievance_text": hindi_iitb}
+    )
+    assert response.status_code == 200
+    data = response.json()["data"]
+    college = data["extracted_college"]
+    
+    assert "Indian Institute of Technology Bombay" in college["name"]
+    assert college["aicte_permanent_id"] == "1-3001011"
+    assert "Bharati" not in college["name"]
+    assert college["confidence"] >= 0.95
+    
+    # Verify translation
+    trans = data["translation"]
+    assert trans["source_language"] == "hi"
+    assert "Indian Institute of Technology Bombay" in trans["translated_text"]
+    assert "भारतीय" not in trans["translated_text"]
+

@@ -66,6 +66,7 @@ class MagicIngestRequest(BaseModel):
     student_name: Optional[str] = Field(None, description="Optional complainant name")
     student_email: Optional[str] = Field(None, description="Optional complainant email")
     student_phone: Optional[str] = Field(None, description="Optional complainant phone")
+    institution_id: Optional[str] = Field(None, description="User-verified or overridden institution UUID")
     auto_docket: bool = Field(True, description="Whether to docket immediately into database or only analyze")
 
 

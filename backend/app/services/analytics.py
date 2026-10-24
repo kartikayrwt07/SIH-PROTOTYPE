@@ -1,4 +1,4 @@
-from typing import Optional, List, Dict
+from typing import Optional, List, Dict, Tuple, Any
 from datetime import datetime, timezone
 from sqlalchemy.orm import Session
 from backend.app.models.case import ComplaintCase, CaseStatus, CasePriority
@@ -14,6 +14,8 @@ from backend.app.schemas.analytics import (
     BottleneckAnalysis,
     InstitutionPerformanceStat,
     RecurringCategoryCount,
+    StatusCount,
+    PriorityCount,
 )
 from backend.app.services.institution_trust import calculate_institution_trust_score
 
@@ -22,15 +24,18 @@ def get_executive_kpis(
     db: Session,
     bureau_id: Optional[str] = None,
     institution_id: Optional[str] = None,
+    preloaded_cases: Optional[List[ComplaintCase]] = None,
 ) -> ExecutiveKPIs:
     """Calculate aggregate operational KPIs across active dockets."""
-    query = db.query(ComplaintCase)
-    if bureau_id:
-        query = query.filter(ComplaintCase.bureau_id == bureau_id)
-    if institution_id:
-        query = query.filter(ComplaintCase.institution_id == institution_id)
-
-    all_cases = query.all()
+    if preloaded_cases is not None:
+        all_cases = preloaded_cases
+    else:
+        query = db.query(ComplaintCase)
+        if bureau_id:
+            query = query.filter(ComplaintCase.bureau_id == bureau_id)
+        if institution_id:
+            query = query.filter(ComplaintCase.institution_id == institution_id)
+        all_cases = query.all()
     total_cases = len(all_cases)
 
     if total_cases == 0:
@@ -114,17 +119,31 @@ def get_executive_kpis(
 def get_bureau_workload_breakdown(
     db: Session,
     institution_id: Optional[str] = None,
+    preloaded_cases: Optional[List[ComplaintCase]] = None,
 ) -> List[BureauWorkloadStat]:
     """Calculate comparative workload and pending volume across all active AICTE bureaus."""
+    from collections import defaultdict
     bureaus = db.query(Bureau).filter(Bureau.is_active == True).order_by(Bureau.name).all()
     stats: List[BureauWorkloadStat] = []
     now = datetime.now(timezone.utc)
 
+    if preloaded_cases is not None:
+        cases_by_bur = defaultdict(list)
+        for c in preloaded_cases:
+            if institution_id and c.institution_id != institution_id:
+                continue
+            cases_by_bur[c.bureau_id].append(c)
+    else:
+        cases_by_bur = None
+
     for b in bureaus:
-        case_query = db.query(ComplaintCase).filter(ComplaintCase.bureau_id == b.id)
-        if institution_id:
-            case_query = case_query.filter(ComplaintCase.institution_id == institution_id)
-        cases = case_query.all()
+        if cases_by_bur is not None:
+            cases = cases_by_bur[b.id]
+        else:
+            case_query = db.query(ComplaintCase).filter(ComplaintCase.bureau_id == b.id)
+            if institution_id:
+                case_query = case_query.filter(ComplaintCase.institution_id == institution_id)
+            cases = case_query.all()
         total = len(cases)
         resolved = 0
         rejected = 0
@@ -164,12 +183,14 @@ def get_bureau_workload_breakdown(
                 bureau_name=b.name,
                 total_cases=total,
                 open_cases=open_cases,
+                active_cases=open_cases,
                 overdue_cases=overdue,
                 approaching_cases=approaching,
                 resolved_cases=resolved,
                 rejected_cases=rejected,
                 resolution_rate_pct=rate,
                 avg_resolution_hours=avg_bureau_h,
+                avg_resolution_days=round(avg_bureau_h / 24.0, 1),
             )
         )
 
@@ -311,7 +332,14 @@ def compute_lifecycle_dwell_times(
         primary_bottleneck_stage=primary_bottleneck,
         system_health_status=system_health,
         operational_advisory=advisory,
+        stage_dwell_times=stats,
+        critical_bottleneck_stage=primary_bottleneck,
+        analysis_summary=advisory,
     )
+
+
+_DASHBOARD_CACHE: Dict[str, Tuple[float, Any]] = {}
+DASHBOARD_CACHE_TTL = 30.0
 
 
 def get_dashboard_overview(
@@ -319,16 +347,28 @@ def get_dashboard_overview(
     bureau_id: Optional[str] = None,
     institution_id: Optional[str] = None,
 ) -> DashboardOverview:
-    """Consolidate KPIs, bureau workload breakdown, and status/category distributions."""
-    kpis = get_executive_kpis(db, bureau_id=bureau_id, institution_id=institution_id)
-    by_bureau = get_bureau_workload_breakdown(db, institution_id=institution_id)
+    """
+    Consolidate KPIs, bureau workload breakdown, and status/category distributions.
+    Executes in a single DB round-trip with 30s memory caching.
+    """
+    import time
+    cache_key = f"{bureau_id}:{institution_id}"
+    now_ts = time.time()
+    if cache_key in _DASHBOARD_CACHE:
+        cached_ts, cached_val = _DASHBOARD_CACHE[cache_key]
+        if now_ts - cached_ts < DASHBOARD_CACHE_TTL:
+            return cached_val
 
+    # Single DB round-trip for all cases under scope
     case_query = db.query(ComplaintCase)
     if bureau_id:
         case_query = case_query.filter(ComplaintCase.bureau_id == bureau_id)
     if institution_id:
         case_query = case_query.filter(ComplaintCase.institution_id == institution_id)
     cases = case_query.all()
+
+    kpis = get_executive_kpis(db, bureau_id=bureau_id, institution_id=institution_id, preloaded_cases=cases)
+    by_bureau = get_bureau_workload_breakdown(db, institution_id=institution_id, preloaded_cases=cases)
 
     by_status: Dict[str, int] = {}
     by_priority: Dict[str, int] = {}
@@ -344,13 +384,28 @@ def get_dashboard_overview(
         cat = c.category
         by_category[cat] = by_category.get(cat, 0) + 1
 
-    return DashboardOverview(
+    status_dist = [StatusCount(status=st, count=cnt) for st, cnt in by_status.items()]
+    priority_dist = [PriorityCount(priority=pr, count=cnt) for pr, cnt in by_priority.items()]
+
+    overview = DashboardOverview(
         kpis=kpis,
         by_bureau=by_bureau,
         by_status=by_status,
         by_priority=by_priority,
         by_category=by_category,
+        total_cases=kpis.total_cases,
+        active_cases=kpis.open_cases,
+        resolved_cases=kpis.resolved_closed,
+        overdue_cases=kpis.overdue_cases,
+        approaching_sla_cases=kpis.approaching_deadline,
+        sla_compliance_rate_pct=kpis.resolution_rate_pct,
+        avg_resolution_dwell_days=kpis.avg_resolution_days,
+        bureau_workload=by_bureau,
+        status_distribution=status_dist,
+        priority_distribution=priority_dist,
     )
+    _DASHBOARD_CACHE[cache_key] = (now_ts, overview)
+    return overview
 
 
 def get_institution_performance_stats(

@@ -149,22 +149,31 @@ def apply_triage_suggestion(
     old_category = case.category
     old_priority = case.priority.value if case.priority else "None"
 
-    # Update bureau if requested
-    if request.bureau_id:
-        target_bureau = db.query(Bureau).filter(Bureau.id == request.bureau_id).first()
+    # Resolve bureau by ID or Code (supporting both backend ID and frontend bureau_code aliases)
+    bureau_id = request.bureau_id
+    bureau_code = request.target_bureau_code or request.bureau_code
+    if bureau_id:
+        target_bureau = db.query(Bureau).filter(Bureau.id == bureau_id).first()
         if not target_bureau:
-            raise ValueError(f"Bureau ID '{request.bureau_id}' not found.")
+            raise ValueError(f"Bureau ID '{bureau_id}' not found.")
+        case.bureau_id = target_bureau.id
+    elif bureau_code:
+        target_bureau = db.query(Bureau).filter(Bureau.code == bureau_code).first()
+        if not target_bureau:
+            raise ValueError(f"Bureau with code '{bureau_code}' not found.")
         case.bureau_id = target_bureau.id
 
-    # Update category if requested
-    if request.category:
-        case.category = request.category
+    # Update category if requested (supporting both category and target_category)
+    new_category = request.target_category or request.category
+    if new_category:
+        case.category = new_category
 
-    # Update priority if requested
-    if request.priority:
+    # Update priority if requested (supporting both priority and target_priority)
+    new_priority = request.target_priority or request.priority
+    if new_priority:
         from backend.app.models.case import CasePriority
         try:
-            case.priority = CasePriority(request.priority)
+            case.priority = CasePriority(new_priority)
         except ValueError:
             pass
 
@@ -182,7 +191,7 @@ def apply_triage_suggestion(
         new_state=f"Bureau: {case.bureau.code}, Category: {case.category}, Priority: {case.priority.value}",
         metadata_json={
             "action": "AI_RECOMMENDATION_ACCEPTED",
-            "justification": request.justification or "Accepted explainable AI triage recommendation",
+            "justification": request.officer_rationale or request.justification or "Accepted explainable AI triage recommendation",
             "actor_email": actor_email,
         },
         timestamp=datetime.utcnow()

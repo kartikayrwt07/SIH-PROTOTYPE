@@ -21,7 +21,7 @@ from backend.app.services.triage_classifier import (
     BUREAU_ARCHETYPES,
 )
 from backend.app.services.csv_io import generate_case_reference
-from backend.app.services.bhashini import bhashini_service
+from backend.app.services.bhashini import bhashini_service, VERNACULAR_INSTITUTION_MAP, find_vernacular_institution
 from backend.app.schemas.magic_ingest import (
     ExtractedInstitution,
     CategorizationResult,
@@ -36,11 +36,46 @@ from backend.app.schemas.magic_ingest import (
 # Common collegiate acronyms mapped to standard names
 ACRONYM_MAP = {
     "dtu": "Delhi Technological University",
-    "vit": "Vellore Metropolitan Technical Institute",
-    "bits": "Bharati Institute of Technology & Science",
-    "coep": "Sahyadri Engineering College",
-    "nit": "Avadh Institute of Engineering & Research",
-    "iit": "Indraprastha Regional Polytechnic",
+    "coep": "College of Engineering Pune",
+    "bits": "Birla Institute of Technology and Science",
+    "vit": "Vellore Institute of Technology",
+    "srm": "SRM Institute of Science and Technology",
+    "rvce": "R.V. College of Engineering",
+    "bmsce": "BMS College of Engineering",
+    "msrit": "M.S. Ramaiah Institute of Technology",
+    "nsut": "Netaji Subhas University of Technology",
+    "iiitd": "Indraprastha Institute of Information Technology",
+    "iiitb": "International Institute of Information Technology Bangalore",
+    "iiith": "International Institute of Information Technology Hyderabad",
+    "vjti": "Veermata Jijabai Technological Institute",
+    "vnit": "Visvesvaraya National Institute of Technology",
+    "spce": "Sardar Patel College of Engineering",
+    "mit": "Manipal Institute of Technology",
+    "thapar": "Thapar Institute of Engineering and Technology",
+    "pec": "Punjab Engineering College",
+    "kiit": "Kalinga Institute of Industrial Technology",
+    "psg": "PSG College of Technology",
+    "cbit": "Chaitanya Bharathi Institute of Technology",
+    "cet": "College of Engineering Trivandrum",
+    "mnit": "Malaviya National Institute of Technology",
+    "manit": "Maulana Azad National Institute of Technology",
+    "nitk": "National Institute of Technology Karnataka",
+    "nitt": "National Institute of Technology Tiruchirappalli",
+    "hbtu": "Harcourt Butler Technical University",
+    "lnmiit": "The LNM Institute of Information Technology",
+    "svnit": "Sardar Vallabhbhai National Institute of Technology",
+    "pdeu": "Pandit Deendayal Energy University",
+    "ict": "Institute of Chemical Technology",
+    "iitb": "Indian Institute of Technology Bombay",
+    "iitd": "Indian Institute of Technology Delhi",
+    "iitm": "Indian Institute of Technology Madras",
+    "iitk": "Indian Institute of Technology Kanpur",
+    "iitkgp": "Indian Institute of Technology Kharagpur",
+    "iitr": "Indian Institute of Technology Roorkee",
+    "iitg": "Indian Institute of Technology Guwahati",
+    "iith": "Indian Institute of Technology Hyderabad",
+    "iitp": "Indian Institute of Technology Patna",
+    "iitj": "Indian Institute of Technology Jodhpur",
 }
 
 # Urgency keywords triggering URGENT SLA
@@ -57,12 +92,32 @@ def extract_institution_from_text(
 ) -> ExtractedInstitution:
     """
     Extracts institution entity using multi-stage matching:
+    0. Vernacular script entity extraction (Hindi, Tamil, Marathi keywords & aliases).
     1. Exact / Substring search against registered AICTE institutions in DB.
-    2. Acronym normalization (e.g. DTU, VIT, BITS).
+    2. Acronym normalization (e.g. DTU, VIT, BITS, COEP, NIT, IIT).
     3. NLP Regex Entity Extraction for collegiate noun phrases.
     """
     clean_lower = text.lower()
     institutions = db.query(Institution).filter(Institution.is_active == True).all()
+
+    # Stage 0: Vernacular Script Entity Detection (Hindi, Tamil, Marathi)
+    vernacular_match_name = find_vernacular_institution(text)
+    if vernacular_match_name:
+        target_inst = next(
+            (i for i in institutions if vernacular_match_name.lower() in i.name.lower() or i.name.lower() in vernacular_match_name.lower()),
+            None
+        )
+        if target_inst:
+            return ExtractedInstitution(
+                name=target_inst.name,
+                id=target_inst.id,
+                aicte_permanent_id=target_inst.aicte_permanent_id,
+                state=target_inst.state,
+                district=target_inst.district,
+                confidence=0.98,
+                is_database_match=True,
+                matched_phrase=vernacular_match_name,
+            )
 
     # Stage 1: Exact / Substring match against DB
     best_db_inst = None
@@ -85,14 +140,16 @@ def extract_institution_from_text(
             )
 
         # Check salient tokens
-        tokens = [t for t in re.findall(r"\b[a-zA-Z]{4,}\b", inst_name_lower) if t not in ["college", "institute", "engineering", "technology", "research", "academy"]]
+        tokens = [t for t in re.findall(r"\b[a-zA-Z]{4,}\b", inst_name_lower) if t not in ["college", "institute", "engineering", "technology", "research", "academy", "polytechnic", "science", "applied", "technical"]]
         if tokens:
             matches = sum(1 for t in tokens if t in clean_lower)
             token_score = matches / len(tokens)
-            if token_score > best_score and token_score >= 0.5:
-                best_score = token_score
-                best_db_inst = inst
-                matched_phrase = inst.name
+            # Require at least 2 token matches or 100% of tokens if only 1
+            if (matches >= 2 or (len(tokens) == 1 and matches == 1)) and token_score >= 0.5:
+                if token_score > best_score:
+                    best_score = token_score
+                    best_db_inst = inst
+                    matched_phrase = inst.name
 
     if best_db_inst and best_score >= 0.5:
         return ExtractedInstitution(
@@ -110,7 +167,7 @@ def extract_institution_from_text(
     for acronym, mapped_name in ACRONYM_MAP.items():
         if re.search(rf"\b{acronym}\b", clean_lower):
             # Check if mapped name exists in DB
-            target_inst = next((i for i in institutions if mapped_name.lower() in i.name.lower()), None)
+            target_inst = next((i for i in institutions if mapped_name.lower() in i.name.lower() or i.name.lower() in mapped_name.lower()), None)
             if target_inst:
                 return ExtractedInstitution(
                     name=target_inst.name,
@@ -118,7 +175,7 @@ def extract_institution_from_text(
                     aicte_permanent_id=target_inst.aicte_permanent_id,
                     state=target_inst.state,
                     district=target_inst.district,
-                    confidence=0.90,
+                    confidence=0.92,
                     is_database_match=True,
                     matched_phrase=acronym.upper(),
                 )
@@ -135,30 +192,40 @@ def extract_institution_from_text(
             extracted_name = match.group(1).strip()
             # Clean trailing punctuation
             extracted_name = re.sub(r"[,.;:]$", "", extracted_name)
-            # Find closest matching institution in DB or create provisional
-            fallback_inst = institutions[0] if institutions else None
+            # Find closest matching institution in DB
+            matching_db_inst = next((i for i in institutions if extracted_name.lower() in i.name.lower() or i.name.lower() in extracted_name.lower()), None)
+            if matching_db_inst:
+                return ExtractedInstitution(
+                    name=matching_db_inst.name,
+                    id=matching_db_inst.id,
+                    aicte_permanent_id=matching_db_inst.aicte_permanent_id,
+                    state=matching_db_inst.state,
+                    district=matching_db_inst.district,
+                    confidence=0.88,
+                    is_database_match=True,
+                    matched_phrase=match.group(0),
+                )
             return ExtractedInstitution(
                 name=extracted_name,
-                id=fallback_inst.id if fallback_inst else None,
-                aicte_permanent_id=fallback_inst.aicte_permanent_id if fallback_inst else "AICTE-PROV-1001",
-                state=fallback_inst.state if fallback_inst else "National",
-                district=fallback_inst.district if fallback_inst else "Central Jurisdiction",
-                confidence=0.82,
+                id=None,
+                aicte_permanent_id=None,
+                state="Unverified Jurisdiction",
+                district="Needs Verification",
+                confidence=0.45,
                 is_database_match=False,
                 matched_phrase=match.group(0),
             )
 
-    # Fallback to default registered institution
-    default_inst = institutions[0] if institutions else None
+    # Honest fallback: Do not falsely bind to institutions[0]
     return ExtractedInstitution(
-        name=default_inst.name if default_inst else "AICTE Affiliated Technical Institution",
-        id=default_inst.id if default_inst else None,
-        aicte_permanent_id=default_inst.aicte_permanent_id if default_inst else "AICTE-CENTRAL",
-        state=default_inst.state if default_inst else "National",
-        district=default_inst.district if default_inst else "Central",
-        confidence=0.60,
-        is_database_match=bool(default_inst),
-        matched_phrase="Contextual Fallback",
+        name="Unverified Institution (Please Select)",
+        id=None,
+        aicte_permanent_id=None,
+        state=None,
+        district=None,
+        confidence=0.10,
+        is_database_match=False,
+        matched_phrase="No Match Detected",
     )
 
 
@@ -282,6 +349,34 @@ def ingest_magic_grievance(
             docket_message="AI Extraction & Triage Analysis Complete (Preview Only - No Case Created)",
         )
 
+    # Resolve institution: User selection takes absolute precedence over AI deduction
+    all_insts = db.query(Institution).filter(Institution.is_active == True).all()
+    target_inst = None
+    is_user_override = False
+
+    if request.institution_id:
+        target_inst = next((i for i in all_insts if i.id == request.institution_id), None)
+        if target_inst:
+            is_user_override = True
+
+    if not target_inst and analysis.extracted_college.id:
+        target_inst = next((i for i in all_insts if i.id == analysis.extracted_college.id), None)
+
+    if not target_inst and all_insts:
+        target_inst = all_insts[0]
+
+    if target_inst and is_user_override:
+        analysis.extracted_college = ExtractedInstitution(
+            name=target_inst.name,
+            id=target_inst.id,
+            aicte_permanent_id=target_inst.aicte_permanent_id,
+            state=target_inst.state,
+            district=target_inst.district,
+            confidence=1.0,
+            is_database_match=True,
+            matched_phrase="User Confirmed / Selected",
+        )
+
     # 1. Generate unique case reference ID
     case_ref = generate_case_reference(db)
 
@@ -311,7 +406,7 @@ def ingest_magic_grievance(
         priority=CasePriority(analysis.priority_assignment.priority),
         status=CaseStatus.ASSIGNED,
         bureau_id=analysis.bureau_routing.bureau_id,
-        institution_id=analysis.extracted_college.id,
+        institution_id=target_inst.id if target_inst else analysis.extracted_college.id,
         due_date=due_date,
         created_at=now,
     )
@@ -339,6 +434,7 @@ def ingest_magic_grievance(
             "source_language_name": analysis.translation.source_language_name,
             "is_translated": analysis.translation.is_translated,
             "translation_provider": analysis.translation.provider,
+            "institution_overridden_by_user": is_user_override,
         },
         timestamp=now,
     )

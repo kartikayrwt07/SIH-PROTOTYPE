@@ -8,12 +8,14 @@ class BureauWorkloadStat(BaseModel):
     bureau_name: str
     total_cases: int
     open_cases: int
+    active_cases: Optional[int] = 0
     overdue_cases: int
     approaching_cases: int
     resolved_cases: int
     rejected_cases: int = 0
     resolution_rate_pct: float
     avg_resolution_hours: float = 0.0
+    avg_resolution_days: float = 0.0
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -43,6 +45,16 @@ class ExecutiveKPIs(BaseModel):
     avg_resolution_days: float = 0.0
 
 
+class StatusCount(BaseModel):
+    status: str
+    count: int
+
+
+class PriorityCount(BaseModel):
+    priority: str
+    count: int
+
+
 class DashboardOverview(BaseModel):
     kpis: ExecutiveKPIs
     by_bureau: List[BureauWorkloadStat]
@@ -50,12 +62,29 @@ class DashboardOverview(BaseModel):
     by_priority: Dict[str, int]
     by_category: Dict[str, int]
 
+    # Dual-schema compatibility fields for OpenAPI and frontend adapters
+    total_cases: Optional[int] = 0
+    active_cases: Optional[int] = 0
+    resolved_cases: Optional[int] = 0
+    overdue_cases: Optional[int] = 0
+    approaching_sla_cases: Optional[int] = 0
+    sla_compliance_rate_pct: Optional[float] = 0.0
+    avg_resolution_dwell_days: Optional[float] = 0.0
+    bureau_workload: Optional[List[BureauWorkloadStat]] = None
+    status_distribution: Optional[List[StatusCount]] = None
+    priority_distribution: Optional[List[PriorityCount]] = None
+
 
 class BottleneckAnalysis(BaseModel):
     stages: List[StageDwellTimeStat]
     primary_bottleneck_stage: Optional[str] = None
     system_health_status: str
     operational_advisory: Optional[str] = None
+
+    # Dual-schema compatibility fields
+    stage_dwell_times: Optional[List[StageDwellTimeStat]] = None
+    critical_bottleneck_stage: Optional[str] = None
+    analysis_summary: Optional[str] = None
 
 
 class RecurringCategoryCount(BaseModel):
