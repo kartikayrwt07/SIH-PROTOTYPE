@@ -10,33 +10,128 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AiTriageRouteImport } from './routes/ai-triage'
+import { Route as DashboardRouteImport } from './routes/dashboard'
+import { Route as IngestRouteImport } from './routes/ingest'
+import { Route as SlaRadarRouteImport } from './routes/sla-radar'
+import { Route as StateMachineRouteImport } from './routes/state-machine'
+import { Route as CasesIndexRouteImport } from './routes/cases/index'
+import { Route as CasesIdRouteImport } from './routes/cases/$id'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AiTriageRoute = AiTriageRouteImport.update({
+  id: '/ai-triage',
+  path: '/ai-triage',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DashboardRoute = DashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const IngestRoute = IngestRouteImport.update({
+  id: '/ingest',
+  path: '/ingest',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SlaRadarRoute = SlaRadarRouteImport.update({
+  id: '/sla-radar',
+  path: '/sla-radar',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StateMachineRoute = StateMachineRouteImport.update({
+  id: '/state-machine',
+  path: '/state-machine',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CasesIndexRoute = CasesIndexRouteImport.update({
+  id: '/cases/',
+  path: '/cases/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CasesIdRoute = CasesIdRouteImport.update({
+  id: '/cases/$id',
+  path: '/cases/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/ai-triage': typeof AiTriageRoute
+  '/dashboard': typeof DashboardRoute
+  '/ingest': typeof IngestRoute
+  '/sla-radar': typeof SlaRadarRoute
+  '/state-machine': typeof StateMachineRoute
+  '/cases/$id': typeof CasesIdRoute
+  '/cases/': typeof CasesIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/ai-triage': typeof AiTriageRoute
+  '/dashboard': typeof DashboardRoute
+  '/ingest': typeof IngestRoute
+  '/sla-radar': typeof SlaRadarRoute
+  '/state-machine': typeof StateMachineRoute
+  '/cases/$id': typeof CasesIdRoute
+  '/cases': typeof CasesIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/ai-triage': typeof AiTriageRoute
+  '/dashboard': typeof DashboardRoute
+  '/ingest': typeof IngestRoute
+  '/sla-radar': typeof SlaRadarRoute
+  '/state-machine': typeof StateMachineRoute
+  '/cases/$id': typeof CasesIdRoute
+  '/cases/': typeof CasesIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/ai-triage'
+    | '/dashboard'
+    | '/ingest'
+    | '/sla-radar'
+    | '/state-machine'
+    | '/cases/$id'
+    | '/cases/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/ai-triage'
+    | '/dashboard'
+    | '/ingest'
+    | '/sla-radar'
+    | '/state-machine'
+    | '/cases/$id'
+    | '/cases'
+  id:
+    | '__root__'
+    | '/'
+    | '/ai-triage'
+    | '/dashboard'
+    | '/ingest'
+    | '/sla-radar'
+    | '/state-machine'
+    | '/cases/$id'
+    | '/cases/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AiTriageRoute: typeof AiTriageRoute
+  DashboardRoute: typeof DashboardRoute
+  IngestRoute: typeof IngestRoute
+  SlaRadarRoute: typeof SlaRadarRoute
+  StateMachineRoute: typeof StateMachineRoute
+  CasesIdRoute: typeof CasesIdRoute
+  CasesIndexRoute: typeof CasesIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +143,67 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/ai-triage': {
+      id: '/ai-triage'
+      path: '/ai-triage'
+      fullPath: '/ai-triage'
+      preLoaderRoute: typeof AiTriageRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dashboard': {
+      id: '/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof DashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ingest': {
+      id: '/ingest'
+      path: '/ingest'
+      fullPath: '/ingest'
+      preLoaderRoute: typeof IngestRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sla-radar': {
+      id: '/sla-radar'
+      path: '/sla-radar'
+      fullPath: '/sla-radar'
+      preLoaderRoute: typeof SlaRadarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/state-machine': {
+      id: '/state-machine'
+      path: '/state-machine'
+      fullPath: '/state-machine'
+      preLoaderRoute: typeof StateMachineRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/cases/': {
+      id: '/cases/'
+      path: '/cases'
+      fullPath: '/cases/'
+      preLoaderRoute: typeof CasesIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/cases/$id': {
+      id: '/cases/$id'
+      path: '/cases/$id'
+      fullPath: '/cases/$id'
+      preLoaderRoute: typeof CasesIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AiTriageRoute: AiTriageRoute,
+  DashboardRoute: DashboardRoute,
+  IngestRoute: IngestRoute,
+  SlaRadarRoute: SlaRadarRoute,
+  StateMachineRoute: StateMachineRoute,
+  CasesIdRoute: CasesIdRoute,
+  CasesIndexRoute: CasesIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
