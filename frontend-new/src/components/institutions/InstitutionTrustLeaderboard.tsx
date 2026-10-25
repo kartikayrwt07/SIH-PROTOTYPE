@@ -118,13 +118,16 @@ export function InstitutionTrustLeaderboard() {
     if (!activeDossier) return;
     setSubmittingAction(true);
     try {
-      await dispatchRegulatoryAction(activeDossier.institution_id, {
+      const res = await dispatchRegulatoryAction(activeDossier.institution_id, {
         action_code: actionCode,
         summary: actionSummary,
       });
       toast.success(`Regulatory Action '${actionCode}' dispatched to ${activeDossier.name}!`);
       setActionModalOpen(false);
       fetchData();
+      if (res.pdf_download_url) {
+        window.open(res.pdf_download_url, "_blank");
+      }
     } catch (e: any) {
       toast.error(e?.message || "Action dispatch failed");
     } finally {
@@ -371,6 +374,21 @@ export function InstitutionTrustLeaderboard() {
                       >
                         Sanctions
                       </Button>
+                      {(isCritical || isHighRisk || inst.trust_score < 550) && (
+                        <Button
+                          onClick={() => {
+                            const url = inst.pdf_notice_url || `/api/v1/institutions/${inst.institution_id}/regulatory-notice.pdf`;
+                            window.open(url, "_blank");
+                          }}
+                          variant="outline"
+                          size="sm"
+                          className="border-rose-300 dark:border-rose-900/60 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 text-xs h-8 px-2 gap-1"
+                          title="Download Legal Notice (PDF)"
+                        >
+                          <FileText className="h-3 w-3" />
+                          Notice PDF
+                        </Button>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -482,7 +500,21 @@ export function InstitutionTrustLeaderboard() {
                 )}
               </div>
 
-              <DialogFooter>
+              <DialogFooter className="flex flex-col sm:flex-row items-center justify-between gap-2">
+                {(activeDossier.pdf_notice_url || activeDossier.trust_score < 550 || activeDossier.risk_tier.includes("Tier 5") || activeDossier.risk_tier.includes("Tier 6")) && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="text-xs h-8 gap-1.5 border-rose-300 dark:border-rose-900/60 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30"
+                    onClick={() => {
+                      const url = activeDossier.pdf_notice_url || `/api/v1/institutions/${activeDossier.institution_id}/regulatory-notice.pdf`;
+                      window.open(url, "_blank");
+                    }}
+                  >
+                    <FileText className="h-3.5 w-3.5" />
+                    Download Legal Notice (PDF)
+                  </Button>
+                )}
                 <Button size="sm" onClick={() => setActiveDossier(null)} className="text-xs h-8">
                   Close Ledger
                 </Button>

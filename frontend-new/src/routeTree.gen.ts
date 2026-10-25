@@ -19,6 +19,7 @@ import { Route as MagicIntakeRouteImport } from './routes/magic-intake'
 import { Route as MasterTicketsRouteImport } from './routes/master-tickets'
 import { Route as SlaRadarRouteImport } from './routes/sla-radar'
 import { Route as StateMachineRouteImport } from './routes/state-machine'
+import { Route as StudentRouteImport } from './routes/student'
 import { Route as TelegramRouteImport } from './routes/telegram'
 import { Route as CasesIndexRouteImport } from './routes/cases/index'
 import { Route as CasesIdRouteImport } from './routes/cases/$id'
@@ -73,6 +74,11 @@ const StateMachineRoute = StateMachineRouteImport.update({
   path: '/state-machine',
   getParentRoute: () => rootRouteImport,
 } as any)
+const StudentRoute = StudentRouteImport.update({
+  id: '/student',
+  path: '/student',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TelegramRoute = TelegramRouteImport.update({
   id: '/telegram',
   path: '/telegram',
@@ -100,6 +106,7 @@ export interface FileRoutesByFullPath {
   '/master-tickets': typeof MasterTicketsRoute
   '/sla-radar': typeof SlaRadarRoute
   '/state-machine': typeof StateMachineRoute
+  '/student': typeof StudentRoute
   '/telegram': typeof TelegramRoute
   '/cases/$id': typeof CasesIdRoute
   '/cases/': typeof CasesIndexRoute
@@ -115,6 +122,7 @@ export interface FileRoutesByTo {
   '/master-tickets': typeof MasterTicketsRoute
   '/sla-radar': typeof SlaRadarRoute
   '/state-machine': typeof StateMachineRoute
+  '/student': typeof StudentRoute
   '/telegram': typeof TelegramRoute
   '/cases/$id': typeof CasesIdRoute
   '/cases': typeof CasesIndexRoute
@@ -131,6 +139,7 @@ export interface FileRoutesById {
   '/master-tickets': typeof MasterTicketsRoute
   '/sla-radar': typeof SlaRadarRoute
   '/state-machine': typeof StateMachineRoute
+  '/student': typeof StudentRoute
   '/telegram': typeof TelegramRoute
   '/cases/$id': typeof CasesIdRoute
   '/cases/': typeof CasesIndexRoute
@@ -148,6 +157,7 @@ export interface FileRouteTypes {
     | '/master-tickets'
     | '/sla-radar'
     | '/state-machine'
+    | '/student'
     | '/telegram'
     | '/cases/$id'
     | '/cases/'
@@ -163,6 +173,7 @@ export interface FileRouteTypes {
     | '/master-tickets'
     | '/sla-radar'
     | '/state-machine'
+    | '/student'
     | '/telegram'
     | '/cases/$id'
     | '/cases'
@@ -178,6 +189,7 @@ export interface FileRouteTypes {
     | '/master-tickets'
     | '/sla-radar'
     | '/state-machine'
+    | '/student'
     | '/telegram'
     | '/cases/$id'
     | '/cases/'
@@ -194,6 +206,7 @@ export interface RootRouteChildren {
   MasterTicketsRoute: typeof MasterTicketsRoute
   SlaRadarRoute: typeof SlaRadarRoute
   StateMachineRoute: typeof StateMachineRoute
+  StudentRoute: typeof StudentRoute
   TelegramRoute: typeof TelegramRoute
   CasesIdRoute: typeof CasesIdRoute
   CasesIndexRoute: typeof CasesIndexRoute
@@ -271,6 +284,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof StateMachineRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/student': {
+      id: '/student'
+      path: '/student'
+      fullPath: '/student'
+      preLoaderRoute: typeof StudentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/telegram': {
       id: '/telegram'
       path: '/telegram'
@@ -306,6 +326,7 @@ const rootRouteChildren: RootRouteChildren = {
   MasterTicketsRoute: MasterTicketsRoute,
   SlaRadarRoute: SlaRadarRoute,
   StateMachineRoute: StateMachineRoute,
+  StudentRoute: StudentRoute,
   TelegramRoute: TelegramRoute,
   CasesIdRoute: CasesIdRoute,
   CasesIndexRoute: CasesIndexRoute,

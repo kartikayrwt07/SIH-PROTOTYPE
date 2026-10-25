@@ -17,6 +17,7 @@ import {
   Award,
   Bot,
   Wand2,
+  GraduationCap,
   PanelLeftClose,
   PanelLeft,
   X,
@@ -35,6 +36,7 @@ interface NavItem {
 const NAV_ITEMS: NavItem[] = [
   { to: "/dashboard",      label: "Dashboard",       icon: LayoutDashboard },
   { to: "/cases",          label: "Case register",   icon: FolderOpen },
+  { to: "/student",        label: "Student portal",  icon: GraduationCap },
   { to: "/sla-radar",      label: "SLA radar",       icon: Timer },
   { to: "/ai-triage",      label: "Smart triage",    icon: Sparkles },
   { to: "/master-tickets", label: "Master tickets",  icon: Layers },

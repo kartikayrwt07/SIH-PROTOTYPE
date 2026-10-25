@@ -150,10 +150,14 @@ export async function post<T>(
 export async function postForm<T>(
   url: string,
   formData: FormData,
+  customHeaders?: HeadersInit,
 ): Promise<ClientResult<StandardResponse<T>>> {
   const res = await fetch(url, {
     method: "POST",
-    headers: getAuthHeaders(), // Note: no Content-Type for multipart
+    headers: {
+      ...getAuthHeaders(),
+      ...(customHeaders || {}),
+    },
     body: formData,
   });
 

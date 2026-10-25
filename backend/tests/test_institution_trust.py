@@ -184,3 +184,40 @@ def test_api_regulatory_action_payload_validation(client: TestClient, db: Sessio
     assert data["data"]["status"] == "DISPATCHED"
     assert data["data"]["dispatch_reference"] is not None
     assert "Executive Order" in data["data"]["message"]
+    assert "pdf_download_url" in data["data"]
+    assert data["data"]["pdf_download_url"].startswith(f"/api/v1/institutions/{inst.id}/regulatory-notice.pdf")
+
+
+def test_api_regulatory_action_alias_endpoint(client: TestClient, db: Session):
+    """Verify POST /api/v1/institutions/{id}/regulatory-action works as official alias."""
+    inst = db.query(Institution).first()
+    assert inst is not None
+    payload = {
+        "action_code": "SHOW_CAUSE_NOTICE",
+        "summary": "Mandatory explanation for student ragging incident.",
+    }
+    res = client.post(
+        f"/api/v1/institutions/{inst.id}/regulatory-action",
+        json=payload,
+        headers={"X-Demo-Role": "ADMIN"},
+    )
+    assert res.status_code == 200
+    data = res.json()
+    assert data["success"] is True
+    assert data["data"]["action_code"] == "SHOW_CAUSE_NOTICE"
+    assert data["data"]["pdf_download_url"] is not None
+
+
+def test_api_download_regulatory_notice_pdf(client: TestClient, db: Session):
+    """Verify GET /api/v1/institutions/{id}/regulatory-notice.pdf returns valid PDF file."""
+    inst = db.query(Institution).first()
+    assert inst is not None
+    res = client.get(
+        f"/api/v1/institutions/{inst.id}/regulatory-notice.pdf?action_type=MANDATORY_INSPECTION_FREEZE",
+        headers={"X-Demo-Role": "ADMIN"},
+    )
+    assert res.status_code == 200
+    assert res.headers["content-type"] == "application/pdf"
+    assert "attachment; filename=" in res.headers.get("content-disposition", "")
+    assert res.content.startswith(b"%PDF")
+    assert len(res.content) > 1000  # Non-trivial PDF output

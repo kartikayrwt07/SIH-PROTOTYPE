@@ -87,6 +87,7 @@ class InstitutionTrustScoreDetail(BaseModel):
         description="'MANDATORY_INSPECTION_FREEZE' | 'SHOW_CAUSE_SUMMONS' | 'HEIGHTENED_MONITORING' | 'ROUTINE_COMPLIANCE'"
     )
     last_audit_date: str
+    pdf_notice_url: Optional[str] = Field(None, description="Direct download URL for legal Show-Cause or Freeze Notice PDF")
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -135,3 +136,4 @@ class RegulatoryActionResponse(BaseModel):
     dispatched_at: Optional[str] = None
     message: str
     summary: Optional[str] = None
+    pdf_download_url: Optional[str] = Field(None, description="Direct download URL for the generated legal PDF notice")

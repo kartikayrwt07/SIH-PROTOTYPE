@@ -43,6 +43,9 @@ import type {
   BottleneckAnalysis,
   InstitutionPerformanceStat,
   CsvRowResult,
+  StudentPortalData,
+  StudentAuthProfile,
+  StudentUploadResult,
 } from "@/types/ui";
 import type {
   RawComplaintCase,
@@ -94,6 +97,10 @@ import {
   mockApplyTriage,
   mockPreviewCsv,
   mockCommitCsv,
+  mockSendStudentOtp,
+  mockVerifyStudentOtp,
+  mockGetStudentPortalData,
+  mockUploadStudentDocument,
 } from "./mock/handlers";
 
 // Real API client + adapters
@@ -906,4 +913,75 @@ export async function commitCsv(rows: CsvRowResult[]): Promise<CsvCommitResult> 
     skip_invalid: true,
   });
   return adaptCsvCommit(unwrap(result).data!);
+}
+
+// ─── Student-Facing Complainant Portal ────────────────────────────────────────
+
+export async function sendStudentOtp(
+  target: string,
+  fullName?: string,
+): Promise<{ tx_ref: string; target_masked: string; expires_in_seconds: number; message: string; sandbox_otp?: string }> {
+  if (USE_MOCKS) return mockSendStudentOtp(target, fullName);
+  const result = await post<{
+    tx_ref: string;
+    target_masked: string;
+    expires_in_seconds: number;
+    message: string;
+    sandbox_otp?: string;
+  }>(ENDPOINTS.identityOtpSend, {
+    full_name: fullName || "Student Complainant",
+    target: target.trim(),
+    method: "MOBILE_EMAIL_2FA",
+    complainant_type: "STUDENT",
+  });
+  return unwrap(result).data!;
+}
+
+export async function verifyStudentOtp(
+  txRef: string,
+  otpCode: string,
+): Promise<StudentAuthProfile> {
+  if (USE_MOCKS) return mockVerifyStudentOtp(txRef, otpCode);
+  const result = await post<StudentAuthProfile>(ENDPOINTS.identityOtpVerify, {
+    tx_ref: txRef,
+    otp_code: otpCode.trim(),
+  });
+  return unwrap(result).data!;
+}
+
+export async function getStudentPortalData(token: string): Promise<StudentPortalData> {
+  if (USE_MOCKS) return mockGetStudentPortalData(token);
+  const result = await getStandard<StudentPortalData>(ENDPOINTS.identityMyCases, {
+    headers: {
+      "X-Complainant-Token": token,
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  return unwrap(result).data!;
+}
+
+export async function uploadStudentCaseDocument(
+  caseRef: string,
+  file: File,
+  description?: string,
+  token?: string,
+): Promise<StudentUploadResult> {
+  if (USE_MOCKS) return mockUploadStudentDocument(caseRef, file, description);
+
+  const formData = new FormData();
+  formData.append("file", file);
+  if (description) formData.append("description", description);
+
+  const headers: HeadersInit = {};
+  if (token) {
+    headers["X-Complainant-Token"] = token;
+    headers["Authorization"] = `Bearer ${token}`;
+  }
+
+  const result = await postForm<StudentUploadResult>(
+    ENDPOINTS.identityCaseUpload(caseRef),
+    formData,
+    headers,
+  );
+  return unwrap(result).data!;
 }

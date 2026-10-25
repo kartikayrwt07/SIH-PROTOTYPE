@@ -458,6 +458,7 @@ export interface InstitutionTrustScore {
   automated_directive: string;
   recommended_action_code: string;
   last_audit_date: string;
+  pdf_notice_url?: string | undefined;
 }
 
 export interface TrustLeaderboardSummary {
@@ -477,6 +478,7 @@ export interface RegulatoryActionResponse {
   dispatched_at: string;
   dispatch_reference: string;
   summary: string;
+  pdf_download_url?: string | undefined;
 }
 
 // ─── Telegram Bot Tracker ─────────────────────────────────────────────────────
@@ -587,5 +589,74 @@ export interface InstitutionPerformanceStat {
   resolution_rate_pct: number;
   top_recurring_categories: { category: string; count: number }[];
   intervention_status: "COMPLIANT" | "WATCHLIST" | "CRITICAL_INTERVENTION";
+}
+
+// ─── Student Portal & Complainant Identity ─────────────────────────────────────
+
+export interface StudentAuthProfile {
+  verification_token: string;
+  complainant_id: string;
+  masked_identifier: string;
+  full_name: string;
+  complainant_type: "STUDENT" | "FACULTY" | "PARENT" | "CITIZEN";
+  verification_method: string;
+  verified_at: string;
+  is_whistleblower_shielded: boolean;
+}
+
+export interface StudentCaseAttachment {
+  id: string;
+  file_name: string;
+  file_size_bytes: number;
+  mime_type: string;
+  secure_url: string;
+  category: string;
+  description: string | null;
+  created_at: string;
+}
+
+export interface StudentCaseTimelineItem {
+  timestamp: string;
+  event_type: string;
+  previous_state: string | null;
+  new_state: string | null;
+  remarks: string | null;
+}
+
+export interface StudentGrievanceCase {
+  id: string;
+  case_reference_id: string;
+  subject: string;
+  description_redacted: string;
+  category: string;
+  priority: CasePriority;
+  status: CaseStatus;
+  institution_name: string;
+  aicte_permanent_id: string | null;
+  bureau_code: BureauCode;
+  bureau_name: string;
+  due_date: string | null;
+  created_at: string;
+  updated_at: string;
+  resolved_at: string | null;
+  closure_remarks: string | null;
+  is_awaiting_information: boolean;
+  attachments: StudentCaseAttachment[];
+  timeline: StudentCaseTimelineItem[];
+}
+
+export interface StudentPortalData {
+  complainant: StudentAuthProfile;
+  cases: StudentGrievanceCase[];
+  active_count: number;
+  action_required_count: number;
+  resolved_count: number;
+}
+
+export interface StudentUploadResult {
+  attachment: StudentCaseAttachment;
+  case_reference_id: string;
+  new_status: string;
+  message: string;
 }
 

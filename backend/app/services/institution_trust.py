@@ -332,6 +332,7 @@ def calculate_institution_trust_score(
         automated_directive=directive,
         recommended_action_code=action_code,
         last_audit_date=now.strftime("%d %b %Y"),
+        pdf_notice_url=f"/api/v1/institutions/{institution.id}/regulatory-notice.pdf" if final_score < 400 else None,
     )
 
 
@@ -477,6 +478,7 @@ def execute_regulatory_action(
     msg = messages.get(action_key, default_msg)
 
     action_uuid = f"ACT-{uuid.uuid4().hex[:8].upper()}"
+    pdf_url = f"/api/v1/institutions/{inst.id}/regulatory-notice.pdf?action_type={action_key}&ref={ref_no}"
 
     return RegulatoryActionResponse(
         success=True,
@@ -491,4 +493,5 @@ def execute_regulatory_action(
         dispatched_at=issued_date,
         message=msg,
         summary=msg,
+        pdf_download_url=pdf_url,
     )

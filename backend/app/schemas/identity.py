@@ -41,3 +41,59 @@ class ComplainantPublicBadge(BaseModel):
     is_verified: bool
     verification_method: VerificationMethod
     verified_at: Optional[datetime] = None
+
+
+class ComplainantTimelineItem(BaseModel):
+    timestamp: datetime
+    event_type: str
+    previous_state: Optional[str] = None
+    new_state: Optional[str] = None
+    remarks: Optional[str] = None
+
+
+class ComplainantCaseAttachment(BaseModel):
+    id: str
+    file_name: str
+    file_size_bytes: int
+    mime_type: str
+    secure_url: str
+    category: str
+    description: Optional[str] = None
+    created_at: datetime
+
+
+class ComplainantCaseDetail(BaseModel):
+    id: str
+    case_reference_id: str
+    subject: str
+    description_redacted: str
+    category: str
+    priority: str
+    status: str
+    institution_name: str
+    aicte_permanent_id: Optional[str] = None
+    bureau_code: str
+    bureau_name: str
+    due_date: Optional[datetime] = None
+    created_at: datetime
+    updated_at: datetime
+    resolved_at: Optional[datetime] = None
+    closure_remarks: Optional[str] = None
+    is_awaiting_information: bool
+    attachments: list[ComplainantCaseAttachment] = []
+    timeline: list[ComplainantTimelineItem] = []
+
+
+class ComplainantPortalResponse(BaseModel):
+    complainant: VerifiedComplainantToken
+    cases: list[ComplainantCaseDetail]
+    active_count: int
+    action_required_count: int
+    resolved_count: int
+
+
+class ComplainantUploadResponse(BaseModel):
+    attachment: ComplainantCaseAttachment
+    case_reference_id: str
+    new_status: str
+    message: str

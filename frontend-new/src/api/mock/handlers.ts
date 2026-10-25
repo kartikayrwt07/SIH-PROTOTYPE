@@ -29,6 +29,11 @@ import type {
   CasePriority,
   CaseStatus,
   ApiError,
+  StudentPortalData,
+  StudentAuthProfile,
+  StudentGrievanceCase,
+  StudentCaseAttachment,
+  StudentUploadResult,
 } from "@/types/ui";
 import {
   getCases,
@@ -796,5 +801,187 @@ export async function mockCommitCsv(
     skipped_count: rows.length - validRows.length,
     failed_count: 0,
     created_case_references: refs,
+  };
+}
+
+// ─── Student Portal & Complainant Verification ────────────────────────────────
+
+export async function mockSendStudentOtp(target: string, _fullName?: string) {
+  await latency();
+  return {
+    tx_ref: "TX-MOCK-STUDENT-" + Math.floor(100000 + Math.random() * 900000),
+    target_masked: target.includes("@") ? target : `XXXX-XX-${target.slice(-4)}`,
+    expires_in_seconds: 600,
+    message: "Verification OTP successfully dispatched to your target.",
+    sandbox_otp: "123456",
+  };
+}
+
+export async function mockVerifyStudentOtp(
+  _txRef: string,
+  otpCode: string,
+): Promise<StudentAuthProfile> {
+  await latency();
+  if (otpCode !== "123456" && otpCode.length !== 6) {
+    apiErr("INVALID_OTP", "Invalid verification code entered. Try 123456.", 400);
+  }
+  return {
+    verification_token: "MOCK_STUDENT_JWT_TOKEN",
+    complainant_id: "student-aarav-sharma",
+    masked_identifier: "XXXX-XX-3210",
+    full_name: "Aarav Sharma",
+    complainant_type: "STUDENT",
+    verification_method: "MOBILE_EMAIL_2FA",
+    verified_at: new Date().toISOString(),
+    is_whistleblower_shielded: true,
+  };
+}
+
+export async function mockGetStudentPortalData(_token?: string): Promise<StudentPortalData> {
+  await latency();
+  const allCases = getCases();
+
+  // Find or craft cases for the student:
+  let awaitingCase = allCases.find((c) => c.status === "Awaiting Information");
+  if (!awaitingCase) {
+    if (allCases.length > 1) {
+      updateCase(allCases[1]!.case_reference_id, { status: "Awaiting Information" });
+      awaitingCase = getCaseByRef(allCases[1]!.case_reference_id);
+    }
+  }
+
+  const inProgressCase = allCases.find((c) => c.status === "In Progress" || c.status === "Assigned") ?? allCases[0];
+  const resolvedCase = allCases.find((c) => c.status === "Resolved" || c.status === "Closed") ?? allCases[allCases.length - 1];
+
+  const studentCasesRaw = [awaitingCase, inProgressCase, resolvedCase].filter(Boolean) as ComplaintCase[];
+
+  const formattedCases: StudentGrievanceCase[] = studentCasesRaw.map((c) => {
+    const rawTimeline = getTimeline(c.case_reference_id);
+    return {
+      id: c.id,
+      case_reference_id: c.case_reference_id,
+      subject: c.subject,
+      description_redacted: c.description_redacted,
+      category: c.category,
+      priority: c.priority,
+      status: c.status,
+      institution_name: c.institution_name,
+      aicte_permanent_id: c.aicte_permanent_id,
+      bureau_code: c.bureau_code,
+      bureau_name: c.bureau_name,
+      due_date: c.due_date,
+      created_at: c.created_at,
+      updated_at: c.updated_at,
+      resolved_at: c.resolved_at ?? null,
+      closure_remarks: c.closure_remarks ?? null,
+      is_awaiting_information: c.status === "Awaiting Information",
+      attachments: [
+        {
+          id: `att-mock-${c.id}-1`,
+          file_name: "initial_grievance_proof.pdf",
+          file_size_bytes: 245760,
+          mime_type: "application/pdf",
+          secure_url: "#",
+          category: "COMMUNICATION_RECORD",
+          description: "Original grievance documentation submitted at intake",
+          created_at: c.created_at,
+        },
+      ],
+      timeline: rawTimeline.map((t) => ({
+        timestamp: t.timestamp,
+        event_type: t.event_type,
+        previous_state: t.previous_state,
+        new_state: t.new_state,
+        remarks: t.remark,
+      })),
+    };
+  });
+
+  const activeCount = formattedCases.filter((c) => c.status !== "Resolved" && c.status !== "Closed").length;
+  const actionRequiredCount = formattedCases.filter((c) => c.status === "Awaiting Information").length;
+  const resolvedCount = formattedCases.filter((c) => c.status === "Resolved" || c.status === "Closed").length;
+
+  return {
+    complainant: {
+      verification_token: "MOCK_STUDENT_JWT_TOKEN",
+      complainant_id: "student-aarav-sharma",
+      masked_identifier: "XXXX-XX-3210",
+      full_name: "Aarav Sharma",
+      complainant_type: "STUDENT",
+      verification_method: "MOBILE_EMAIL_2FA",
+      verified_at: new Date().toISOString(),
+      is_whistleblower_shielded: true,
+    },
+    cases: formattedCases,
+    active_count: activeCount,
+    action_required_count: actionRequiredCount,
+    resolved_count: resolvedCount,
+  };
+}
+
+export async function mockUploadStudentDocument(
+  caseRef: string,
+  file: File,
+  description?: string,
+): Promise<StudentUploadResult> {
+  await latency();
+  const c = getCaseByRef(caseRef);
+  if (!c) apiErr("NOT_FOUND", `Case ${caseRef} not found.`, 404);
+
+  let newStatus = c.status;
+  if (c.status === "Awaiting Information") {
+    newStatus = "In Progress";
+    updateCase(caseRef, { status: "In Progress" });
+    addTimelineEvent(caseRef, {
+      id: makeId("tl"),
+      case_id: c.id,
+      actor_id: null,
+      actor_role: "COMPLAINANT",
+      actor_name: "Aarav Sharma (Verified Student)",
+      event_type: "STATUS_CHANGE",
+      previous_state: "Awaiting Information",
+      new_state: "In Progress",
+      remark: description || `Complainant uploaded requested document: ${file.name}. Status advanced to In Progress.`,
+      metadata: {
+        action: "COMPLAINANT_DOCUMENT_SUBMITTED",
+        file_name: file.name,
+      },
+      timestamp: new Date().toISOString(),
+    });
+  } else {
+    addTimelineEvent(caseRef, {
+      id: makeId("tl"),
+      case_id: c.id,
+      actor_id: null,
+      actor_role: "COMPLAINANT",
+      actor_name: "Aarav Sharma (Verified Student)",
+      event_type: "NOTE_ADDED",
+      previous_state: c.status,
+      new_state: c.status,
+      remark: description || `Complainant uploaded supplemental document: ${file.name}`,
+      metadata: {
+        action: "COMPLAINANT_DOCUMENT_SUBMITTED",
+        file_name: file.name,
+      },
+      timestamp: new Date().toISOString(),
+    });
+  }
+
+  const att: StudentCaseAttachment = {
+    id: "att-mock-" + Date.now(),
+    file_name: file.name,
+    file_size_bytes: file.size,
+    mime_type: file.type || "application/pdf",
+    secure_url: "#",
+    category: "COMMUNICATION_RECORD",
+    description: description || "Requested supplemental document submitted by complainant",
+    created_at: new Date().toISOString(),
+  };
+
+  return {
+    attachment: att,
+    case_reference_id: caseRef,
+    new_status: newStatus,
+    message: `Document '${file.name}' securely uploaded and registered.`,
   };
 }

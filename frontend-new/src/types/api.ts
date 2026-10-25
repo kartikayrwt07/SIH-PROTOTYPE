@@ -308,6 +308,7 @@ export interface RawInstitutionTrustScoreDetail {
   automated_directive: string;
   recommended_action_code: string;
   last_audit_date: string;
+  pdf_notice_url?: string;
 }
 
 export interface RawTrustLeaderboardSummary {
@@ -327,6 +328,7 @@ export interface RawRegulatoryActionResponse {
   dispatched_at: string;
   dispatch_reference: string;
   summary: string;
+  pdf_download_url?: string;
 }
 
 // ─── Telegram Bot Tracker ─────────────────────────────────────────────────────

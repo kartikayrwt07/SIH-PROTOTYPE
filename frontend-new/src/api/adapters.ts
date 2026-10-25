@@ -365,6 +365,7 @@ export function adaptTrustScoreDetail(raw: RawInstitutionTrustScoreDetail): Inst
     automated_directive: raw.automated_directive,
     recommended_action_code: raw.recommended_action_code,
     last_audit_date: raw.last_audit_date,
+    pdf_notice_url: raw.pdf_notice_url || ((raw as any).trust_score < 400 ? `/api/v1/institutions/${raw.institution_id}/regulatory-notice.pdf` : undefined),
   };
 }
 
@@ -374,14 +375,19 @@ export function adaptTrustLeaderboardSummary(raw: RawTrustLeaderboardSummary): T
 
 export function adaptRegulatoryAction(raw: RawRegulatoryActionResponse): RegulatoryActionResponse {
   const r = raw as any;
+  const instId = raw.institution_id || r.institutionId || "";
+  const actType = raw.action_type || r.action_code || "SHOW_CAUSE_SUMMONS";
+  const refNo = raw.dispatch_reference || r.reference_number || "";
+
   return {
     action_id: raw.action_id || r.id || r.reference_number || "act-" + Date.now(),
-    institution_id: raw.institution_id || r.institutionId || "",
-    action_type: raw.action_type || r.action_code || "SHOW_CAUSE_SUMMONS",
+    institution_id: instId,
+    action_type: actType,
     status: raw.status || (r.success ? "DISPATCHED" : "PENDING"),
     dispatched_at: raw.dispatched_at || r.issued_at || new Date().toISOString(),
-    dispatch_reference: raw.dispatch_reference || r.reference_number || "",
+    dispatch_reference: refNo,
     summary: raw.summary || r.message || "",
+    pdf_download_url: raw.pdf_download_url || r.pdf_download_url || (instId ? `/api/v1/institutions/${instId}/regulatory-notice.pdf?action_type=${actType}&ref=${refNo}` : undefined),
   };
 }
 

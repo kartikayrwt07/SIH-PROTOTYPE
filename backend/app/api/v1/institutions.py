@@ -3,8 +3,9 @@ API Endpoints for Institution Dynamic Trust Score & Super Admin High-Risk Leader
 """
 
 from typing import List, Optional
-from fastapi import APIRouter, Depends, Query, Path, HTTPException, status
+from fastapi import APIRouter, Depends, Query, Path, HTTPException, status, Response
 from sqlalchemy.orm import Session
+from sqlalchemy import or_
 
 from backend.app.core.database import get_db
 from backend.app.core.auth import get_current_user, require_roles
@@ -23,6 +24,7 @@ from backend.app.services.institution_trust import (
     get_institution_trust_detail,
     execute_regulatory_action,
 )
+from backend.app.services.legal_paperwork import generate_regulatory_pdf
 
 router = APIRouter()
 
@@ -126,8 +128,13 @@ def get_institution_trust_score_by_id(
     response_model=StandardResponse[RegulatoryActionResponse],
     summary="Execute Automated Regulatory Oversight Action",
 )
+@router.post(
+    "/{institution_id}/regulatory-action",
+    response_model=StandardResponse[RegulatoryActionResponse],
+    summary="Execute Automated Regulatory Oversight Action (Official Alias)",
+)
 def post_regulatory_action(
-    institution_id: str = Path(..., description="Target Institution UUID"),
+    institution_id: str = Path(..., description="Target Institution UUID or Permanent AICTE ID"),
     request: RegulatoryActionRequest = ...,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
@@ -135,7 +142,7 @@ def post_regulatory_action(
     """
     Executes a formal AICTE regulatory action triggered from the High-Risk Leaderboard:
     Dispatches Show-Cause Notice, orders intake quota freeze, or schedules inspection.
-    Restricted to SUPER_ADMIN, ADMIN, or BUREAU_HEAD.
+    Restricted to SUPER_ADMIN, ADMIN, or SUPERVISOR.
     """
     if current_user.role not in [UserRole.ADMIN, UserRole.SUPERVISOR]:
         raise HTTPException(
@@ -152,3 +159,70 @@ def post_regulatory_action(
         return StandardResponse(data=response)
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+
+
+@router.get(
+    "/{institution_id}/regulatory-notice.pdf",
+    summary="Download Official Statutory Show-Cause Notice / Intake Freeze Directives (PDF)",
+    response_class=Response,
+)
+@router.get(
+    "/{institution_id}/regulatory-action/pdf",
+    summary="Download Official Statutory Show-Cause Notice / Intake Freeze Directives (PDF Alias)",
+    response_class=Response,
+)
+def download_regulatory_notice_pdf(
+    institution_id: str = Path(..., description="Institution UUID or Permanent AICTE ID"),
+    action_type: Optional[str] = Query(None, description="Notice Type (SHOW_CAUSE_NOTICE, FREEZE_INTAKE, etc.)"),
+    ref: Optional[str] = Query(None, description="Official dispatch reference number"),
+    directive_notes: Optional[str] = Query(None, description="Custom directive terms"),
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """
+    Auto-generates a downloadable, court-admissible, legally formatted PDF notice
+    under the AICTE Act 1987 with statutory citations, penalty ledgers, and official seal blocks.
+    """
+    inst = db.query(Institution).filter(
+        or_(Institution.id == institution_id, Institution.aicte_permanent_id == institution_id)
+    ).first()
+    if not inst:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Institution with ID or Permanent ID '{institution_id}' not found",
+        )
+
+    # Fetch trust score detail for citations and credit rating
+    trust_detail = get_institution_trust_detail(institution_id, db)
+    trust_dict = trust_detail.model_dump() if trust_detail else None
+
+    # Derive action_type if not provided
+    effective_action_type = action_type
+    if not effective_action_type and trust_detail:
+        effective_action_type = trust_detail.recommended_action_code
+
+    pdf_bytes = generate_regulatory_pdf(
+        institution={
+            "name": inst.name,
+            "aicte_permanent_id": inst.aicte_permanent_id,
+            "state": inst.state,
+            "district": inst.district,
+            "institution_type": inst.institution_type,
+        },
+        trust_score_detail=trust_dict,
+        action_type=effective_action_type or "SHOW_CAUSE_NOTICE",
+        directive_notes=directive_notes or (trust_detail.automated_directive if trust_detail else None),
+        reference_number=ref,
+    )
+
+    clean_name = inst.name.replace(" ", "_").replace("/", "_")[:25]
+    filename = f"AICTE_Legal_Notice_{inst.aicte_permanent_id}_{clean_name}.pdf"
+
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": f'attachment; filename="{filename}"',
+            "Cache-Control": "no-cache",
+        },
+    )

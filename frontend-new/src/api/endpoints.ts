@@ -87,8 +87,10 @@ export const ENDPOINTS = {
   telegramInfo: `${BASE}/api/v1/telegram/info`,
   telegramSimulate: `${BASE}/api/v1/telegram/simulate`,
 
-  // Complainant Identity Verification
+  // Complainant Identity Verification & Student Portal
   identityOtpSend: `${BASE}/api/v1/identity/otp/send`,
   identityOtpVerify: `${BASE}/api/v1/identity/otp/verify`,
   identityVerifyToken: `${BASE}/api/v1/identity/verify-token`,
+  identityMyCases: `${BASE}/api/v1/identity/my-cases`,
+  identityCaseUpload: (caseRef: string) => `${BASE}/api/v1/identity/cases/${caseRef}/upload`,
 } as const;
