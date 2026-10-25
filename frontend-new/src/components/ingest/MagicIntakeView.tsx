@@ -116,6 +116,17 @@ export function MagicIntakeView() {
     toast.success(`Attached evidence: ${file.name}`);
   };
 
+  const getIngestEvidenceUrl = () => {
+    if (attachmentDataUrl) return attachmentDataUrl;
+    if (ingestResponse?.attachment_url && !ingestResponse.attachment_url.includes("supabase.co") && ingestResponse.attachment_url !== "#") {
+      return ingestResponse.attachment_url;
+    }
+    if (ingestResponse?.case_reference_id && ingestResponse?.attachment_id) {
+      return `/api/v1/cases/${ingestResponse.case_reference_id}/attachments/${ingestResponse.attachment_id}/file`;
+    }
+    return ingestResponse?.attachment_url || "";
+  };
+
   const handleRemoveAttachment = () => {
     setAttachedFile(null);
     setAttachmentDataUrl(null);
@@ -452,8 +463,17 @@ export function MagicIntakeView() {
                       className="relative h-14 w-14 rounded-lg overflow-hidden border border-emerald-200 shrink-0 cursor-pointer group shadow-xs"
                     >
                       <img
-                        src={attachmentDataUrl || ingestResponse.attachment_url || ""}
+                        src={getIngestEvidenceUrl()}
                         alt="Submitted evidence"
+                        onError={(e) => {
+                          const target = e.currentTarget;
+                          if (ingestResponse?.case_reference_id && ingestResponse?.attachment_id) {
+                            const proxyUrl = `/api/v1/cases/${ingestResponse.case_reference_id}/attachments/${ingestResponse.attachment_id}/file`;
+                            if (target.src !== window.location.origin + proxyUrl && !target.src.endsWith(proxyUrl)) {
+                              target.src = proxyUrl;
+                            }
+                          }
+                        }}
                         className="h-full w-full object-cover group-hover:scale-105 transition-transform"
                       />
                       <div className="absolute inset-0 bg-black/25 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity text-white">
@@ -766,10 +786,19 @@ export function MagicIntakeView() {
           </DialogHeader>
 
           <div className="py-2 flex items-center justify-center bg-black/5 dark:bg-black/40 rounded-xl overflow-hidden border border-rule min-h-[250px]">
-            {attachmentDataUrl || ingestResponse?.attachment_url ? (
+            {getIngestEvidenceUrl() ? (
               <img
-                src={attachmentDataUrl || ingestResponse?.attachment_url || ""}
+                src={getIngestEvidenceUrl()}
                 alt="Full size evidence"
+                onError={(e) => {
+                  const target = e.currentTarget;
+                  if (ingestResponse?.case_reference_id && ingestResponse?.attachment_id) {
+                    const proxyUrl = `/api/v1/cases/${ingestResponse.case_reference_id}/attachments/${ingestResponse.attachment_id}/file`;
+                    if (target.src !== window.location.origin + proxyUrl && !target.src.endsWith(proxyUrl)) {
+                      target.src = proxyUrl;
+                    }
+                  }
+                }}
                 className="max-h-[60vh] max-w-full object-contain rounded-lg shadow-md"
               />
             ) : (

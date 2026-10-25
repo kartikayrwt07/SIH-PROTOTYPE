@@ -103,12 +103,18 @@ def create_case_attachment(
     from backend.app.services.cloud_storage import cloud_storage
 
     attachment_id = str(uuid.uuid4())
-    storage_path, secure_url, bucket_name, provider_name = cloud_storage.upload_file(
+    storage_path, raw_secure_url, bucket_name, provider_name = cloud_storage.upload_file(
         file_bytes=file_bytes,
         file_name=file_name,
         content_type=mime_type,
         case_ref=case.case_reference_id,
     )
+
+    # Guarantee that secure_url always routes to our reliable backend stream proxy
+    if not raw_secure_url or raw_secure_url.startswith("/api/") or "supabase.co" in raw_secure_url:
+        secure_url = f"/api/v1/cases/{case.case_reference_id}/attachments/{attachment_id}/file"
+    else:
+        secure_url = raw_secure_url
 
     attachment = CaseAttachment(
         id=attachment_id,

@@ -49,6 +49,17 @@ export function CaseAttachmentsTab({ caseRef }: CaseAttachmentsTabProps) {
     );
   };
 
+  const getAttachmentUrl = (att?: CaseAttachment | null) => {
+    if (!att) return "";
+    if (att.secure_url?.startsWith("data:") || att.secure_url?.startsWith("blob:")) {
+      return att.secure_url;
+    }
+    if (!att.secure_url || att.secure_url.includes("supabase.co") || att.secure_url === "#") {
+      return `/api/v1/cases/${caseRef}/attachments/${att.id}/file`;
+    }
+    return att.secure_url;
+  };
+
   const {
     data: attachments = [],
     isLoading,
@@ -127,15 +138,22 @@ export function CaseAttachmentsTab({ caseRef }: CaseAttachmentsTabProps) {
               className="p-4 rounded-xl border border-rule bg-white/70 dark:bg-[#0B0813]/70 backdrop-blur-sm flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-xs"
             >
               <div className="flex items-start gap-3">
-                {isImageAttachment(att) && att.secure_url && att.secure_url !== "#" ? (
+                {isImageAttachment(att) ? (
                   <div
                     onClick={() => setPreviewAttachment(att)}
-                    className="relative h-12 w-12 rounded-lg overflow-hidden border border-purple-200 dark:border-purple-800 shrink-0 mt-0.5 cursor-pointer group shadow-2xs"
+                    className="relative h-12 w-12 rounded-lg overflow-hidden border border-purple-200 dark:border-purple-800 shrink-0 mt-0.5 cursor-pointer group shadow-2xs bg-purple-50 dark:bg-purple-950/20"
                     title="Click to look at image"
                   >
                     <img
-                      src={att.secure_url}
+                      src={getAttachmentUrl(att)}
                       alt={att.file_name}
+                      onError={(e) => {
+                        const target = e.currentTarget;
+                        const proxyUrl = `/api/v1/cases/${caseRef}/attachments/${att.id}/file`;
+                        if (target.src !== window.location.origin + proxyUrl && !target.src.endsWith(proxyUrl)) {
+                          target.src = proxyUrl;
+                        }
+                      }}
                       className="h-full w-full object-cover group-hover:scale-105 transition-transform"
                     />
                     <div className="absolute inset-0 bg-black/35 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity text-white">
@@ -180,7 +198,7 @@ export function CaseAttachmentsTab({ caseRef }: CaseAttachmentsTabProps) {
               </div>
 
               <div className="flex items-center gap-2 self-end md:self-auto shrink-0">
-                {isImageAttachment(att) && att.secure_url && att.secure_url !== "#" ? (
+                {isImageAttachment(att) ? (
                   <Button
                     variant="outline"
                     size="sm"
@@ -192,7 +210,7 @@ export function CaseAttachmentsTab({ caseRef }: CaseAttachmentsTabProps) {
                   </Button>
                 ) : (
                   <a
-                    href={att.secure_url}
+                    href={getAttachmentUrl(att)}
                     target="_blank"
                     rel="noreferrer"
                     className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-rule text-xs font-medium text-ink hover:bg-surface transition-colors"
@@ -312,8 +330,15 @@ export function CaseAttachmentsTab({ caseRef }: CaseAttachmentsTabProps) {
 
               <div className="py-2 flex items-center justify-center bg-black/5 dark:bg-black/40 rounded-xl overflow-hidden border border-rule min-h-[250px]">
                 <img
-                  src={previewAttachment.secure_url}
+                  src={getAttachmentUrl(previewAttachment)}
                   alt={previewAttachment.file_name}
+                  onError={(e) => {
+                    const target = e.currentTarget;
+                    const proxyUrl = `/api/v1/cases/${caseRef}/attachments/${previewAttachment.id}/file`;
+                    if (target.src !== window.location.origin + proxyUrl && !target.src.endsWith(proxyUrl)) {
+                      target.src = proxyUrl;
+                    }
+                  }}
                   className="max-h-[65vh] max-w-full object-contain rounded-lg shadow-md"
                 />
               </div>
@@ -325,7 +350,7 @@ export function CaseAttachmentsTab({ caseRef }: CaseAttachmentsTabProps) {
                 </span>
                 <div className="flex items-center gap-2">
                   <a
-                    href={previewAttachment.secure_url}
+                    href={getAttachmentUrl(previewAttachment)}
                     download={previewAttachment.file_name}
                     className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-rule text-xs font-medium text-ink hover:bg-surface transition-colors h-8"
                   >

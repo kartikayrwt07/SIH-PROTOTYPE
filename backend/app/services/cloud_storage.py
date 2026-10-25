@@ -87,30 +87,34 @@ class CloudStorageService:
         bucket_name: str,
     ) -> str:
         """
-        Uploads file to Supabase Storage Bucket via REST API.
-        If service key is configured, pushes data over HTTPS.
-        Always returns the canonical Supabase secure CDN URL.
+        Uploads file to Supabase Storage Bucket via REST API if service key is configured.
+        If service role key is absent or upload encounters NoSuchBucket, returns backend proxy stream URL.
         """
         public_url = f"{self.supabase_url}/storage/v1/object/public/{bucket_name}/{storage_path}"
 
-        if self.supabase_key:
-            try:
-                headers = {
-                    "Authorization": f"Bearer {self.supabase_key}",
-                    "Content-Type": content_type,
-                    "x-upsert": "true",
-                }
-                upload_endpoint = f"{self.supabase_url}/storage/v1/object/{bucket_name}/{storage_path}"
-                with httpx.Client(timeout=10.0) as client:
-                    resp = client.post(upload_endpoint, content=file_bytes, headers=headers)
-                    if resp.status_code in [200, 201]:
-                        print(f"[CloudStorage] Uploaded {len(file_bytes)} bytes to Supabase: {storage_path}")
-                    else:
-                        print(f"[CloudStorage] Notice: Supabase upload response {resp.status_code}: {resp.text}")
-            except Exception as e:
-                print(f"[CloudStorage] Warning: Supabase storage API dispatch error: {e}")
+        if not self.supabase_key:
+            # Service role key not configured in environment — return local backend streaming URL
+            return f"/api/v1/cases/attachments/file/{storage_path}"
 
-        return public_url
+        try:
+            headers = {
+                "Authorization": f"Bearer {self.supabase_key}",
+                "Content-Type": content_type,
+                "x-upsert": "true",
+            }
+            upload_endpoint = f"{self.supabase_url}/storage/v1/object/{bucket_name}/{storage_path}"
+            with httpx.Client(timeout=10.0) as client:
+                resp = client.post(upload_endpoint, content=file_bytes, headers=headers)
+                if resp.status_code in [200, 201]:
+                    print(f"[CloudStorage] Uploaded {len(file_bytes)} bytes to Supabase: {storage_path}")
+                    return public_url
+                else:
+                    print(f"[CloudStorage] Notice: Supabase upload response {resp.status_code}: {resp.text}")
+        except Exception as e:
+            print(f"[CloudStorage] Warning: Supabase storage API dispatch error: {e}")
+
+        # Fallback to local server stream
+        return f"/api/v1/cases/attachments/file/{storage_path}"
 
     def _upload_to_s3(
         self,
