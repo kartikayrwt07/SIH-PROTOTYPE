@@ -407,6 +407,8 @@ The state machine implements rigid procedural validity checks. Illegal jumps (su
 |---|---|---|---|
 | `POST` | `/api/v1/identity/otp/send` | Send sandbox verification challenge to complainant | Public / Officer |
 | `POST` | `/api/v1/identity/otp/verify` | Verify OTP code and issue cryptographically masked token | Public / Officer |
+| `GET` | `/api/v1/identity/my-cases` | Student Portal list of active complaints, status & timeline | Complainant Token |
+| `POST` | `/api/v1/identity/cases/{case_ref}/upload` | Secure evidentiary upload for Awaiting Information cases | Complainant Token |
 
 ### AI Triage & Master Ticket Operations
 | HTTP Method | Route | Description | Auth Required |
@@ -431,6 +433,7 @@ The state machine implements rigid procedural validity checks. Illegal jumps (su
 | `GET` | `/api/v1/institutions/{id}/trust-score` | Detailed credit report with itemized penalty citations | JWT Bearer |
 | `POST` | `/api/v1/institutions/{id}/recalculate-trust`| Force live recalculation of college credit score | JWT Bearer |
 | `POST` | `/api/v1/institutions/{id}/regulatory-action`| Apply regulatory action (Show-Cause / Intake Freeze) | Admin / Supervisor |
+| `GET` | `/api/v1/institutions/{id}/legal-notice/pdf`| Download official AICTE legal show-cause / freeze PDF | Admin / Supervisor |
 
 ### Telegram Bot Webhook & Student Tracker
 | HTTP Method | Route | Description | Auth Required |
@@ -510,3 +513,29 @@ python -m pytest backend/tests/test_health.py backend/tests/test_bhashini.py bac
     - Independent Compliance Auditor (`AUDITOR`)
   - `frontend-new/src/components/dossier/CaseDossierView.tsx`: Computes `isOfficerFromOtherBureau`. Disables the "Change status" button when an officer views a grievance outside their jurisdiction, rendering a prominent **"Cross-Bureau Read-Only Mode"** warning banner and an action-rail **"Jurisdictional Boundary"** notice directing the evaluator to switch to the matching bureau officer or supervisor.
   - `frontend-new/src/components/dossier/ChangeStatusModal.tsx`: Added clear actionable error messaging if a cross-bureau mutation is ever rejected by backend governance.
+
+#### 2. Automated Official Legal Paperwork (PDF Directives & Show-Cause Notices)
+- **Problem**: When colleges descend into severe penalty tiers (Tier 5: Show-Cause Notice Issued, Tier 6: Intake Freeze Directed), administrators previously had no programmatic mechanism to issue legally binding notices, requiring manual drafting outside the system.
+- **Backend Resolution (`backend/app/services/legal_paperwork.py` & `backend/app/api/v1/institutions.py`)**:
+  - Implemented ReportLab vector PDF generator that dynamically composes official AICTE statutory legal directives.
+  - Features Government of India emblem header, AICTE official seals, unique dispatch reference numbers (`AICTE/LEGAL/SCN/...`), dynamic QR code verification, itemized statutory violation citations, punitive stipulations (under AICTE Act 1987 Section 10(k)), and an authorized signature block for Member Secretary.
+  - Exposed via `GET /api/v1/institutions/{id}/legal-notice/pdf` with custom filename streaming (`application/pdf`).
+- **Frontend Resolution (`frontend-new/src/components/institutions/InstitutionTrustLeaderboard.tsx`)**:
+  - Added a 1-click **"Download Directive PDF"** / **"Download Notice PDF"** button for institutions in Tier 5 and Tier 6.
+  - Supports live PDF streaming download and fallback mock PDF generation for offline evaluator demonstrations.
+
+#### 3. Student-Facing Web Dashboard with OTP Authentication & Awaiting Information Document Upload
+- **Problem**: The system provided exhaustive administrative views (`SmartTriageView`, `MasterTicketHub`, `CaseDossierView`), but lacked a dedicated, secure self-service web interface for complainants to track their active grievances and upload requested documents when cases enter the `Awaiting Information` state.
+- **Backend Architecture & IDOR Shielding (`backend/app/services/identity.py`, `backend/app/api/v1/identity.py`)**:
+  - `GET /api/v1/identity/my-cases`: Authenticates via complainant JWT token linked to `complainant_identities`. Retrieves all grievances filed by the complainant with sanitized descriptions, attachment history, and event milestones.
+  - `POST /api/v1/identity/cases/{case_ref}/upload`: Enforces strict IDOR protection (`assert_case_access`). When a case is in `Awaiting Information`:
+    - Stores evidentiary attachment with SHA-256 integrity hash and simulated antivirus clean verdict.
+    - Automatically advances case lifecycle state to `In Progress`.
+    - Writes an immutable audit event (`STATUS_CHANGE`) to `case_audit_events` with actor role `COMPLAINANT`.
+- **Frontend Dashboard View (`frontend-new/src/components/student/StudentPortalView.tsx` & `/student` Route)**:
+  - **OTP Authentication**: Complainants enter phone/email to receive a 6-digit sandbox OTP with 1-click quick-fill demo access for evaluators.
+  - **Whistleblower Privacy Shield**: Displays clear verification status, masked identifier (`XXXX-XX-3210`), and privacy vault badge confirming identity is decoupled from public dossiers.
+  - **Grievance Overview & Action Required Rail**: Top metrics display Active, Action Required, and Resolved cases. Cases in `Awaiting Information` are highlighted with prominent amber alerts.
+  - **Secure Document Upload Modal**: Allows uploading supplementary documents (receipts, affidavits, grade cards) with drag-and-drop, real-time SHA-256 seal badge, antivirus scan indicator, and mandatory description input.
+  - **Collapsible Audit Milestones**: Provides students transparent, chronological tracking of official AICTE investigative actions.
+

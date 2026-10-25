@@ -837,23 +837,33 @@ export async function mockVerifyStudentOtp(
   };
 }
 
+let studentCaseRefs: string[] | null = null;
+
 export async function mockGetStudentPortalData(_token?: string): Promise<StudentPortalData> {
   await latency();
   const allCases = getCases();
 
-  // Find or craft cases for the student:
-  let awaitingCase = allCases.find((c) => c.status === "Awaiting Information");
-  if (!awaitingCase) {
-    if (allCases.length > 1) {
+  // Pin student cases so state transitions (e.g. Awaiting Information -> In Progress) persist across re-fetches
+  if (!studentCaseRefs || studentCaseRefs.length === 0) {
+    let awaitingCase = allCases.find((c) => c.status === "Awaiting Information");
+    if (!awaitingCase && allCases.length > 1) {
       updateCase(allCases[1]!.case_reference_id, { status: "Awaiting Information" });
       awaitingCase = getCaseByRef(allCases[1]!.case_reference_id);
     }
+    const otherCases = allCases.filter((c) => c.case_reference_id !== awaitingCase?.case_reference_id);
+    const inProgressCase = otherCases.find((c) => c.status === "In Progress" || c.status === "Assigned") ?? otherCases[0];
+    const resolvedCase = otherCases.find((c) => c.status === "Resolved" || c.status === "Closed") ?? otherCases[otherCases.length - 1];
+
+    studentCaseRefs = [
+      awaitingCase?.case_reference_id,
+      inProgressCase?.case_reference_id,
+      resolvedCase?.case_reference_id,
+    ].filter(Boolean) as string[];
   }
 
-  const inProgressCase = allCases.find((c) => c.status === "In Progress" || c.status === "Assigned") ?? allCases[0];
-  const resolvedCase = allCases.find((c) => c.status === "Resolved" || c.status === "Closed") ?? allCases[allCases.length - 1];
-
-  const studentCasesRaw = [awaitingCase, inProgressCase, resolvedCase].filter(Boolean) as ComplaintCase[];
+  const studentCasesRaw = studentCaseRefs
+    .map((ref) => getCaseByRef(ref))
+    .filter(Boolean) as ComplaintCase[];
 
   const formattedCases: StudentGrievanceCase[] = studentCasesRaw.map((c) => {
     const rawTimeline = getTimeline(c.case_reference_id);
