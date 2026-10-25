@@ -439,6 +439,53 @@ def ingest_magic_grievance(
         timestamp=now,
     )
     db.add(audit_event)
+
+    # 5. Process and attach evidentiary image/document if provided
+    attached_url = None
+    attached_id = None
+    attached_name = None
+
+    if request.attachment_base64 and request.attachment_name:
+        import base64
+        import os
+        from backend.app.models.attachment import AttachmentCategory
+        from backend.app.services.attachment import create_case_attachment
+
+        try:
+            raw_b64 = request.attachment_base64
+            if "," in raw_b64:
+                raw_b64 = raw_b64.split(",", 1)[1]
+            file_bytes = base64.b64decode(raw_b64)
+            mime = request.attachment_mime or "application/octet-stream"
+            if not mime or mime == "application/octet-stream":
+                ext = os.path.splitext(request.attachment_name.lower())[1]
+                mime_map = {
+                    ".png": "image/png",
+                    ".jpg": "image/jpeg",
+                    ".jpeg": "image/jpeg",
+                    ".webp": "image/webp",
+                    ".pdf": "application/pdf",
+                }
+                mime = mime_map.get(ext, "image/png")
+
+            category = AttachmentCategory.FACILITY_PHOTOGRAPH if mime.startswith("image/") else AttachmentCategory.OTHER
+            att = create_case_attachment(
+                db=db,
+                case=new_case,
+                file_name=request.attachment_name,
+                file_bytes=file_bytes,
+                mime_type=mime,
+                category=category,
+                uploader=None,
+                description=f"Evidentiary attachment submitted during Magic AI Intake by {request.student_name or 'complainant'}",
+                is_confidential=False,
+            )
+            attached_url = att.secure_url
+            attached_id = att.id
+            attached_name = att.file_name
+        except Exception as e:
+            print(f"[MagicIngest] Warning: Failed to attach evidence during intake: {e}")
+
     db.commit()
     db.refresh(new_case)
 
@@ -451,4 +498,7 @@ def ingest_magic_grievance(
         due_date=new_case.due_date,
         created_at=new_case.created_at,
         docket_message=f"Case {new_case.case_reference_id} successfully created and autonomously routed to {analysis.bureau_routing.bureau_name} ({analysis.bureau_routing.bureau_code}).",
+        attachment_url=attached_url,
+        attachment_id=attached_id,
+        attachment_name=attached_name,
     )

@@ -54,6 +54,15 @@ class CloudStorageService:
         safe_name = self._sanitize_filename(file_name)
         storage_path = f"evidence/{case_ref}/{unique_id}_{safe_name}"
 
+        # Persist local mirror/cache so files are always streamable regardless of external network connectivity
+        try:
+            local_cache_path = os.path.join(os.getcwd(), ".uploads", storage_path)
+            os.makedirs(os.path.dirname(local_cache_path), exist_ok=True)
+            with open(local_cache_path, "wb") as f:
+                f.write(file_bytes)
+        except Exception as e:
+            print(f"[CloudStorage] Notice: Local caching skipped: {e}")
+
         # 1. AWS S3 Upload
         if self.provider == "s3" and settings.AWS_ACCESS_KEY_ID:
             secure_url = self._upload_to_s3(file_bytes, storage_path, content_type, target_bucket)
@@ -62,6 +71,13 @@ class CloudStorageService:
         # 2. Supabase Storage Bucket Upload
         secure_url = self._upload_to_supabase(file_bytes, storage_path, content_type, target_bucket)
         return storage_path, secure_url, target_bucket, "supabase"
+
+    def get_local_path(self, storage_path: str) -> Optional[str]:
+        """Resolves local cached file path if present on disk."""
+        local_path = os.path.join(os.getcwd(), ".uploads", storage_path)
+        if os.path.exists(local_path):
+            return local_path
+        return None
 
     def _upload_to_supabase(
         self,

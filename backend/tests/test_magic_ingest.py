@@ -78,3 +78,42 @@ def test_magic_ingest_auto_docket():
     assert data["case_reference_id"].startswith("AICTE-")
     assert data["status"] == "Assigned"
     assert data["analysis"]["bureau_routing"]["bureau_code"] == "APPR"
+
+
+def test_magic_ingest_with_image_attachment_and_stream():
+    import base64
+    # 1x1 transparent PNG image base64
+    sample_png_b64 = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII="
+    text = (
+        "National Institute of Technology has demanded illegal cash capitation fee. "
+        "I am attaching the bank slip photograph as evidence of illicit transaction."
+    )
+
+    response = client.post(
+        "/api/v1/cases/magic-ingest",
+        json={
+            "grievance_text": text,
+            "student_name": "Rohan Gupta",
+            "student_email": "rohan.gupta@example.edu",
+            "auto_docket": True,
+            "attachment_name": "capitation_fee_receipt.png",
+            "attachment_base64": sample_png_b64,
+            "attachment_mime": "image/png",
+        }
+    )
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["success"] is True
+    data = payload["data"]
+    assert data["case_created"] is True
+    assert data["attachment_name"] == "capitation_fee_receipt.png"
+    assert data["attachment_id"] is not None
+
+    case_ref = data["case_reference_id"]
+    att_id = data["attachment_id"]
+
+    # Stream the file back
+    stream_resp = client.get(f"/api/v1/cases/{case_ref}/attachments/{att_id}/file")
+    assert stream_resp.status_code == 200
+    assert "image/png" in stream_resp.headers.get("content-type", "")
+    assert len(stream_resp.content) > 0

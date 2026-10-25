@@ -725,6 +725,44 @@ async def upload_case_attachment(
     return StandardResponse(data=CaseAttachmentRead.model_validate(attachment))
 
 
+@router.get("/{case_ref}/attachments/{attachment_id}/file")
+def get_case_attachment_file(
+    case_ref: str,
+    attachment_id: str,
+    db: Session = Depends(get_db),
+):
+    """Streams evidentiary document or image directly for inline viewing."""
+    import os
+    from fastapi.responses import FileResponse, RedirectResponse
+    from backend.app.models.attachment import CaseAttachment
+    from backend.app.services.cloud_storage import cloud_storage
+
+    case = db.query(ComplaintCase).filter(ComplaintCase.case_reference_id == case_ref).first()
+    if not case:
+        raise HTTPException(status_code=404, detail="Case not found")
+
+    attachment = db.query(CaseAttachment).filter(
+        CaseAttachment.id == attachment_id,
+        CaseAttachment.case_id == case.id,
+    ).first()
+    if not attachment:
+        raise HTTPException(status_code=404, detail="Attachment not found")
+
+    local_path = cloud_storage.get_local_path(attachment.storage_path)
+    if local_path and os.path.exists(local_path):
+        return FileResponse(
+            local_path,
+            media_type=attachment.mime_type,
+            filename=attachment.file_name,
+            content_disposition_type="inline",
+        )
+
+    if attachment.secure_url and attachment.secure_url.startswith("http"):
+        return RedirectResponse(attachment.secure_url)
+
+    raise HTTPException(status_code=404, detail="Attachment evidence file not found on disk or cloud")
+
+
 @router.post("/magic-analyze", response_model=StandardResponse[MagicAnalysisResult])
 def magic_analyze_endpoint(
     request: MagicIngestRequest,

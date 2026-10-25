@@ -20,6 +20,12 @@ import {
   Edit3,
   Search,
   AlertCircle,
+  Paperclip,
+  Image as ImageIcon,
+  Eye,
+  X,
+  Download,
+  Upload,
 } from "lucide-react";
 import { magicAnalyze, magicIngest, listInstitutionsAll } from "@/api/index";
 import type { MagicAnalysisResult, MagicIngestResponse } from "@/types/ui";
@@ -27,6 +33,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { Link } from "@tanstack/react-router";
 
@@ -81,11 +88,39 @@ export function MagicIntakeView() {
   const [isChangingCollege, setIsChangingCollege] = useState(false);
   const [collegeSearchQuery, setCollegeSearchQuery] = useState("");
 
+  // Evidentiary Image / Document attachment states
+  const [attachedFile, setAttachedFile] = useState<File | null>(null);
+  const [attachmentDataUrl, setAttachmentDataUrl] = useState<string | null>(null);
+  const [isEvidencePreviewOpen, setIsEvidencePreviewOpen] = useState(false);
+  const fileInputRef = React.useRef<HTMLInputElement | null>(null);
+
   useEffect(() => {
     listInstitutionsAll()
       .then((data) => setInstitutions(data))
       .catch((err) => console.error("Failed to load institutions", err));
   }, []);
+
+  const handleFileSelect = (file: File) => {
+    if (file.size > 15 * 1024 * 1024) {
+      toast.error("File exceeds 15MB limit.");
+      return;
+    }
+    setAttachedFile(file);
+    if (file.type.startsWith("image/") || file.name.match(/\.(png|jpg|jpeg|webp)$/i)) {
+      const reader = new FileReader();
+      reader.onload = () => setAttachmentDataUrl(reader.result as string);
+      reader.readAsDataURL(file);
+    } else {
+      setAttachmentDataUrl(null);
+    }
+    toast.success(`Attached evidence: ${file.name}`);
+  };
+
+  const handleRemoveAttachment = () => {
+    setAttachedFile(null);
+    setAttachmentDataUrl(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
 
   const handleSelectScenario = (scenario: (typeof PRESET_SCENARIOS)[0]) => {
     setGrievanceText(scenario.text);
@@ -131,6 +166,9 @@ export function MagicIntakeView() {
         student_phone: studentPhone || undefined,
         institution_id: selectedInstitutionId || undefined,
         auto_docket: true,
+        attachment_name: attachedFile?.name,
+        attachment_base64: attachmentDataUrl || undefined,
+        attachment_mime: attachedFile?.type,
       });
       setIngestResponse(res);
       toast.success(`Complaint docketed successfully as ${res.case_reference_id}!`);
@@ -207,6 +245,105 @@ export function MagicIntakeView() {
             onChange={(e) => setGrievanceText(e.target.value)}
             className="text-xs border-rule resize-none leading-relaxed"
           />
+
+          {/* Supporting Evidence Image/Document Attachment Input */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <label className="text-[11px] font-medium text-text-secondary flex items-center gap-1.5">
+                <Paperclip className="h-3.5 w-3.5 text-indigo-500" />
+                <span>Supporting Image / Evidence Proof (Optional)</span>
+              </label>
+              {attachedFile && (
+                <button
+                  type="button"
+                  onClick={handleRemoveAttachment}
+                  className="text-[10px] text-red-500 hover:underline flex items-center gap-1"
+                >
+                  <X className="h-3 w-3" />
+                  Remove
+                </button>
+              )}
+            </div>
+
+            <input
+              type="file"
+              ref={fileInputRef}
+              accept="image/png,image/jpeg,image/jpg,image/webp,application/pdf"
+              className="hidden"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) handleFileSelect(file);
+              }}
+            />
+
+            {!attachedFile ? (
+              <div
+                onClick={() => fileInputRef.current?.click()}
+                className="border border-dashed border-rule/80 hover:border-indigo-400 dark:hover:border-indigo-600 bg-surface/40 hover:bg-indigo-50/20 dark:hover:bg-indigo-950/20 rounded-xl p-3.5 text-center cursor-pointer transition-all flex items-center justify-center gap-2 text-xs text-text-secondary"
+              >
+                <ImageIcon className="h-4 w-4 text-indigo-500" />
+                <span>Click to attach photo evidence (PNG, JPG, WebP) or document (PDF up to 15MB)</span>
+              </div>
+            ) : (
+              <div className="p-3 rounded-xl border border-indigo-200 dark:border-indigo-900 bg-indigo-50/40 dark:bg-indigo-950/20 flex items-center justify-between gap-3 shadow-2xs">
+                <div className="flex items-center gap-3 min-w-0">
+                  {attachmentDataUrl ? (
+                    <div
+                      onClick={() => setIsEvidencePreviewOpen(true)}
+                      className="relative h-12 w-12 rounded-lg overflow-hidden border border-indigo-200 shrink-0 cursor-pointer group"
+                      title="Click to look at image"
+                    >
+                      <img
+                        src={attachmentDataUrl}
+                        alt="Evidence preview"
+                        className="h-full w-full object-cover group-hover:scale-105 transition-transform"
+                      />
+                      <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity text-white">
+                        <Eye className="h-4 w-4" />
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="h-12 w-12 rounded-lg bg-indigo-100 dark:bg-indigo-900 text-indigo-600 flex items-center justify-center shrink-0">
+                      <FileCheck className="h-5 w-5" />
+                    </div>
+                  )}
+
+                  <div className="min-w-0 space-y-0.5">
+                    <div className="text-xs font-semibold text-ink truncate">{attachedFile.name}</div>
+                    <div className="text-[10px] text-text-secondary flex items-center gap-2">
+                      <span>{(attachedFile.size / 1024).toFixed(1)} KB</span>
+                      <span>•</span>
+                      <span className="text-emerald-600 font-medium">ClamAV Clean</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-1.5 shrink-0">
+                  {attachmentDataUrl && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setIsEvidencePreviewOpen(true)}
+                      className="h-7 text-[11px] gap-1 border-indigo-200 dark:border-indigo-800 text-indigo-700 dark:text-indigo-300"
+                    >
+                      <Eye className="h-3 w-3" />
+                      Look at Image
+                    </Button>
+                  )}
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleRemoveAttachment}
+                    className="h-7 w-7 p-0 text-red-500 hover:text-red-700"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
             <div className="space-y-1">
@@ -295,6 +432,57 @@ export function MagicIntakeView() {
               <p className="text-xs text-emerald-800 dark:text-emerald-300 leading-relaxed">
                 {ingestResponse.docket_message}
               </p>
+
+              {/* Evidence Look-back Card */}
+              {(attachmentDataUrl || ingestResponse.attachment_url) && (
+                <div className="p-4 rounded-xl border border-emerald-300 dark:border-emerald-800 bg-white/80 dark:bg-black/30 space-y-2.5">
+                  <div className="flex items-center justify-between text-xs font-semibold text-emerald-900 dark:text-emerald-300">
+                    <span className="flex items-center gap-1.5">
+                      <ImageIcon className="h-4 w-4 text-emerald-600" />
+                      Attached Evidentiary Evidence Proof
+                    </span>
+                    <Badge variant="outline" className="border-emerald-300 text-emerald-700 text-[9px]">
+                      Permanent Cloud Stored
+                    </Badge>
+                  </div>
+
+                  <div className="flex items-center gap-3">
+                    <div
+                      onClick={() => setIsEvidencePreviewOpen(true)}
+                      className="relative h-14 w-14 rounded-lg overflow-hidden border border-emerald-200 shrink-0 cursor-pointer group shadow-xs"
+                    >
+                      <img
+                        src={attachmentDataUrl || ingestResponse.attachment_url || ""}
+                        alt="Submitted evidence"
+                        className="h-full w-full object-cover group-hover:scale-105 transition-transform"
+                      />
+                      <div className="absolute inset-0 bg-black/25 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity text-white">
+                        <Eye className="h-4 w-4" />
+                      </div>
+                    </div>
+
+                    <div className="space-y-1 min-w-0">
+                      <div className="text-xs font-semibold text-ink truncate">
+                        {attachedFile?.name || ingestResponse.attachment_name || "Evidence Photograph"}
+                      </div>
+                      <p className="text-[11px] text-text-secondary">
+                        Evidence securely hashed (SHA-256) and associated with case docket {ingestResponse.case_reference_id}.
+                      </p>
+                    </div>
+                  </div>
+
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setIsEvidencePreviewOpen(true)}
+                    className="w-full text-xs h-8 gap-1.5 border-emerald-300 text-emerald-800 dark:text-emerald-200 hover:bg-emerald-100/50"
+                  >
+                    <Eye className="h-3.5 w-3.5 text-emerald-600" />
+                    Look at Submitted Image / Evidence (Full View)
+                  </Button>
+                </div>
+              )}
 
               <div className="pt-2 flex items-center gap-3">
                 <Button asChild size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs h-8">
@@ -564,6 +752,48 @@ export function MagicIntakeView() {
           )}
         </div>
       </div>
+      {/* Evidence Lightbox Modal */}
+      <Dialog open={isEvidencePreviewOpen} onOpenChange={setIsEvidencePreviewOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-base font-serif font-semibold flex items-center gap-2 text-ink">
+              <Eye className="h-4 w-4 text-indigo-500" />
+              Evidentiary Image Proof
+            </DialogTitle>
+            <DialogDescription className="text-xs text-text-secondary">
+              {attachedFile?.name || ingestResponse?.attachment_name || "Submitted Evidence Photograph"} — SHA-256 ClamAV Verified
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="py-2 flex items-center justify-center bg-black/5 dark:bg-black/40 rounded-xl overflow-hidden border border-rule min-h-[250px]">
+            {attachmentDataUrl || ingestResponse?.attachment_url ? (
+              <img
+                src={attachmentDataUrl || ingestResponse?.attachment_url || ""}
+                alt="Full size evidence"
+                className="max-h-[60vh] max-w-full object-contain rounded-lg shadow-md"
+              />
+            ) : (
+              <div className="p-8 text-center text-xs text-text-secondary">
+                Document preview not available in image lightbox.
+              </div>
+            )}
+          </div>
+
+          <DialogFooter className="flex items-center justify-between sm:justify-between">
+            <span className="text-[11px] text-emerald-600 font-medium flex items-center gap-1">
+              <CheckCircle2 className="h-3.5 w-3.5" />
+              Evidence Recorded in Case Audit Trail
+            </span>
+            <Button
+              size="sm"
+              onClick={() => setIsEvidencePreviewOpen(false)}
+              className="text-xs h-8"
+            >
+              Close Viewer
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -409,6 +409,9 @@ export interface RawMagicIngestResponse {
   due_date: string | null;
   created_at: string | null;
   docket_message: string;
+  attachment_url?: string | null | undefined;
+  attachment_id?: string | null | undefined;
+  attachment_name?: string | null | undefined;
 }
 
 // ─── Analytics & Dashboard Overview ───────────────────────────────────────────

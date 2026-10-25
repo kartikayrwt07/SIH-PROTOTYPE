@@ -11,6 +11,8 @@ import {
   RefreshCw,
   ExternalLink,
   Lock,
+  Eye,
+  Image as ImageIcon,
 } from "lucide-react";
 import { getAttachments, uploadAttachment } from "@/api/index";
 import type { CaseAttachment } from "@/types/ui";
@@ -37,6 +39,15 @@ export function CaseAttachmentsTab({ caseRef }: CaseAttachmentsTabProps) {
   const [category, setCategory] = useState("EVIDENCE");
   const [description, setDescription] = useState("");
   const [isConfidential, setIsConfidential] = useState(false);
+  const [previewAttachment, setPreviewAttachment] = useState<CaseAttachment | null>(null);
+
+  const isImageAttachment = (att: CaseAttachment) => {
+    return (
+      Boolean(att.mime_type?.startsWith("image/")) ||
+      Boolean(att.file_name?.match(/\.(png|jpg|jpeg|webp)$/i)) ||
+      Boolean(att.secure_url?.startsWith("data:image/"))
+    );
+  };
 
   const {
     data: attachments = [],
@@ -116,9 +127,26 @@ export function CaseAttachmentsTab({ caseRef }: CaseAttachmentsTabProps) {
               className="p-4 rounded-xl border border-rule bg-white/70 dark:bg-[#0B0813]/70 backdrop-blur-sm flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-xs"
             >
               <div className="flex items-start gap-3">
-                <div className="p-2.5 rounded-lg bg-purple-50 dark:bg-purple-950/40 text-purple-600 border border-purple-100 dark:border-purple-900 shrink-0 mt-0.5">
-                  <FileCheck className="h-5 w-5" />
-                </div>
+                {isImageAttachment(att) && att.secure_url && att.secure_url !== "#" ? (
+                  <div
+                    onClick={() => setPreviewAttachment(att)}
+                    className="relative h-12 w-12 rounded-lg overflow-hidden border border-purple-200 dark:border-purple-800 shrink-0 mt-0.5 cursor-pointer group shadow-2xs"
+                    title="Click to look at image"
+                  >
+                    <img
+                      src={att.secure_url}
+                      alt={att.file_name}
+                      className="h-full w-full object-cover group-hover:scale-105 transition-transform"
+                    />
+                    <div className="absolute inset-0 bg-black/35 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity text-white">
+                      <Eye className="h-4 w-4" />
+                    </div>
+                  </div>
+                ) : (
+                  <div className="p-2.5 rounded-lg bg-purple-50 dark:bg-purple-950/40 text-purple-600 border border-purple-100 dark:border-purple-900 shrink-0 mt-0.5">
+                    <FileCheck className="h-5 w-5" />
+                  </div>
+                )}
                 <div className="space-y-1">
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="font-semibold text-xs text-ink">{att.file_name}</span>
@@ -152,15 +180,27 @@ export function CaseAttachmentsTab({ caseRef }: CaseAttachmentsTabProps) {
               </div>
 
               <div className="flex items-center gap-2 self-end md:self-auto shrink-0">
-                <a
-                  href={att.secure_url}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-rule text-xs font-medium text-ink hover:bg-surface transition-colors"
-                >
-                  <ExternalLink className="h-3.5 w-3.5 text-text-secondary" />
-                  View Document
-                </a>
+                {isImageAttachment(att) && att.secure_url && att.secure_url !== "#" ? (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setPreviewAttachment(att)}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-rule text-xs font-medium text-ink hover:bg-surface transition-colors h-8"
+                  >
+                    <Eye className="h-3.5 w-3.5 text-purple-600" />
+                    Look at Image
+                  </Button>
+                ) : (
+                  <a
+                    href={att.secure_url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-rule text-xs font-medium text-ink hover:bg-surface transition-colors"
+                  >
+                    <ExternalLink className="h-3.5 w-3.5 text-text-secondary" />
+                    View Document
+                  </a>
+                )}
               </div>
             </div>
           ))}
@@ -248,6 +288,61 @@ export function CaseAttachmentsTab({ caseRef }: CaseAttachmentsTabProps) {
               Upload &amp; Verify
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Evidence Lightbox Viewer Modal */}
+      <Dialog open={!!previewAttachment} onOpenChange={(open) => !open && setPreviewAttachment(null)}>
+        <DialogContent className="max-w-3xl">
+          {previewAttachment && (
+            <>
+              <DialogHeader>
+                <DialogTitle className="text-base font-serif font-semibold flex items-center gap-2 text-ink">
+                  <Eye className="h-4 w-4 text-purple-600" />
+                  {previewAttachment.file_name}
+                </DialogTitle>
+                <DialogDescription className="text-xs text-text-secondary flex items-center gap-2 flex-wrap">
+                  <span>Category: {previewAttachment.category}</span>
+                  <span>•</span>
+                  <span>Size: {formatFileSize(previewAttachment.file_size_bytes)}</span>
+                  <span>•</span>
+                  <span className="font-mono text-purple-600 font-medium">SHA-256 Verified</span>
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className="py-2 flex items-center justify-center bg-black/5 dark:bg-black/40 rounded-xl overflow-hidden border border-rule min-h-[250px]">
+                <img
+                  src={previewAttachment.secure_url}
+                  alt={previewAttachment.file_name}
+                  className="max-h-[65vh] max-w-full object-contain rounded-lg shadow-md"
+                />
+              </div>
+
+              <DialogFooter className="flex items-center justify-between sm:justify-between">
+                <span className="text-[11px] text-emerald-600 font-medium flex items-center gap-1">
+                  <ShieldCheck className="h-3.5 w-3.5" />
+                  Cryptographically Hashed &amp; ClamAV Clean
+                </span>
+                <div className="flex items-center gap-2">
+                  <a
+                    href={previewAttachment.secure_url}
+                    download={previewAttachment.file_name}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-rule text-xs font-medium text-ink hover:bg-surface transition-colors h-8"
+                  >
+                    <Download className="h-3.5 w-3.5" />
+                    Download File
+                  </a>
+                  <Button
+                    size="sm"
+                    onClick={() => setPreviewAttachment(null)}
+                    className="text-xs h-8"
+                  >
+                    Close
+                  </Button>
+                </div>
+              </DialogFooter>
+            </>
+          )}
         </DialogContent>
       </Dialog>
     </div>

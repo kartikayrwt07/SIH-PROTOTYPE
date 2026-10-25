@@ -68,6 +68,9 @@ class MagicIngestRequest(BaseModel):
     student_phone: Optional[str] = Field(None, description="Optional complainant phone")
     institution_id: Optional[str] = Field(None, description="User-verified or overridden institution UUID")
     auto_docket: bool = Field(True, description="Whether to docket immediately into database or only analyze")
+    attachment_name: Optional[str] = Field(None, description="Optional filename of attached image or document")
+    attachment_base64: Optional[str] = Field(None, description="Optional Base64 encoded file data (data:image/... or raw base64)")
+    attachment_mime: Optional[str] = Field(None, description="Optional MIME type (image/png, image/jpeg, application/pdf, etc.)")
 
 
 class MagicIngestResponse(BaseModel):
@@ -79,3 +82,6 @@ class MagicIngestResponse(BaseModel):
     due_date: Optional[datetime] = None
     created_at: Optional[datetime] = None
     docket_message: str
+    attachment_url: Optional[str] = None
+    attachment_id: Optional[str] = None
+    attachment_name: Optional[str] = None

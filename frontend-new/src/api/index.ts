@@ -344,14 +344,20 @@ export async function getAssignmentHistory(caseRef: string): Promise<AssignmentH
 
 export async function getAttachments(caseRef: string): Promise<CaseAttachment[]> {
   if (USE_MOCKS) {
+    if (typeof window !== "undefined") {
+      try {
+        const stored = JSON.parse(sessionStorage.getItem(`attachments_${caseRef}`) || "[]");
+        if (stored.length > 0) return stored;
+      } catch {}
+    }
     return [
       {
         id: "att-mock-1",
-        case_id: "case-01",
+        case_id: caseRef,
         file_name: "Hostel_Inspection_Report.pdf",
         file_size_bytes: 2450000,
         mime_type: "application/pdf",
-        storage_path: "cases/case-01/Hostel_Inspection_Report.pdf",
+        storage_path: `cases/${caseRef}/Hostel_Inspection_Report.pdf`,
         storage_bucket: "aicte-case-evidence",
         storage_provider: "supabase",
         secure_url: "https://rocrtbthsbdkwikatjjf.supabase.co/storage/v1/object/public/aicte-case-evidence/sample.pdf",
@@ -375,6 +381,46 @@ export async function uploadAttachment(
   description?: string,
   isConfidential = false,
 ): Promise<CaseAttachment> {
+  if (USE_MOCKS) {
+    let dataUrl = "#";
+    try {
+      dataUrl = await new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = () => resolve(URL.createObjectURL(file));
+        reader.readAsDataURL(file);
+      });
+    } catch {
+      dataUrl = URL.createObjectURL(file);
+    }
+
+    const att: CaseAttachment = {
+      id: "att-" + Date.now(),
+      case_id: caseRef,
+      file_name: file.name,
+      file_size_bytes: file.size,
+      mime_type: file.type || "application/octet-stream",
+      storage_path: `evidence/${caseRef}/${file.name}`,
+      storage_bucket: "aicte-case-evidence",
+      storage_provider: "supabase",
+      secure_url: dataUrl,
+      category: category,
+      description: description || "Evidentiary proof document",
+      is_confidential: isConfidential,
+      scan_status: "CLEAN",
+      sha256_hash: "7f83b1657ff1fc53b92dc18148a1d65dfc2d4b1fa3d677284addd200126d9069",
+      created_at: new Date().toISOString(),
+    };
+    if (typeof window !== "undefined") {
+      try {
+        const stored = JSON.parse(sessionStorage.getItem(`attachments_${caseRef}`) || "[]");
+        stored.unshift(att);
+        sessionStorage.setItem(`attachments_${caseRef}`, JSON.stringify(stored));
+      } catch {}
+    }
+    return att;
+  }
+
   const formData = new FormData();
   formData.append("file", file);
   formData.append("category", category);
@@ -888,7 +934,62 @@ export async function magicIngest(payload: {
   student_phone?: string | undefined;
   institution_id?: string | undefined;
   auto_docket?: boolean | undefined;
+  attachment_name?: string | undefined;
+  attachment_base64?: string | undefined;
+  attachment_mime?: string | undefined;
 }): Promise<MagicIngestResponse> {
+  if (USE_MOCKS) {
+    const analysis = await magicAnalyze(payload.grievance_text);
+    const caseRef = `AICTE-2026-${Math.floor(100000 + Math.random() * 900000)}`;
+    let attUrl: string | undefined = undefined;
+    let attId: string | undefined = undefined;
+    let attName: string | undefined = undefined;
+
+    if (payload.attachment_name && payload.attachment_base64) {
+      attId = "att-" + Date.now();
+      attUrl = payload.attachment_base64;
+      attName = payload.attachment_name;
+      const att: CaseAttachment = {
+        id: attId,
+        case_id: caseRef,
+        file_name: payload.attachment_name,
+        file_size_bytes: Math.round(payload.attachment_base64.length * 0.75),
+        mime_type: payload.attachment_mime || "image/png",
+        storage_path: `evidence/${caseRef}/${payload.attachment_name}`,
+        storage_bucket: "aicte-case-evidence",
+        storage_provider: "supabase",
+        secure_url: payload.attachment_base64,
+        category: "FACILITY_PHOTOGRAPH",
+        description: `Evidence attached during Magic AI Intake by ${payload.student_name || "complainant"}`,
+        is_confidential: false,
+        scan_status: "CLEAN",
+        sha256_hash: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        created_at: new Date().toISOString(),
+      };
+      if (typeof window !== "undefined") {
+        try {
+          const stored = JSON.parse(sessionStorage.getItem(`attachments_${caseRef}`) || "[]");
+          stored.unshift(att);
+          sessionStorage.setItem(`attachments_${caseRef}`, JSON.stringify(stored));
+        } catch {}
+      }
+    }
+
+    return {
+      analysis,
+      case_created: true,
+      case_reference_id: caseRef,
+      case_id: "case-" + Date.now(),
+      status: "Assigned",
+      due_date: new Date(Date.now() + 48 * 3600 * 1000).toISOString(),
+      created_at: new Date().toISOString(),
+      docket_message: `Case ${caseRef} successfully created and autonomously routed to ${analysis.bureau_routing.bureau_name} (${analysis.bureau_routing.bureau_code}).`,
+      attachment_url: attUrl,
+      attachment_id: attId,
+      attachment_name: attName,
+    };
+  }
+
   const result = await post<RawMagicIngestResponse>(ENDPOINTS.magicIngest, payload);
   return adaptMagicIngestResponse(unwrap(result).data!);
 }
