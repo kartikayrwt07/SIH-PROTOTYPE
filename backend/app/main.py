@@ -143,11 +143,17 @@ async def global_exception_handler(request: Request, exc: Exception):
 app.include_router(api_router, prefix=settings.API_V1_STR)
 
 
-@app.get("/")
-def root():
+@app.api_route("/", methods=["GET", "HEAD"])
+def read_root():
     return {
+        "status": "online",
         "service": settings.PROJECT_NAME,
         "docs": "/docs",
         "api_v1": settings.API_V1_STR,
-        "status": "online"
     }
+
+
+@app.api_route("/health", methods=["GET", "HEAD"])
+def root_health():
+    return {"status": "ok"}
+

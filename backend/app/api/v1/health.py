@@ -9,7 +9,7 @@ from backend.app.schemas.common import StandardResponse
 router = APIRouter()
 
 
-@router.get("/health", response_model=StandardResponse[dict])
+@router.api_route("/health", methods=["GET", "HEAD"], response_model=StandardResponse[dict])
 def check_health(db: Session = Depends(get_db)):
     """Healthcheck endpoint verifying application runtime and database connectivity."""
     db_status = "healthy"

@@ -67,8 +67,83 @@ def clean_semantic_text(text: str) -> str:
     return " ".join(filtered) if filtered else " ".join(tokens)
 
 
+import hashlib
+
+# Canonical Semantic Jurisdictional Clusters for Zero-Overhead 384-d Dense Projection
+SEMANTIC_CLUSTERS = {
+    "FIN": [
+        "fee", "fees", "stole", "stolen", "steal", "money", "extortion", "extort",
+        "capitation", "overcharging", "overcharge", "refund", "caution", "deposit",
+        "donation", "bribe", "fine", "penalty", "illegal fee", "unauthorized fee",
+        "payment", "financial", "embezzlement", "cash", "receipt", "tuition"
+    ],
+    "STU": [
+        "ragging", "rag", "hazing", "haze", "abuse", "harassment", "harass",
+        "physical abuse", "mental harassment", "senior", "seniors", "beaten",
+        "beating", "beat", "corridor", "hostel", "dormitory", "night", "threat",
+        "threats", "violence", "violent", "suicide", "bullying", "bully",
+        "fresher", "freshers", "humiliation", "safety"
+    ],
+    "APPR": [
+        "unapproved", "approval", "affiliation", "accreditation",
+        "course", "branch", "civil", "mechanical", "computer", "degree",
+        "syllabus", "curriculum", "lab", "laboratory", "equipment", "building",
+        "land", "deficiency", "norms", "sanctioned", "seats", "intake", "illegal course"
+    ],
+    "FDC": [
+        "faculty", "teacher", "teachers", "professor", "professors", "salary",
+        "unpaid", "recruitment", "termination", "qualification", "phd", "ugc",
+        "provident fund", "promotion", "arrears", "pay scale", "delays"
+    ]
+}
+
+
+def project_semantic_dense_384(text: str) -> np.ndarray:
+    """
+    Zero-overhead, pure-NumPy dense 384-dimensional semantic projection engine.
+    Produces deterministic, normalized 384-d vectors matching PostgreSQL/Supabase pgvector Vector(384)
+    without requiring ONNX Runtime or heavy model downloads.
+    """
+    dim = 384
+    vec = np.zeros(dim, dtype=np.float32)
+    cleaned = clean_semantic_text(text)
+    tokens = cleaned.split() if cleaned else text.lower().split()
+    if not tokens:
+        return vec
+
+    # 1. Cluster affinity projection (subspaces 0..127: 32 dimensions per statutory bureau)
+    cluster_keys = ["FIN", "STU", "APPR", "FDC"]
+    cluster_weights = {k: 0.0 for k in cluster_keys}
+    for t in tokens:
+        for c_key, keywords in SEMANTIC_CLUSTERS.items():
+            if t in keywords or any(k in t for k in keywords if len(k) > 3):
+                cluster_weights[c_key] += 1.0
+
+    for c_idx, c_key in enumerate(cluster_keys):
+        w = cluster_weights[c_key]
+        if w > 0:
+            start = c_idx * 32
+            rng = np.random.default_rng(c_idx * 1000 + 42)
+            basis = rng.standard_normal(32).astype(np.float32)
+            basis /= np.linalg.norm(basis)
+            vec[start:start + 32] += w * 2.5 * basis
+
+    # 2. Token hashing projection (dimensions 128..383)
+    for t in tokens:
+        h = int(hashlib.md5(t.encode("utf-8")).hexdigest()[:8], 16)
+        rng = np.random.default_rng(h % 100000)
+        token_vec = rng.standard_normal(dim - 128).astype(np.float32)
+        token_vec /= np.linalg.norm(token_vec)
+        vec[128:] += token_vec
+
+    norm = np.linalg.norm(vec)
+    if norm > 0:
+        vec /= norm
+    return vec
+
+
 class PersistentVectorStore:
-    """Thread-safe persistent dense semantic vector store with Supabase pgvector and ONNX runtime."""
+    """Thread-safe persistent dense semantic vector store with Supabase pgvector and zero-memory projection."""
 
     _instance: Optional["PersistentVectorStore"] = None
     _lock = threading.Lock()
@@ -103,10 +178,14 @@ class PersistentVectorStore:
         return cls._instance
 
     def _get_model(self) -> Any:
-        """Lazy loader for ONNX TextEmbedding model with single-thread limit for low-memory cloud tiers."""
+        """Lazy loader for ONNX TextEmbedding model when explicitly opted in via USE_ONNX_EMBEDDINGS."""
         if self.embedding_model is None:
-            from fastembed import TextEmbedding as _TextEmbedding
-            self.embedding_model = _TextEmbedding(model_name=self.model_name, threads=1)
+            try:
+                from fastembed import TextEmbedding as _TextEmbedding
+                self.embedding_model = _TextEmbedding(model_name=self.model_name, threads=1)
+            except Exception as e:
+                print(f"[VectorStore] ONNX TextEmbedding unavailable, using native projection: {e}")
+                self.embedding_model = None
         return self.embedding_model
 
     def _normalize(self, vectors: np.ndarray) -> np.ndarray:
@@ -120,9 +199,12 @@ class PersistentVectorStore:
         cleaned = clean_semantic_text(text)
         if not cleaned:
             cleaned = text
-        model = self._get_model()
-        raw = np.array(list(model.embed([cleaned])), dtype=np.float32)
-        return self._normalize(raw)[0]
+        if os.getenv("USE_ONNX_EMBEDDINGS", "false").lower() in ("true", "1"):
+            model = self._get_model()
+            if model is not None:
+                raw = np.array(list(model.embed([cleaned])), dtype=np.float32)
+                return self._normalize(raw)[0]
+        return project_semantic_dense_384(cleaned)
 
     def count(self) -> int:
         """Returns total number of indexed complaint cases."""
@@ -265,20 +347,21 @@ class PersistentVectorStore:
                 })
                 id_to_idx[case.case_reference_id] = idx
 
-            model = self._get_model()
-            raw_embeddings = np.array(list(model.embed(corpus)), dtype=np.float32)
+            raw_embeddings = np.array([self.embed(t) for t in corpus], dtype=np.float32)
             self.embeddings = self._normalize(raw_embeddings)
             self.metadata = metadata
             self.case_id_to_idx = id_to_idx
             self.is_initialized = True
 
-            # Persist to Supabase pgvector table
+            # Persist to Supabase pgvector table using batch mapping
             try:
+                existing_map = {
+                    e.case_reference_id: e for e in db.query(CaseEmbedding).all()
+                }
                 for idx, meta in enumerate(metadata):
                     vec_list = self.embeddings[idx].tolist()
-                    existing = db.query(CaseEmbedding).filter(
-                        CaseEmbedding.case_reference_id == meta["case_reference_id"]
-                    ).first()
+                    ref = meta["case_reference_id"]
+                    existing = existing_map.get(ref)
                     if existing:
                         existing.embedding = vec_list
                         existing.subject = meta["subject"]
@@ -290,7 +373,7 @@ class PersistentVectorStore:
                         existing.status = meta["status"]
                     else:
                         db.add(CaseEmbedding(
-                            case_reference_id=meta["case_reference_id"],
+                            case_reference_id=ref,
                             embedding=vec_list,
                             subject=meta["subject"],
                             description=meta["description"],
@@ -614,9 +697,7 @@ class PersistentVectorStore:
                 )
 
             # Compute normalized query vector
-            model = self._get_model()
-            q_emb = np.array(list(model.embed([query_clean])), dtype=np.float32)
-            q_norm = self._normalize(q_emb)[0]
+            q_norm = self.embed(query_clean)
 
             # Fast dot-product cosine similarity against all N precomputed vectors
             scores = np.dot(self.embeddings, q_norm)
