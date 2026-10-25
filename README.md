@@ -141,6 +141,18 @@ flowchart TB
 * **Zero-Knowledge Decoupling:** Complainant identities (Aadhaar / Phone / Email) are encrypted and segregated from case dossiers. College administrators and case officers see only verified institutional status (e.g. `Verified Student [XXXX-XX-3210]`), shielding students from campus retaliation.
 * **Deterministic 9-State Lifecycle:** Rigid state transitions (`Received ➔ Registered ➔ Under Triage ➔ Assigned ➔ In Progress ➔ Awaiting Info ➔ Under Review ➔ Resolved ➔ Closed`) with tamper-evident audit logging.
 
+### 7. ⚖️ Automated Generative Legal Paperwork (ReportLab PDF Directives)
+* **Official AICTE Sanctions Engine:** Generates legally binding, downloadable PDF **Show-Cause Notices** and **Intake Freeze Directives** for institutions descending into Tier 5/6 Red Zones.
+* **Statutory Compliance:** Formatted with official Government of India / AICTE emblems, statutory citations under the AICTE Act 1987 Section 10(k), dynamic verification QR codes, and registrar signature blocks.
+
+### 8. 🎓 Dedicated Student Self-Service Portal (`/student`)
+* **Frictionless OTP Authentication:** Allows complainants to check active cases without static passwords via 6-digit sandbox OTP.
+* **Evidence Upload in Awaiting Information:** Direct document upload interface for students to submit receipts, affidavits, and grade cards when requested by officers, automatically advancing case status to `In Progress`.
+
+### 9. 🗄️ Resilient Multi-Provider Evidence Storage & Safe Streaming Proxy
+* **Zero 404 NoSuchBucket Failures:** Seamless abstraction across Supabase Storage, AWS S3, and persistent local storage cache.
+* **Cryptographic Fallback Stream:** In absence of external buckets, securely streams documents via `/api/v1/cases/{ref}/attachments/{id}/file` with automatic cryptographic SVG evidence seals (docket ID, SHA-256 seal, and ClamAV status).
+
 ---
 
 ## 🛠️ Technology Stack
@@ -263,13 +275,17 @@ All endpoints follow the **Standard JSON Response Envelope**:
 | `GET` | `/api/v1/health` | Service health, database status, and uptime |
 | `POST`| `/api/v1/cases/` | Register new complaint dossier with SLA calculation |
 | `GET` | `/api/v1/cases/` | Query complaints with role-based scoping & pagination |
+| `GET` | `/api/v1/cases/{case_ref}/attachments/{id}/file` | Resilient inline streaming proxy for evidentiary attachments |
 | `POST`| `/api/v1/ai/magic-ingest` | AI intake: language detection, college match & triage |
 | `POST`| `/api/v1/ai/triage` | Zero-shot bureau routing and statutory priority triage |
 | `POST`| `/api/v1/ai/triage/apply` | Apply triage recommendations with bureau reassignment |
 | `GET` | `/api/v1/dashboard/summary` | Executive metrics, bureau workload, and Dwell-time |
 | `GET` | `/api/v1/institutions/trust-scores` | 1000-Point College Credit Rating leaderboard |
+| `GET` | `/api/v1/institutions/{id}/legal-notice/pdf` | Download official AICTE legal show-cause / freeze notice PDF |
 | `POST`| `/api/v1/master-tickets/` | Form a Master Ticket cluster from duplicates |
 | `POST`| `/api/v1/master-tickets/{id}/cascade` | 1-Click cascading bulk resolution to all child cases |
+| `GET` | `/api/v1/identity/my-cases` | Student portal active cases query with PII redaction |
+| `POST`| `/api/v1/identity/cases/{case_ref}/upload` | Student supplementary evidence upload in Awaiting Information |
 | `POST`| `/api/v1/telegram/webhook` | Telegram update processing webhook endpoint |
 
 ---

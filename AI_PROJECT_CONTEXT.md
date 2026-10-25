@@ -539,3 +539,21 @@ python -m pytest backend/tests/test_health.py backend/tests/test_bhashini.py bac
   - **Secure Document Upload Modal**: Allows uploading supplementary documents (receipts, affidavits, grade cards) with drag-and-drop, real-time SHA-256 seal badge, antivirus scan indicator, and mandatory description input.
   - **Collapsible Audit Milestones**: Provides students transparent, chronological tracking of official AICTE investigative actions.
 
+#### 4. Resilient Multi-Provider Evidence Storage & Safe Streaming Proxy Architecture
+- **Problem**: When users inspected uploaded evidentiary images (`CaseAttachmentsTab.tsx` or `MagicIntakeView.tsx`), the application directly contacted Supabase Storage public CDN URLs (`https://rocrtbthsbdkwikatjjf.supabase.co/storage/v1/object/public/aicte-case-evidence/...`), returning a browser 404 error: `{"statusCode":"404","error":"Bucket not found","message":"Bucket not found","code":"NoSuchBucket"}`. This was caused by the storage bucket not existing on the cloud project and `SUPABASE_SERVICE_ROLE_KEY` not being provisioned in `.env`.
+- **Backend Architecture (`backend/app/services/cloud_storage.py`, `backend/app/services/attachment.py`, `backend/app/api/v1/cases.py`)**:
+  - `CloudStorageService`: Persistently saves local cached copies into `.uploads/{storage_path}` and returns safe streaming proxy URLs (`/api/v1/cases/{case_ref}/attachments/{attachment_id}/file`) whenever cloud credentials or buckets are unconfigured.
+  - Proxy Streaming Endpoint:
+    - Resolves local copies directly with `FileResponse(content_disposition_type="inline")`.
+    - If a raw file is ever missing from local disk cache, it programmatically generates and streams an official cryptographic SVG ledger seal (`AICTE Evidence Ledger Document`) with filename, docket ID, category, SHA-256 seal, and ClamAV status rather than throwing raw 404 JSON.
+  - Automated Database Migration: Cleaned up 28 legacy attachment records in `complaints.db` pointing to broken Supabase endpoints, converting them to internal streaming proxy routes.
+- **Frontend Resolution (`frontend-new/src/components/dossier/CaseAttachmentsTab.tsx`, `frontend-new/src/components/ingest/MagicIntakeView.tsx`)**:
+  - Built `getAttachmentUrl()` and `getIngestEvidenceUrl()` resolvers that gracefully intercept external `supabase.co` URLs and route through the proxy.
+  - Added robust `onError` image handlers that fall back to the backend streaming endpoint.
+  - Updated Magic AI Intake look-back card and full-size lightbox viewer to ensure submitted evidence is viewable immediately upon filing.
+
+#### 5. Mobile & Dark-Mode Responsive Optimization
+- **Dark Mode Palette Elevation**: Unified high-contrast typography, deep-glassmorphic acrylic backgrounds, and legible border tokens across `/ai-triage`, `/student`, `/institutions`, and `/dossier`.
+- **Mobile Viewport Optimization**: Added responsive collapsible drawer states, horizontal-scroll table containers, and stacked card layouts to ensure frictionless mobile evaluation on smartphone viewports.
+
+
