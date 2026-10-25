@@ -489,3 +489,24 @@ python -m pytest backend/tests/test_health.py backend/tests/test_bhashini.py bac
 - **Local Swagger Documentation**: [http://127.0.0.1:8001/docs](http://127.0.0.1:8001/docs)
 - **Official Telegram Tracker Bot**: `@aictesih_bot`
 - **GitHub Repository**: [https://github.com/kartikayrwt07/SIH-PROTOTYPE.git](https://github.com/kartikayrwt07/SIH-PROTOTYPE.git)
+
+---
+
+### Recent Fixes & Hardening (October 25, 2026)
+
+#### 1. Cross-Bureau Officer Status Transition Resolution & Multi-Bureau Role Switcher
+- **Problem**: When viewing the Case Dossier as an `OFFICER` assigned to one bureau (e.g., `APPR`), attempting to change the status of grievances belonging to another bureau (`FIN`, `STU`, `FDC`) triggered an HTTP 403 `INSUFFICIENT_BUREAU_PERMISSIONS` error popup. Previously, the `RoleSwitcher` only offered a single generic "Officer" pointing solely to `APPR`, making it impossible for evaluators to test officer transitions for grievances assigned to the other three bureaus.
+- **Root Cause & Backend Resolution**:
+  - `backend/app/api/v1/auth.py`: Updated `/auth/switch-demo-role/{role_name}` to support optional `bureau_code` query parameters and composite aliases (`OFFICER_APPR`, `OFFICER_FIN`, `OFFICER_STU`, `OFFICER_FDC`). Returns complete user metadata (`bureau_id`, `bureau_code`, `bureau_name`).
+  - `backend/app/services/lifecycle.py`: Explicitly rejects transition attempts by `AUDITOR` with `INSUFFICIENT_ROLE_PERMISSIONS`. Preserves strict IDOR protection (`assert_bureau_access`) for real officer jurisdiction.
+- **Frontend Resolution**:
+  - `frontend-new/src/components/layout/RoleSwitcher.tsx`: Expanded to expose all 4 bureau officer roles:
+    - Central Admin (`ADMIN`)
+    - Grievance Oversight (`SUPERVISOR`)
+    - Approval Bureau Officer (`OFFICER_APPR` — APPR)
+    - Finance & Fee Bureau Officer (`OFFICER_FIN` — FIN)
+    - Student Welfare Cell Officer (`OFFICER_STU` — STU)
+    - Faculty Grievance Cell Officer (`OFFICER_FDC` — FDC)
+    - Independent Compliance Auditor (`AUDITOR`)
+  - `frontend-new/src/components/dossier/CaseDossierView.tsx`: Computes `isOfficerFromOtherBureau`. Disables the "Change status" button when an officer views a grievance outside their jurisdiction, rendering a prominent **"Cross-Bureau Read-Only Mode"** warning banner and an action-rail **"Jurisdictional Boundary"** notice directing the evaluator to switch to the matching bureau officer or supervisor.
+  - `frontend-new/src/components/dossier/ChangeStatusModal.tsx`: Added clear actionable error messaging if a cross-bureau mutation is ever rejected by backend governance.
