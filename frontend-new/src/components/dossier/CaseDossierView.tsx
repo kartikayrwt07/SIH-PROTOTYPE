@@ -155,7 +155,7 @@ export function CaseDossierView({ caseRef }: CaseDossierViewProps) {
   };
 
   return (
-    <div className="py-10 px-6 lg:px-8 max-w-7xl mx-auto space-y-10">
+    <div className="py-6 sm:py-10 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-6 sm:space-y-10">
       {/* Back button */}
       <div>
         <Link
@@ -371,8 +371,8 @@ export function CaseDossierView({ caseRef }: CaseDossierViewProps) {
           {/* Section 3: Tabs "Timeline", "Notes", "Assignment history", "Evidence" */}
           <section className="space-y-4">
             <Tabs defaultValue="timeline" className="w-full">
-              <div className="border-b border-[var(--color-rule)]">
-                <TabsList className="bg-transparent p-0 h-auto gap-8 border-0">
+              <div className="border-b border-[var(--color-rule)] overflow-x-auto">
+                <TabsList className="bg-transparent p-0 h-auto gap-4 sm:gap-8 border-0 flex whitespace-nowrap">
                   <TabsTrigger
                     value="timeline"
                     className="border-b-2 border-transparent data-[state=active]:border-[var(--color-action)] data-[state=active]:text-[var(--color-ink)] data-[state=active]:shadow-none rounded-none px-1 py-2.5 text-xs font-medium text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-none"

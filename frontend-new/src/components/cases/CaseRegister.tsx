@@ -227,9 +227,9 @@ export function CaseRegister({ initialBureauId }: CaseRegisterProps) {
       />
 
       {/* Quiet Toolbar Row */}
-      <div className="flex flex-wrap items-center gap-3 py-3.5 border-y border-[var(--color-rule)]">
+      <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-2.5 sm:gap-3 py-3.5 border-y border-[var(--color-rule)]">
         {/* Search Input */}
-        <div className="relative flex-1 min-w-[220px]">
+        <div className="relative flex-1 min-w-[200px]">
           <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-[var(--color-text-muted)]" />
           <Input
             type="text"
@@ -239,92 +239,95 @@ export function CaseRegister({ initialBureauId }: CaseRegisterProps) {
               setSearch(e.target.value);
               setPage(1);
             }}
-            className="pl-8 text-xs h-8 bg-surface border-[var(--color-rule)] rounded-[6px]"
+            className="pl-8 text-xs h-8.5 bg-surface border-[var(--color-rule)] rounded-[6px] w-full"
           />
         </div>
 
-        {/* Bureau Select */}
-        {role !== "OFFICER" && (
+        {/* Filter controls row */}
+        <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 sm:gap-3">
+          {/* Bureau Select */}
+          {role !== "OFFICER" && (
+            <Select
+              value={bureauFilter}
+              onValueChange={(v) => {
+                setBureauFilter(v);
+                setPage(1);
+              }}
+            >
+              <SelectTrigger className="h-8.5 w-full sm:w-[130px] text-xs bg-surface border-[var(--color-rule)] rounded-[6px]">
+                <SelectValue placeholder="All bureaus" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="ALL">All bureaus</SelectItem>
+                {bureaus.map((b) => (
+                  <SelectItem key={b.id} value={b.id}>
+                    {b.code} ({b.name.split(" ")[0]})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+
+          {/* Status Select */}
           <Select
-            value={bureauFilter}
+            value={statusFilter}
             onValueChange={(v) => {
-              setBureauFilter(v);
+              setStatusFilter(v);
               setPage(1);
             }}
           >
-            <SelectTrigger className="h-8 w-[140px] text-xs bg-surface border-[var(--color-rule)] rounded-[6px]">
-              <SelectValue placeholder="All bureaus" />
+            <SelectTrigger className="h-8.5 w-full sm:w-[130px] text-xs bg-surface border-[var(--color-rule)] rounded-[6px]">
+              <SelectValue placeholder="All statuses" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="ALL">All bureaus</SelectItem>
-              {bureaus.map((b) => (
-                <SelectItem key={b.id} value={b.id}>
-                  {b.code} ({b.name.split(" ")[0]})
+              <SelectItem value="ALL">All statuses</SelectItem>
+              {ALL_STATUSES.map((st) => (
+                <SelectItem key={st} value={st}>
+                  {st}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
-        )}
 
-        {/* Status Select */}
-        <Select
-          value={statusFilter}
-          onValueChange={(v) => {
-            setStatusFilter(v);
-            setPage(1);
-          }}
-        >
-          <SelectTrigger className="h-8 w-[140px] text-xs bg-surface border-[var(--color-rule)] rounded-[6px]">
-            <SelectValue placeholder="All statuses" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="ALL">All statuses</SelectItem>
-            {ALL_STATUSES.map((st) => (
-              <SelectItem key={st} value={st}>
-                {st}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+          {/* Priority Select */}
+          <Select
+            value={priorityFilter}
+            onValueChange={(v) => {
+              setPriorityFilter(v);
+              setPage(1);
+            }}
+          >
+            <SelectTrigger className="h-8.5 w-full sm:w-[120px] text-xs bg-surface border-[var(--color-rule)] rounded-[6px]">
+              <SelectValue placeholder="All priorities" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="ALL">All priorities</SelectItem>
+              <SelectItem value="LOW">Low</SelectItem>
+              <SelectItem value="MEDIUM">Medium</SelectItem>
+              <SelectItem value="HIGH">High</SelectItem>
+              <SelectItem value="URGENT">Urgent</SelectItem>
+            </SelectContent>
+          </Select>
 
-        {/* Priority Select */}
-        <Select
-          value={priorityFilter}
-          onValueChange={(v) => {
-            setPriorityFilter(v);
-            setPage(1);
-          }}
-        >
-          <SelectTrigger className="h-8 w-[130px] text-xs bg-surface border-[var(--color-rule)] rounded-[6px]">
-            <SelectValue placeholder="All priorities" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="ALL">All priorities</SelectItem>
-            <SelectItem value="LOW">Low</SelectItem>
-            <SelectItem value="MEDIUM">Medium</SelectItem>
-            <SelectItem value="HIGH">High</SelectItem>
-            <SelectItem value="URGENT">Urgent</SelectItem>
-          </SelectContent>
-        </Select>
-
-        {/* SLA Status Select */}
-        <Select
-          value={slaFilter}
-          onValueChange={(v) => {
-            setSlaFilter(v);
-            setPage(1);
-          }}
-        >
-          <SelectTrigger className="h-8 w-[130px] text-xs bg-surface border-[var(--color-rule)] rounded-[6px]">
-            <SelectValue placeholder="All SLA" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="ALL">All SLA</SelectItem>
-            <SelectItem value="OVERDUE">Overdue</SelectItem>
-            <SelectItem value="APPROACHING">Approaching</SelectItem>
-            <SelectItem value="ON_TRACK">On track</SelectItem>
-          </SelectContent>
-        </Select>
+          {/* SLA Status Select */}
+          <Select
+            value={slaFilter}
+            onValueChange={(v) => {
+              setSlaFilter(v);
+              setPage(1);
+            }}
+          >
+            <SelectTrigger className="h-8.5 w-full sm:w-[120px] text-xs bg-surface border-[var(--color-rule)] rounded-[6px]">
+              <SelectValue placeholder="All SLA" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="ALL">All SLA</SelectItem>
+              <SelectItem value="OVERDUE">Overdue</SelectItem>
+              <SelectItem value="APPROACHING">Approaching</SelectItem>
+              <SelectItem value="ON_TRACK">On track</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
 
         {/* Clear filters text button */}
         {hasActiveFilters && (
@@ -332,7 +335,7 @@ export function CaseRegister({ initialBureauId }: CaseRegisterProps) {
             variant="ghost"
             size="sm"
             onClick={handleResetFilters}
-            className="h-8 px-2 text-xs text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-transparent"
+            className="h-8.5 px-2 text-xs text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-transparent self-end sm:self-auto"
           >
             Clear filters
           </Button>

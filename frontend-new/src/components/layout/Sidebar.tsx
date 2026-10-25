@@ -19,9 +19,11 @@ import {
   Wand2,
   PanelLeftClose,
   PanelLeft,
+  X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useRole } from "@/contexts/RoleContext";
+import { ThemeToggle } from "./ThemeToggle";
 
 interface NavItem {
   to: string;
@@ -60,14 +62,14 @@ export function Sidebar({ onClose, collapsed = false, onToggleCollapse }: Sideba
   return (
     <aside
       className={cn(
-        "flex flex-col h-full bg-white/85 dark:bg-[#07050E]/95 backdrop-blur-xl border-r border-[#ECE6F4] dark:border-[#201533] text-[var(--color-ink)] transition-[width] duration-200 select-none shadow-[2px_0_24px_rgba(112,82,200,0.03)]",
-        collapsed ? "w-16" : "w-60",
+        "flex flex-col h-full bg-white/95 dark:bg-[#07050E]/98 backdrop-blur-xl border-r border-[#ECE6F4] dark:border-[#201533] text-[var(--color-ink)] transition-[width] duration-200 select-none shadow-[2px_0_24px_rgba(112,82,200,0.03)]",
+        collapsed ? "w-16" : "w-64",
       )}
     >
       {/* Brand Wordmark Header */}
       <div
         className={cn(
-          "h-12 border-b border-[#ECE6F4]/80 dark:border-[#201533]/80 flex items-center px-4 shrink-0 bg-white/40 dark:bg-[#07050E]/60",
+          "h-14 border-b border-[#ECE6F4]/80 dark:border-[#201533]/80 flex items-center px-4 shrink-0 bg-white/50 dark:bg-[#07050E]/70",
           collapsed ? "justify-center" : "justify-between",
         )}
       >
@@ -89,6 +91,18 @@ export function Sidebar({ onClose, collapsed = false, onToggleCollapse }: Sideba
             </span>
           )}
         </Link>
+
+        {/* Mobile drawer close button */}
+        {onClose && (
+          <button
+            type="button"
+            onClick={onClose}
+            className="md:hidden p-1.5 rounded-lg text-text-secondary hover:text-ink hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
+            aria-label="Close menu"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        )}
       </div>
 
       {/* Nav Links */}
@@ -104,10 +118,10 @@ export function Sidebar({ onClose, collapsed = false, onToggleCollapse }: Sideba
               onClick={onClose}
               title={collapsed ? item.label : undefined}
               className={cn(
-                "relative flex items-center text-xs font-medium rounded-[6px] transition-all duration-150",
-                collapsed ? "justify-center px-0 py-2.5" : "gap-3 px-3 py-2",
+                "relative flex items-center text-xs font-medium rounded-[8px] transition-all duration-150 min-h-[40px] md:min-h-0",
+                collapsed ? "justify-center px-0 py-2.5" : "gap-3 px-3 py-2.5 md:py-2",
                 isActive
-                  ? "text-[#5A38A8] dark:text-[#E9D5FF] bg-[#7052C8]/10 dark:bg-[#9333EA]/20 font-semibold border border-[#7052C8]/15 dark:border-[#9333EA]/35 shadow-[0_2px_8px_rgba(112,82,200,0.06)] dark:shadow-[0_0_12px_rgba(147,51,234,0.18)] shadow-[0_2px_8px_rgba(112,82,200,0.06)] before:absolute before:left-0 before:top-1.5 before:bottom-1.5 before:w-[3px] before:rounded-r before:bg-[#7052C8]"
+                  ? "text-[#5A38A8] dark:text-[#E9D5FF] bg-[#7052C8]/10 dark:bg-[#9333EA]/20 font-semibold border border-[#7052C8]/15 dark:border-[#9333EA]/35 shadow-[0_2px_8px_rgba(112,82,200,0.06)] dark:shadow-[0_0_12px_rgba(147,51,234,0.18)] before:absolute before:left-0 before:top-2 before:bottom-2 before:w-[3px] before:rounded-r before:bg-[#7052C8]"
                   : "text-[var(--color-text-secondary)] dark:text-[#A396BE] hover:text-[var(--color-ink)] dark:hover:text-[#F2EEFA] hover:bg-[#7052C8]/5 dark:hover:bg-[#9333EA]/12 border border-transparent",
               )}
               aria-current={isActive ? "page" : undefined}
@@ -115,7 +129,7 @@ export function Sidebar({ onClose, collapsed = false, onToggleCollapse }: Sideba
               <Icon
                 className={cn(
                   "h-4 w-4 shrink-0 transition-colors",
-                  isActive ? "text-[#7052C8]" : "text-[var(--color-text-muted)]",
+                  isActive ? "text-[#7052C8] dark:text-[#C084FC]" : "text-[var(--color-text-muted)]",
                 )}
               />
               {!collapsed && <span className="truncate">{item.label}</span>}
@@ -124,29 +138,40 @@ export function Sidebar({ onClose, collapsed = false, onToggleCollapse }: Sideba
         })}
       </nav>
 
-      {/* Bottom Rail / Collapse Toggle */}
-      <div className="p-2 border-t border-[#ECE6F4]/80 dark:border-[#201533]/80 flex items-center justify-between text-xs text-[var(--color-text-muted)] dark:text-[#6E6185] bg-white/40 dark:bg-[#07050E]/60">
-        {!collapsed && onToggleCollapse && (
-          <button
-            type="button"
-            onClick={onToggleCollapse}
-            className="flex items-center gap-2 px-2 py-1.5 text-xs text-[var(--color-text-secondary)] dark:text-[#9B91AF] hover:text-[var(--color-ink)] dark:hover:text-[#EDE8F5] hover:bg-[#7052C8]/6 dark:hover:bg-[#9333EA]/15 rounded-[6px] w-full cursor-pointer transition-colors"
-            title="Collapse sidebar"
-          >
-            <PanelLeftClose className="h-4 w-4 shrink-0" />
-            <span>Collapse</span>
-          </button>
-        )}
+      {/* Bottom Rail / Collapse Toggle or Mobile Theme Info */}
+      <div className="p-3 border-t border-[#ECE6F4]/80 dark:border-[#201533]/80 flex items-center justify-between text-xs text-[var(--color-text-muted)] dark:text-[#6E6185] bg-white/40 dark:bg-[#07050E]/60">
+        {onClose ? (
+          <div className="flex items-center justify-between w-full">
+            <span className="text-[11px] text-text-muted truncate">
+              {user ? user.role : "AICTE Portal"}
+            </span>
+            <ThemeToggle />
+          </div>
+        ) : (
+          <>
+            {!collapsed && onToggleCollapse && (
+              <button
+                type="button"
+                onClick={onToggleCollapse}
+                className="flex items-center gap-2 px-2 py-1.5 text-xs text-[var(--color-text-secondary)] dark:text-[#9B91AF] hover:text-[var(--color-ink)] dark:hover:text-[#EDE8F5] hover:bg-[#7052C8]/6 dark:hover:bg-[#9333EA]/15 rounded-[6px] w-full cursor-pointer transition-colors"
+                title="Collapse sidebar"
+              >
+                <PanelLeftClose className="h-4 w-4 shrink-0" />
+                <span>Collapse</span>
+              </button>
+            )}
 
-        {collapsed && onToggleCollapse && (
-          <button
-            type="button"
-            onClick={onToggleCollapse}
-            className="flex items-center justify-center p-2 text-[var(--color-text-secondary)] dark:text-[#9B91AF] hover:text-[var(--color-ink)] dark:hover:text-[#EDE8F5] hover:bg-[#7052C8]/6 dark:hover:bg-[#9333EA]/15 rounded-[6px] w-full cursor-pointer transition-colors"
-            title="Expand sidebar"
-          >
-            <PanelLeft className="h-4 w-4 shrink-0" />
-          </button>
+            {collapsed && onToggleCollapse && (
+              <button
+                type="button"
+                onClick={onToggleCollapse}
+                className="flex items-center justify-center p-2 text-[var(--color-text-secondary)] dark:text-[#9B91AF] hover:text-[var(--color-ink)] dark:hover:text-[#EDE8F5] hover:bg-[#7052C8]/6 dark:hover:bg-[#9333EA]/15 rounded-[6px] w-full cursor-pointer transition-colors"
+                title="Expand sidebar"
+              >
+                <PanelLeft className="h-4 w-4 shrink-0" />
+              </button>
+            )}
+          </>
         )}
       </div>
     </aside>

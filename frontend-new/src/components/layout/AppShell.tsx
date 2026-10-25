@@ -11,6 +11,7 @@ import { Sidebar } from "./Sidebar";
 import { RoleSwitcher } from "./RoleSwitcher";
 import { ThemeToggle } from "./ThemeToggle";
 import { CursorSpotlight } from "./CursorSpotlight";
+import { MobileBottomBar } from "./MobileBottomBar";
 import { Button } from "@/components/ui/button";
 import { Toaster } from "@/components/ui/sonner";
 import { RoleProvider } from "@/contexts/RoleContext";
@@ -43,30 +44,43 @@ function Breadcrumbs() {
     parts.push({ label: "Telegram bot" });
   } else if (path === "/magic-intake") {
     parts.push({ label: "Magic AI intake" });
+  } else if (path === "/state-machine") {
+    parts.push({ label: "State machine" });
   } else if (path === "/login") {
     parts.push({ label: "Sign in" });
   } else {
     parts.push({ label: "Portal" });
   }
 
+  const currentTitle = parts[parts.length - 1]?.label ?? "Portal";
+
   return (
-    <nav className="flex items-center gap-1.5 text-xs text-text-secondary select-none" aria-label="Breadcrumb">
-      {parts.map((p, idx) => {
-        const isLast = idx === parts.length - 1;
-        return (
-          <span key={idx} className="flex items-center gap-1.5">
-            {idx > 0 && <ChevronRight className="h-3 w-3 text-rule shrink-0" aria-hidden="true" />}
-            {p.to && !isLast ? (
-              <Link to={p.to} className="hover:text-ink transition-none">
-                {p.label}
-              </Link>
-            ) : (
-              <span className={isLast ? "font-medium text-ink" : ""}>{p.label}</span>
-            )}
-          </span>
-        );
-      })}
-    </nav>
+    <>
+      {/* Mobile Current Title */}
+      <div className="flex sm:hidden items-center gap-2">
+        <span className="h-2 w-2 rounded-full bg-[#7052C8] dark:bg-[#9333EA] shadow-[0_0_8px_rgba(147,51,234,0.6)]" />
+        <span className="text-xs font-semibold text-ink truncate max-w-[130px]">{currentTitle}</span>
+      </div>
+
+      {/* Desktop Breadcrumbs */}
+      <nav className="hidden sm:flex items-center gap-1.5 text-xs text-text-secondary select-none" aria-label="Breadcrumb">
+        {parts.map((p, idx) => {
+          const isLast = idx === parts.length - 1;
+          return (
+            <span key={idx} className="flex items-center gap-1.5">
+              {idx > 0 && <ChevronRight className="h-3 w-3 text-rule shrink-0" aria-hidden="true" />}
+              {p.to && !isLast ? (
+                <Link to={p.to} className="hover:text-ink transition-none">
+                  {p.label}
+                </Link>
+              ) : (
+                <span className={isLast ? "font-medium text-ink" : ""}>{p.label}</span>
+              )}
+            </span>
+          );
+        })}
+      </nav>
+    </>
   );
 }
 
@@ -89,12 +103,12 @@ export function AppShell() {
         {/* Mobile sidebar overlay drawer */}
         {mobileOpen && (
           <div
-            className="fixed inset-0 z-40 md:hidden"
+            className="fixed inset-0 z-50 md:hidden"
             onClick={() => setMobileOpen(false)}
           >
-            <div className="absolute inset-0 bg-[#1B1233]/25 backdrop-blur-sm" />
+            <div className="absolute inset-0 bg-black/60 dark:bg-black/80 backdrop-blur-sm animate-in fade-in-0 duration-200" />
             <div
-              className="absolute inset-y-0 left-0 z-50 w-60"
+              className="absolute inset-y-0 left-0 z-50 w-68 max-w-[85vw] shadow-2xl animate-in slide-in-from-left duration-250 ease-out"
               onClick={(e) => e.stopPropagation()}
             >
               <Sidebar onClose={() => setMobileOpen(false)} />
@@ -105,13 +119,13 @@ export function AppShell() {
         {/* Main content area */}
         <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
           {/* Top bar: Frosted glass header with subtle ambient glow */}
-          <header className="flex items-center justify-between h-12 px-6 lg:px-8 border-b border-[#ECE6F4] dark:border-[#201533] bg-white/75 dark:bg-[#07050E]/90 dark:border-[#201533] backdrop-blur-md shadow-[0_1px_12px_rgba(112,82,200,0.02)] shrink-0">
-            <div className="flex items-center gap-3">
+          <header className="flex items-center justify-between h-12 px-3 sm:px-6 lg:px-8 border-b border-[#ECE6F4] dark:border-[#201533] bg-white/80 dark:bg-[#07050E]/90 dark:border-[#201533] backdrop-blur-md shadow-[0_1px_12px_rgba(112,82,200,0.02)] shrink-0">
+            <div className="flex items-center gap-2 sm:gap-3 min-w-0">
               {/* Mobile menu button */}
               <Button
                 variant="ghost"
                 size="icon"
-                className="md:hidden h-8 w-8 text-text-secondary hover:text-ink"
+                className="md:hidden h-8 w-8 text-text-secondary hover:text-ink shrink-0"
                 onClick={() => setMobileOpen((o) => !o)}
                 aria-label={mobileOpen ? "Close menu" : "Open menu"}
               >
@@ -121,17 +135,23 @@ export function AppShell() {
               <Breadcrumbs />
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
               <ThemeToggle />
               <RoleSwitcher />
             </div>
           </header>
 
-          {/* Page content */}
-          <main className="flex-1 overflow-y-auto">
+          {/* Page content with bottom space on mobile for navigation bar */}
+          <main className="flex-1 overflow-y-auto pb-16 md:pb-0">
             <Outlet />
           </main>
         </div>
+
+        {/* Mobile Bottom Navigation Bar */}
+        <MobileBottomBar
+          onOpenMenu={() => setMobileOpen(true)}
+          isMenuOpen={mobileOpen}
+        />
       </div>
 
       <Toaster position="top-right" richColors />

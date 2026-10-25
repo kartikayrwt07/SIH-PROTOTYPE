@@ -174,7 +174,7 @@ export function SlaRadarView() {
   ];
 
   return (
-    <div className="py-10 px-6 lg:px-8 max-w-7xl mx-auto space-y-10">
+    <div className="py-6 sm:py-10 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-6 sm:space-y-8">
       {/* Page Header */}
       <div className="space-y-3">
         <PageHeader
@@ -215,7 +215,7 @@ export function SlaRadarView() {
       )}
 
       {/* Bureau filter select above table, right-aligned with search input */}
-      <div className="flex flex-wrap items-center justify-between gap-4 py-3 border-y border-[var(--color-rule)]">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 py-3 border-y border-[var(--color-rule)]">
         <div className="flex items-center gap-2.5">
           <span className="text-xs font-medium text-[var(--color-text-secondary)]">Bureau jurisdiction:</span>
           {isOfficer ? (
