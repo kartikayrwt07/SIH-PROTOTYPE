@@ -43,6 +43,15 @@ def execute_transition(
     # 1. Assert actor has jurisdiction over this bureau
     assert_bureau_access(actor, case.bureau_id)
 
+    if actor.role == UserRole.AUDITOR:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail={
+                "code": "INSUFFICIENT_ROLE_PERMISSIONS",
+                "message": "Auditors have read-only access and cannot alter case lifecycle states."
+            }
+        )
+
     # 2. Check if case is terminal
     if case.status == CaseStatus.CLOSED:
         raise HTTPException(

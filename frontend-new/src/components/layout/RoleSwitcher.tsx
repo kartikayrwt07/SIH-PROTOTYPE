@@ -13,21 +13,44 @@ import {
 } from "@/components/ui/select";
 import { Loader2 } from "lucide-react";
 
-const ROLES: { value: UserRole; label: string; bureau?: string }[] = [
-  { value: "ADMIN",      label: "Admin",      bureau: "Central Administration" },
-  { value: "SUPERVISOR", label: "Supervisor", bureau: "Grievance Oversight" },
-  { value: "OFFICER",    label: "Officer",    bureau: "Approval Bureau" },
-  { value: "AUDITOR",    label: "Auditor",    bureau: "Independent Compliance" },
+interface RoleOption {
+  key: string;
+  role: UserRole;
+  bureauCode?: string;
+  label: string;
+  bureau: string;
+}
+
+const ROLE_OPTIONS: RoleOption[] = [
+  { key: "ADMIN", role: "ADMIN", label: "Admin", bureau: "Central Administration" },
+  { key: "SUPERVISOR", role: "SUPERVISOR", label: "Supervisor", bureau: "Grievance Oversight" },
+  { key: "OFFICER_APPR", role: "OFFICER", bureauCode: "APPR", label: "Officer (Approval)", bureau: "Approval Bureau (APPR)" },
+  { key: "OFFICER_FIN", role: "OFFICER", bureauCode: "FIN", label: "Officer (Finance)", bureau: "Finance & Fee Bureau (FIN)" },
+  { key: "OFFICER_STU", role: "OFFICER", bureauCode: "STU", label: "Officer (Student Welfare)", bureau: "Student Welfare Cell (STU)" },
+  { key: "OFFICER_FDC", role: "OFFICER", bureauCode: "FDC", label: "Officer (Faculty Grievance)", bureau: "Faculty Grievance Cell (FDC)" },
+  { key: "AUDITOR", role: "AUDITOR", label: "Auditor", bureau: "Independent Compliance" },
 ];
 
 export function RoleSwitcher() {
   const { role, user, isLoading, changeRole } = useRole();
-  const current = ROLES.find((r) => r.value === role) ?? ROLES[0]!;
+
+  const currentKey =
+    role === "OFFICER"
+      ? (user?.bureau_code ? `OFFICER_${user.bureau_code}` : "OFFICER_APPR")
+      : role;
+
+  const current = ROLE_OPTIONS.find((r) => r.key === currentKey) ?? ROLE_OPTIONS[0]!;
 
   const bureauDisplay =
     role === "OFFICER" && user?.bureau_name
       ? user.bureau_name
       : current.bureau;
+
+  const handleRoleChange = (key: string) => {
+    const selected = ROLE_OPTIONS.find((r) => r.key === key);
+    if (!selected) return;
+    changeRole(selected.role, selected.bureauCode);
+  };
 
   return (
     <div className="flex items-center gap-3">
@@ -40,8 +63,8 @@ export function RoleSwitcher() {
         <span className="text-text-secondary hidden sm:inline">Viewing as</span>
 
         <Select
-          value={role}
-          onValueChange={(v) => changeRole(v as UserRole)}
+          value={currentKey}
+          onValueChange={handleRoleChange}
           disabled={isLoading}
         >
           <SelectTrigger className="h-8 w-auto gap-2 border-rule bg-surface text-xs font-medium px-2.5 shadow-none hover:bg-page transition-none">
@@ -64,8 +87,8 @@ export function RoleSwitcher() {
             )}
           </SelectTrigger>
           <SelectContent align="end" className="text-xs bg-surface border-rule shadow-md">
-            {ROLES.map((r) => (
-              <SelectItem key={r.value} value={r.value} className="text-xs py-2">
+            {ROLE_OPTIONS.map((r) => (
+              <SelectItem key={r.key} value={r.key} className="text-xs py-2">
                 <div className="flex flex-col">
                   <span className="font-semibold text-ink">{r.label}</span>
                   <span className="text-[11px] text-text-secondary">{r.bureau}</span>

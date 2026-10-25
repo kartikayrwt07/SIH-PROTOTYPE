@@ -75,7 +75,18 @@ export function ChangeStatusModal({
       onOpenChange(false);
     },
     onError: (err: any) => {
-      setValidationError(err?.message || "Failed to change status.");
+      const msg = err?.message || "";
+      if (
+        msg.includes("outside your jurisdiction") ||
+        msg.includes("INSUFFICIENT_BUREAU_PERMISSIONS") ||
+        msg.includes("another bureau")
+      ) {
+        setValidationError(
+          `Access restricted: This case belongs to ${caseItem.bureau_name} (${caseItem.bureau_code}). Switch to Officer (${caseItem.bureau_code}), Supervisor, or Admin in the top-right switcher to update it.`
+        );
+      } else {
+        setValidationError(msg || "Failed to change status.");
+      }
     },
   });
 

@@ -125,13 +125,20 @@ const DEMO_USERS: Record<string, CurrentUser> = {
 
 export async function mockSwitchRole(role: string, bureauId?: string): Promise<CurrentUser> {
   await latency();
-  const user = DEMO_USERS[role.toUpperCase()];
+  let baseRole = role.toUpperCase();
+  let targetBureauCode = bureauId;
+  if (baseRole.startsWith("OFFICER_")) {
+    targetBureauCode = baseRole.replace("OFFICER_", "");
+    baseRole = "OFFICER";
+  }
+  const user = DEMO_USERS[baseRole];
   if (!user) apiErr("INVALID_ROLE", `Invalid role: ${role}. Valid: ADMIN, SUPERVISOR, OFFICER, AUDITOR`, 400);
-  if (bureauId && user) {
-    const bur = MOCK_BUREAUS.find((b) => b.id === bureauId || b.code === bureauId);
+  if (targetBureauCode && user) {
+    const bur = MOCK_BUREAUS.find((b) => b.id === targetBureauCode || b.code === targetBureauCode);
     return {
       ...user,
-      bureau_id: bureauId,
+      bureau_id: bur?.id ?? targetBureauCode,
+      bureau_code: bur?.code ?? targetBureauCode,
       bureau_name: bur?.name ?? user.bureau_name,
     };
   }
@@ -484,7 +491,8 @@ export async function mockGetDashboardStats(
 ): Promise<DashboardStats> {
   await latency();
 
-  let cases = getCases();
+  const allMockCases = getCases();
+  let cases = allMockCases;
   if (currentRole === "OFFICER" && bureauId) {
     cases = cases.filter((c) => c.bureau_id === bureauId);
   }
@@ -498,7 +506,7 @@ export async function mockGetDashboardStats(
   const onTrack = cases.filter((c) => slaStatus(c) === "ON_TRACK" && isActive(c.status)).length;
 
   const bureauBreakdown = MOCK_BUREAUS.map((b) => {
-    const bc = cases.filter((c) => c.bureau_id === b.id);
+    const bc = allMockCases.filter((c) => c.bureau_id === b.id);
     return {
       bureau_id: b.id,
       bureau_code: b.code,

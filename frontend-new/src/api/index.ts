@@ -181,14 +181,14 @@ export async function login(email: string, password: string): Promise<CurrentUse
 }
 
 /** Switch demo role. In live mode this calls switch-demo-role and stores the JWT. */
-export async function switchRole(role: string, bureauId?: string | undefined): Promise<CurrentUser> {
+export async function switchRole(role: string, bureauCodeOrId?: string | undefined): Promise<CurrentUser> {
   if (USE_MOCKS) {
-    const user = await mockSwitchRole(role, bureauId);
+    const user = await mockSwitchRole(role, bureauCodeOrId);
     setMockRole(role, user.bureau_id);
     return user;
   }
   const result = await getStandard<{ user: RawAuthUser; token: string }>(
-    ENDPOINTS.switchDemoRole(role),
+    ENDPOINTS.switchDemoRole(role, bureauCodeOrId),
   );
   const raw = unwrap(result);
   if (raw.data?.token) {

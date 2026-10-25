@@ -2,6 +2,7 @@
 Tests for Telegram Bot Grievance Tracker Webhook and Simulator.
 """
 
+import html
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
@@ -75,7 +76,7 @@ def test_telegram_case_lookup_success(db: Session):
     assert response["chat_id"] == 98765
     assert first_case.case_reference_id in response["text"]
     assert "Current Status:" in response["text"]
-    assert first_case.category in response["text"]
+    assert html.escape(first_case.category) in response["text"]
 
 
 def test_telegram_case_lookup_not_found(db: Session):

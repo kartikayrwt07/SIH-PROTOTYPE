@@ -17,8 +17,8 @@ interface RoleContextValue {
   role: UserRole;
   user: CurrentUser | null;
   isLoading: boolean;
-  /** Switch to a different demo role. Returns the new user on success. */
-  changeRole: (role: UserRole) => Promise<void>;
+  /** Switch to a different demo role. Optionally target a specific bureau by code or ID. */
+  changeRole: (role: UserRole, bureauCodeOrId?: string) => Promise<void>;
   /** True when running with real backend (VITE_USE_MOCKS=false). */
   useMocks: boolean;
 }
@@ -49,14 +49,14 @@ export function RoleProvider({ children }: { children: ReactNode }) {
   const useMocks =
     ((import.meta.env as Record<string, string | undefined>)["VITE_USE_MOCKS"])?.toLowerCase() !== "false";
 
-  const changeRole = useCallback(async (newRole: UserRole) => {
+  const changeRole = useCallback(async (newRole: UserRole, bureauCodeOrId?: string) => {
     setIsLoading(true);
     try {
-      const newUser = await switchRole(newRole);
-      setRole(newRole);
+      const newUser = await switchRole(newRole, bureauCodeOrId);
+      setRole(newUser.role);
       setUser(newUser);
       // Keep mock API layer in sync
-      if (useMocks) setMockRole(newRole, newUser.bureau_id);
+      if (useMocks) setMockRole(newUser.role, newUser.bureau_id);
     } catch (err) {
       console.error("Failed to switch role:", err);
     } finally {

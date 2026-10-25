@@ -13,7 +13,10 @@ export const ENDPOINTS = {
   login: `${BASE}/api/v1/auth/login`,
   register: `${BASE}/api/v1/auth/register`,
   me: `${BASE}/api/v1/auth/me`,
-  switchDemoRole: (role: string) => `${BASE}/api/v1/auth/switch-demo-role/${role}`,
+  switchDemoRole: (role: string, bureauCode?: string) =>
+    bureauCode
+      ? `${BASE}/api/v1/auth/switch-demo-role/${role}?bureau_code=${encodeURIComponent(bureauCode)}`
+      : `${BASE}/api/v1/auth/switch-demo-role/${role}`,
 
   // Bureaus
   bureaus: `${BASE}/api/v1/bureaus`,

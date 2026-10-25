@@ -368,7 +368,12 @@ def get_dashboard_overview(
     cases = case_query.all()
 
     kpis = get_executive_kpis(db, bureau_id=bureau_id, institution_id=institution_id, preloaded_cases=cases)
-    by_bureau = get_bureau_workload_breakdown(db, institution_id=institution_id, preloaded_cases=cases)
+    # Preloaded cases is only valid for comparative bureau breakdown if cases was NOT filtered to a single bureau.
+    # If bureau_id is set, cases only contains cases for that single bureau, which would falsely zero out all other bureaus.
+    if bureau_id:
+        by_bureau = get_bureau_workload_breakdown(db, institution_id=institution_id)
+    else:
+        by_bureau = get_bureau_workload_breakdown(db, institution_id=institution_id, preloaded_cases=cases)
 
     by_status: Dict[str, int] = {}
     by_priority: Dict[str, int] = {}

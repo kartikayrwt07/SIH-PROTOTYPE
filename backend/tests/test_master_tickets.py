@@ -70,7 +70,7 @@ def setup_cluster_cases(db: Session):
         db.refresh(inst)
 
     # Find bureau
-    bureau = db.query(Bureau).filter(Bureau.code == "BUR-FIN").first()
+    bureau = db.query(Bureau).filter(Bureau.code.in_(["FIN", "BUR-FIN"])).first()
     if not bureau:
         bureau = db.query(Bureau).first()
 
@@ -110,7 +110,15 @@ def setup_cluster_cases(db: Session):
     for c in cases:
         db.refresh(c)
 
-    return cases
+    try:
+        yield cases
+    finally:
+        case_ids = [c.id for c in cases]
+        db.query(MasterTicketChild).filter(MasterTicketChild.case_id.in_(case_ids)).delete(synchronize_session=False)
+        db.query(CaseAuditEvent).filter(CaseAuditEvent.case_id.in_(case_ids)).delete(synchronize_session=False)
+        for c in cases:
+            db.delete(c)
+        db.commit()
 
 
 def test_detect_duplicate_clusters(db: Session, setup_cluster_cases):

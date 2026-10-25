@@ -1,3 +1,4 @@
+from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from backend.app.core.database import get_db
@@ -114,23 +115,58 @@ def get_current_user_profile(current_user: User = Depends(get_current_user)):
 
 
 @router.get("/switch-demo-role/{role_name}", response_model=StandardResponse[dict])
-def switch_demo_role(role_name: str, db: Session = Depends(get_db)):
-    """Convenience endpoint for judging evaluation: generate a token for the specified role."""
+def switch_demo_role(
+    role_name: str,
+    bureau_code: Optional[str] = None,
+    db: Session = Depends(get_db)
+):
+    """Convenience endpoint for judging evaluation: generate a token for the specified role and optional bureau."""
+    raw_name = role_name.upper().strip()
+    target_bureau_code = bureau_code.upper().strip() if bureau_code else None
+
+    # Handle composite format like OFFICER_FIN, OFFICER_STU, OFFICER_APPR, OFFICER_FDC
+    if "_" in raw_name and raw_name.startswith("OFFICER_"):
+        base_role = "OFFICER"
+        target_bureau_code = raw_name.replace("OFFICER_", "")
+    else:
+        base_role = raw_name
+
     try:
-        role_enum = UserRole(role_name.upper())
+        role_enum = UserRole(base_role)
     except ValueError:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Invalid role '{role_name}'. Available: {[r.value for r in UserRole]}"
+            detail=f"Invalid role '{role_name}'. Available: {[r.value for r in UserRole]} or OFFICER_APPR, OFFICER_FIN, OFFICER_STU, OFFICER_FDC"
         )
 
-    user = db.query(User).filter(User.role == role_enum, User.is_active == True).first()
+    query = db.query(User).filter(User.role == role_enum, User.is_active == True)
+
+    if role_enum == UserRole.OFFICER and target_bureau_code:
+        target_bureau = db.query(Bureau).filter(Bureau.code.ilike(target_bureau_code)).first()
+        if target_bureau:
+            user = query.filter(User.bureau_id == target_bureau.id).first()
+            if not user:
+                # If specific officer not found, look for email match or use first officer
+                user = query.filter(User.email.ilike(f"%{target_bureau_code.lower()}%")).first()
+                if not user:
+                    user = query.first()
+                    if user:
+                        user.bureau_id = target_bureau.id
+                        db.commit()
+        else:
+            user = query.first()
+    else:
+        user = query.first()
+
     if not user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"No active user found with role {role_name}")
 
     access_token = create_access_token(
         data={"sub": user.id, "email": user.email, "role": user.role.value, "bureau_id": user.bureau_id}
     )
+    bureau_name = user.bureau.name if user.bureau else None
+    bureau_code_val = user.bureau.code if user.bureau else None
+
     return StandardResponse(
         data={
             "user": {
@@ -139,6 +175,8 @@ def switch_demo_role(role_name: str, db: Session = Depends(get_db)):
                 "full_name": user.full_name,
                 "role": user.role.value,
                 "bureau_id": user.bureau_id,
+                "bureau_name": bureau_name,
+                "bureau_code": bureau_code_val,
             },
             "token": access_token
         }

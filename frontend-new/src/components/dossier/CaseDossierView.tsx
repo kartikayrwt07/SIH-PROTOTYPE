@@ -34,6 +34,7 @@ import {
   RotateCcw,
   FileText,
   ShieldCheck,
+  ShieldAlert,
   Sparkles,
 } from "lucide-react";
 
@@ -60,7 +61,7 @@ const INSTITUTION_METADATA: Record<string, { state: string; district: string; ty
 };
 
 export function CaseDossierView({ caseRef }: CaseDossierViewProps) {
-  const { role } = useRole();
+  const { role, user } = useRole();
   const isAuditor = role === "AUDITOR";
 
   const [changeStatusOpen, setChangeStatusOpen] = useState(false);
@@ -124,12 +125,18 @@ export function CaseDossierView({ caseRef }: CaseDossierViewProps) {
   const isResolved = caseItem.status === "Resolved";
   const allowedTransitions = getAllowedTransitions(caseItem.status);
 
-  // Role gating
-  const canChangeStatus = !isAuditor && !isClosed && allowedTransitions.length > 0;
+  // Role & Jurisdiction gating
+  const isOfficerFromOtherBureau =
+    role === "OFFICER" &&
+    Boolean(user?.bureau_id) &&
+    Boolean(caseItem.bureau_id) &&
+    user?.bureau_id !== caseItem.bureau_id;
+
+  const canChangeStatus = !isAuditor && !isClosed && !isOfficerFromOtherBureau && allowedTransitions.length > 0;
   const canReassign = (role === "ADMIN" || role === "SUPERVISOR") && !isClosed;
   const canEscalate = (role === "ADMIN" || role === "SUPERVISOR") && !isClosed && (caseItem.escalation_level ?? 0) < 2;
   const canReject = (role === "ADMIN" || role === "SUPERVISOR") && !isClosed;
-  const canReopen = !isAuditor && isResolved;
+  const canReopen = !isAuditor && !isOfficerFromOtherBureau && isResolved;
 
   // Metadata resolution
   const instMeta = INSTITUTION_METADATA[caseItem.institution_id] || {
@@ -200,6 +207,26 @@ export function CaseDossierView({ caseRef }: CaseDossierViewProps) {
           />
         </div>
       </header>
+
+      {/* Officer Cross-Bureau Warning Banner */}
+      {isOfficerFromOtherBureau && (
+        <div className="flex items-start gap-3 p-4 bg-amber-500/10 border border-amber-500/25 rounded-[6px] text-xs text-amber-900 dark:text-amber-200">
+          <ShieldAlert className="h-4 w-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+          <div className="space-y-1">
+            <p className="font-semibold text-sm">Cross-Bureau Read-Only Mode</p>
+            <p className="leading-relaxed">
+              This grievance falls under the jurisdiction of{" "}
+              <strong>{caseItem.bureau_name} ({caseItem.bureau_code})</strong>.
+              You are currently viewing as an officer of{" "}
+              <strong>{user?.bureau_name ?? user?.bureau_code}</strong>.
+              Under AICTE governance rules, officers cannot modify status or actions for cases outside their assigned bureau.
+            </p>
+            <p className="text-[11px] text-amber-800 dark:text-amber-300">
+              Tip: Switch to <strong>Officer ({caseItem.bureau_code})</strong>, <strong>Supervisor</strong>, or <strong>Admin</strong> using the top-bar role switcher to update this case.
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Main Two Columns: Left (65% case file), Right (35% action rail) */}
       <div className="flex flex-col-reverse lg:grid lg:grid-cols-[1fr_340px] gap-10 items-start pt-2">
@@ -461,6 +488,19 @@ export function CaseDossierView({ caseRef }: CaseDossierViewProps) {
               <p className="text-[11px] text-[var(--color-text-muted)] pt-3 leading-relaxed border-t border-[var(--color-rule)]">
                 Auditor access is strictly read-only. Status advancement, reassignment, and escalation controls are disabled.
               </p>
+            )}
+
+            {isOfficerFromOtherBureau && (
+              <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-[6px] text-[11px] text-amber-800 dark:text-amber-300 leading-relaxed space-y-1">
+                <p className="font-semibold flex items-center gap-1.5">
+                  <ShieldAlert className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
+                  Jurisdictional Boundary
+                </p>
+                <p>
+                  Status controls are disabled. This grievance belongs to{" "}
+                  <strong>{caseItem.bureau_name} ({caseItem.bureau_code})</strong>.
+                </p>
+              </div>
             )}
 
             {isClosed && (
