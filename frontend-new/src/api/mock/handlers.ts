@@ -822,7 +822,8 @@ export async function mockVerifyStudentOtp(
   otpCode: string,
 ): Promise<StudentAuthProfile> {
   await latency();
-  if (otpCode !== "123456" && otpCode.length !== 6) {
+  const code = (otpCode || "").trim();
+  if (code !== "123456" && code.length !== 6) {
     apiErr("INVALID_OTP", "Invalid verification code entered. Try 123456.", 400);
   }
   return {
