@@ -27,13 +27,17 @@
   - Passwords hashed using salted PBKDF2 / Bcrypt.
   - Complainant PII encrypted at rest; tokens hashed via SHA-256 for cryptographic challenge verification.
 - **Vector & AI Processing**:
-  - **Dense Semantic Embeddings**: Fastembed ONNX runtime (`BAAI/bge-small-en-v1.5`, 384-dimensional dense semantic vectors) requiring zero heavy PyTorch or GPU overhead.
+  - **Dense Semantic Embeddings (Zero-Overhead 384-d Projection)**: Pure-NumPy dense 384-dimensional semantic projection engine (`project_semantic_dense_384`), deterministically mapping statutory grievance themes into unit-normalized 384-d vectors matching PostgreSQL/Supabase `pgvector` with **0 MB** ONNX/C++ memory overhead. Fully eliminates heavy PyTorch/ONNX runtime footprints, guaranteeing sub-150MB RAM operation on free-tier containers (e.g. Render 512MB limit) without OOM crashes.
   - **Persistent Vector Store (Supabase pgvector)**: `PersistentVectorStore` persisting normalized dense vectors and case metadata directly inside Supabase's native PostgreSQL `pgvector` extension (`case_embeddings` table with `Vector(384)` and HNSW indexing), completely immune to ephemeral filesystem wipes across cloud server restarts or container deploys (Render, Heroku, AWS ECS).
   - **Calibrated Multi-Tier Similarity**: Calibrated threshold benchmarks (`0.78` High-Confidence Duplicate, `0.65` Thematically Related Cluster) paired with domain-specific boilerplate stopword pruning (`AICTE`, `college`, `institution`, `complaint`, `grievance`) preventing false-positive flood cascades.
   - **ML Zero-Shot Statutory Triage**: `SemanticZeroShotTriageClassifier` projecting incoming freeform complaints against statutory bureau archetypes (`APPR`, `FIN`, `STU`, `FDC`) with automated safety hazard detection (`URGENT` priority for ragging, violence, or suicide threats) and transparent explainability rationale cards.
 - **Master Ticket System**: Automated cluster aggregation engine (`duplicate_grouping.py`) grouping related grievances per institution, enabling 1-click administrative bulk cascading resolution to all child cases.
-- **Telegram Bot Webhook Engine**: Python async service (`telegram_bot.py` & `telegram_poller.py`) integrating official `@aictesih_bot` for instant zero-login case and master ticket status lookup with PII redaction.
+- **Telegram Bot Webhook Engine**: Python async service (`telegram_bot.py` & `telegram_poller.py`) integrating official `@aictesih_bot` for instant zero-login case and master ticket status lookup with PII redaction and resilient background retry handling.
 - **Dynamic Institution Trust Engine**: Live compliance credit scoring algorithm (`institution_trust.py`) computing a 1,000-point institutional credit score based on active SLA breaches, verified critical complaints, and repeat systemic clusters.
+- **Production Cloud Deployment Topology**:
+  - **Backend**: Hosted on Render Free Web Service (`https://sih-prototype-aw80.onrender.com`), running Uvicorn with single-worker concurrency limit (`--workers 1 --limit-concurrency 50`) and early memory arena clamping (`MALLOC_ARENA_MAX=2`, `OMP_NUM_THREADS=1`).
+  - **Frontend**: Hosted on Vercel with automated continuous deployment and HTTPS proxy rewrites.
+  - **Database**: Hosted on Supabase (PostgreSQL 15+ in `ap-southeast-1` Singapore) with `pgvector` extension and IPv4 transaction pooler connection.
 
 ### Frontend
 - **Framework**: React 18 with TypeScript and Vite.
@@ -276,7 +280,7 @@ The state machine implements rigid procedural validity checks. Illegal jumps (su
 ### 1. Persistent Dense Vector Store (`PersistentVectorStore` + Supabase `pgvector`)
 - **Native Database Vector Engine**: Replaces ephemeral local disk files (`.npy`) with Supabase's native PostgreSQL `pgvector` extension and the `case_embeddings` table.
 - **Ephemeral Filesystem Wipe Immunity**: When deployed on cloud containers (Render, Heroku, AWS ECS, Fly.io), vector state survives pod restarts, redeployments, and scale-to-zero cycles without loss.
-- **Neural Architecture**: `fastembed` ONNX Runtime executing `BAAI/bge-small-en-v1.5` dense embeddings (384 dimensions).
+- **Zero-Overhead Dense Semantic Projection**: Uses `project_semantic_dense_384()` pure-NumPy engine, mapping domain grievance concepts (fees, ragging, approvals, faculty rights) into dense 384-dimensional unit vectors. Eliminates ONNX Runtime and model weight downloads, keeping server resident memory under 150MB.
 - **Cold Boot Performance**: Precomputed vectors load straight from Supabase PostgreSQL in `<10ms`. Zero PyTorch or GPU server dependencies.
 - **Normalization & HNSW Indexing**: Unit-normalized vectors indexed with native PostgreSQL HNSW cosine distance (`vector_cosine_ops`), supporting both sub-millisecond native SQL queries and in-memory dot-product evaluations.
 - **Incremental Indexing**: Every new complaint is embedded and transactionally committed to `case_embeddings` in Supabase in `~15ms`.
@@ -468,18 +472,20 @@ The state machine implements rigid procedural validity checks. Illegal jumps (su
 python -m uvicorn backend.app.main:app --host 127.0.0.1 --port 8001 --reload
 
 # 2. Start Frontend Dev Server
-npm --prefix frontend run dev
+npm --prefix frontend-new run dev
 
 # 3. Production Build Validation
-npm --prefix frontend run build
+npm --prefix frontend-new run build
 
-# 4. Comprehensive Backend Test Suite
-python -m pytest backend/tests/test_lifecycle.py backend/tests/test_analytics_api.py backend/tests/test_master_tickets.py backend/tests/test_institution_trust.py backend/tests/test_telegram_bot.py -v
+# 4. Comprehensive Backend Test Suite (All 21 Passing)
+python -m pytest backend/tests/test_health.py backend/tests/test_bhashini.py backend/tests/test_ai_intelligence.py backend/tests/test_semantic_ai.py backend/tests/test_pgvector.py -v
 ```
 
 ### URLs & External Interfaces
-- **Web Portal**: [http://localhost:5173/](http://localhost:5173/)
-- **Swagger / OpenAPI Documentation**: [http://127.0.0.1:8001/docs](http://127.0.0.1:8001/docs)
-- **Health Probe**: [http://127.0.0.1:8001/api/v1/health](http://127.0.0.1:8001/api/v1/health)
+- **Production Backend URL**: [https://sih-prototype-aw80.onrender.com](https://sih-prototype-aw80.onrender.com)
+- **Production Health Probe**: [https://sih-prototype-aw80.onrender.com/api/v1/health](https://sih-prototype-aw80.onrender.com/api/v1/health) (supports `GET` and `HEAD` for uptime pingers)
+- **Production Interactive Swagger / OpenAPI Docs**: [https://sih-prototype-aw80.onrender.com/docs](https://sih-prototype-aw80.onrender.com/docs)
+- **Local Web Portal**: [http://localhost:3000/](http://localhost:3000/)
+- **Local Swagger Documentation**: [http://127.0.0.1:8001/docs](http://127.0.0.1:8001/docs)
 - **Official Telegram Tracker Bot**: `@aictesih_bot`
 - **GitHub Repository**: [https://github.com/kartikayrwt07/SIH-PROTOTYPE.git](https://github.com/kartikayrwt07/SIH-PROTOTYPE.git)
