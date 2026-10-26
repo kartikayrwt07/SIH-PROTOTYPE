@@ -18,6 +18,7 @@ export const ALLOWED_TRANSITIONS: Record<CaseStatus, CaseStatus[]> = {
   "Under Review": ["In Progress", "Resolved"],
   Resolved: ["Closed", "In Progress"], // In Progress = Reopen
   Closed: [], // Terminal — no further transitions
+  Rejected: [], // Terminal — rejected malformed or spam case
 };
 
 /** All 9 lifecycle states in display order. */
@@ -31,6 +32,7 @@ export const ALL_STATUSES: CaseStatus[] = [
   "Under Review",
   "Resolved",
   "Closed",
+  "Rejected",
 ];
 
 /** Returns valid next states for a given current state. */
@@ -45,12 +47,12 @@ export function canTransition(from: CaseStatus, to: CaseStatus): boolean {
 
 /** Returns true if status is terminal (no further transitions possible). */
 export function isTerminal(status: CaseStatus): boolean {
-  return ALLOWED_TRANSITIONS[status].length === 0;
+  return (ALLOWED_TRANSITIONS[status] ?? []).length === 0;
 }
 
-/** Returns true if the case is considered "active" (not Resolved or Closed). */
+/** Returns true if the case is considered "active" (not Resolved, Closed, or Rejected). */
 export function isActive(status: CaseStatus): boolean {
-  return status !== "Resolved" && status !== "Closed";
+  return status !== "Resolved" && status !== "Closed" && status !== "Rejected";
 }
 
 /** Guard rules displayed in the State Machine screen and dossier modal. */
@@ -70,6 +72,7 @@ export const TRANSITION_GUARD_RULES: Record<CaseStatus, string[]> = {
     "Mandatory remarks required",
   ],
   Closed: ["Terminal state — no further transitions allowed"],
+  Rejected: ["Terminal state — isolated from MTTR analytics"],
 };
 
 /** Step index for the linear progress tracker in the Case Dossier header. */
@@ -83,6 +86,7 @@ export const STATUS_STEP_INDEX: Record<CaseStatus, number> = {
   "Under Review": 5,
   Resolved: 6,
   Closed: 7,
+  Rejected: -1,
 };
 
 /** Human-readable labels for audit event types. */
@@ -95,5 +99,6 @@ export const AUDIT_EVENT_LABELS: Record<string, string> = {
   RESOLVED: "Case Resolved",
   CLOSED: "Case Closed",
   REOPENED: "Case Reopened",
+  REJECTED: "Case Rejected / Marked as Spam",
   TRIAGE_APPLIED: "Triage Classification Applied",
 };

@@ -13,6 +13,7 @@ const STATUS_DOT_COLORS: Record<CaseStatus, string> = {
   "Under Review": "bg-[#974E79]",
   Resolved: "bg-[#257D4E]",
   Closed: "bg-[#625A70]",
+  Rejected: "bg-red-600",
 };
 
 interface StatusChipProps {

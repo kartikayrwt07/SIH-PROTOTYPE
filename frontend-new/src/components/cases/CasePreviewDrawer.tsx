@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link } from "@tanstack/react-router";
 import type { ComplaintCase } from "@/types/ui";
 import {
@@ -13,6 +13,9 @@ import { SlaPill } from "@/components/shared/SlaPill";
 import { StatusMark } from "@/components/shared/StatusMark";
 import { PriorityMark } from "@/components/shared/PriorityMark";
 import { formatIST } from "@/lib/dateUtils";
+import { useRole } from "@/contexts/RoleContext";
+import { CaseRejectionModal } from "@/components/dossier/CaseRejectionModal";
+import { XCircle } from "lucide-react";
 
 interface CasePreviewDrawerProps {
   caseItem: ComplaintCase | null;
@@ -25,10 +28,21 @@ export function CasePreviewDrawer({
   open,
   onOpenChange,
 }: CasePreviewDrawerProps) {
+  const { role, user } = useRole();
+  const [rejectOpen, setRejectOpen] = useState(false);
+
   if (!caseItem) return null;
 
   const isResolvedOrClosed =
-    caseItem.status === "Resolved" || caseItem.status === "Closed";
+    caseItem.status === "Resolved" || caseItem.status === "Closed" || caseItem.status === "Rejected";
+  const isAuditor = role === "AUDITOR";
+  const isOfficerFromOtherBureau =
+    role === "OFFICER" &&
+    Boolean(user?.bureau_id) &&
+    Boolean(caseItem.bureau_id) &&
+    user?.bureau_id !== caseItem.bureau_id;
+  const isClosed = caseItem.status === "Closed" || caseItem.status === "Rejected";
+  const canReject = !isAuditor && !isClosed && !isOfficerFromOtherBureau;
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -115,7 +129,7 @@ export function CasePreviewDrawer({
         </div>
 
         {/* Footer with primary action */}
-        <div className="pt-6 border-t border-[var(--color-rule)] mt-6">
+        <div className="pt-6 border-t border-[var(--color-rule)] mt-6 space-y-2">
           <Button
             asChild
             className="w-full bg-[var(--color-action)] text-white hover:bg-[var(--color-action)]/90 h-9 text-xs font-medium rounded-[6px]"
@@ -128,8 +142,30 @@ export function CasePreviewDrawer({
               Open case file
             </Link>
           </Button>
+
+          {canReject && (
+            <Button
+              variant="outline"
+              onClick={() => setRejectOpen(true)}
+              className="w-full text-xs h-8.5 font-normal text-red-600 border-red-200 bg-red-50/50 hover:bg-red-100/50 rounded-[6px] gap-1.5"
+            >
+              <XCircle className="h-3.5 w-3.5" />
+              Reject as spam / invalid
+            </Button>
+          )}
         </div>
       </SheetContent>
+
+      <CaseRejectionModal
+        caseRef={caseItem.case_reference_id}
+        open={rejectOpen}
+        onOpenChange={(isOpen) => {
+          setRejectOpen(isOpen);
+          if (!isOpen && caseItem.status === "Rejected") {
+            onOpenChange(false);
+          }
+        }}
+      />
     </Sheet>
   );
 }

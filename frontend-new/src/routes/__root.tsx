@@ -11,7 +11,6 @@ import {
 import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
-import { reportLovableError } from "../lib/lovable-error-reporting";
 import { AppShell } from "../components/layout/AppShell";
 import { ThemeProvider } from "../contexts/ThemeContext";
 
@@ -38,11 +37,8 @@ function NotFoundComponent() {
 }
 
 function ErrorComponent({ error, reset }: ErrorComponentProps) {
-  console.error(error);
+  console.error("Root error boundary caught:", error);
   const router = useRouter();
-  useEffect(() => {
-    reportLovableError(error, { boundary: "tanstack_root_error_component" });
-  }, [error]);
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
@@ -80,11 +76,11 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "AICTE Integrated Complaint Case Monitoring Dashboard" },
-      { name: "description", content: "Role-based monitoring and lifecycle tracking for AICTE bureaus" },
-      { name: "author", content: "AICTE Smart India Hackathon" },
-      { property: "og:title", content: "AICTE Integrated Complaint Case Monitoring Dashboard" },
-      { property: "og:description", content: "Role-based monitoring and lifecycle tracking for AICTE bureaus" },
+      { title: "SUTRA - AICTE Grievance & Case Monitoring Platform" },
+      { name: "description", content: "SUTRA: Role-based complaint monitoring and lifecycle tracking platform for AICTE bureaus." },
+      { name: "author", content: "AICTE Smart India Hackathon - Team SUTRA" },
+      { property: "og:title", content: "SUTRA - AICTE Grievance & Case Monitoring Platform" },
+      { property: "og:description", content: "SUTRA: Role-based complaint monitoring and lifecycle tracking platform for AICTE bureaus." },
       { property: "og:type", content: "website" },
     ],
     links: [
@@ -107,7 +103,27 @@ function RootShell({ children }: { children: ReactNode }) {
       <head>
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{var t=localStorage.getItem('aicte_theme');if(t==='dark'||(!t&&window.matchMedia('(prefers-color-scheme: dark)').matches)){document.documentElement.classList.add('dark');}}catch(e){}})();`,
+            __html: `(function(){
+              try {
+                var t=localStorage.getItem('aicte_theme');
+                if(t==='dark'||(!t&&window.matchMedia('(prefers-color-scheme: dark)').matches)){
+                  document.documentElement.classList.add('dark');
+                }
+              } catch(e){}
+              function purgeLovable(){
+                try {
+                  var sel = '#lovable-badge, [id*="lovable-badge"], [class*="lovable-badge"], [id*="lovable_badge"], [class*="lovable_badge"], [data-lovable-badge], a[href*="lovable.dev"], a[href*="lovable.app"]';
+                  var els = document.querySelectorAll(sel);
+                  for (var i = 0; i < els.length; i++) {
+                    els[i].remove();
+                  }
+                } catch(e){}
+              }
+              if (typeof window !== 'undefined') {
+                window.addEventListener('DOMContentLoaded', purgeLovable);
+                setInterval(purgeLovable, 400);
+              }
+            })();`,
           }}
         />
         <HeadContent />

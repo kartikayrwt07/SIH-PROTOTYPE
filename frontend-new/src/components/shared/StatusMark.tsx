@@ -12,6 +12,7 @@ const STATUS_SQUARE_COLORS: Record<CaseStatus, string> = {
   "Under Review": "#974E79",
   Resolved: "#257D4E",
   Closed: "#625A70",
+  Rejected: "#DC2626",
 };
 
 interface StatusMarkProps {

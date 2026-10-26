@@ -79,7 +79,7 @@ export function Sidebar({ onClose, collapsed = false, onToggleCollapse }: Sideba
           to="/dashboard"
           onClick={onClose}
           className="flex items-center gap-2.5 overflow-hidden"
-          title="AICTE Case Monitor"
+          title="SUTRA - AICTE Grievance & Case Monitoring"
         >
           {/* Luminous Purple Brand Mark */}
           <span
@@ -88,9 +88,14 @@ export function Sidebar({ onClose, collapsed = false, onToggleCollapse }: Sideba
           />
 
           {!collapsed && (
-            <span className="text-sm font-semibold tracking-tight text-[var(--color-ink)] whitespace-nowrap">
-              AICTE Case Monitor
-            </span>
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-bold tracking-wider text-[var(--color-ink)] whitespace-nowrap">
+                SUTRA
+              </span>
+              <span className="text-[10px] uppercase font-semibold tracking-wider px-1.5 py-0.5 rounded bg-[#7052C8]/10 text-[#7052C8] dark:bg-[#9333EA]/20 dark:text-[#E9D5FF]">
+                AICTE
+              </span>
+            </div>
           )}
         </Link>
 
@@ -145,7 +150,7 @@ export function Sidebar({ onClose, collapsed = false, onToggleCollapse }: Sideba
         {onClose ? (
           <div className="flex items-center justify-between w-full">
             <span className="text-[11px] text-text-muted truncate">
-              {user ? user.role : "AICTE Portal"}
+              {user ? user.role : "SUTRA Portal"}
             </span>
             <ThemeToggle />
           </div>

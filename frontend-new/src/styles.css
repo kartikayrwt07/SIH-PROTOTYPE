@@ -266,3 +266,28 @@
   background: rgba(147, 51, 234, 0.6);
 }
 
+/* ─── Permanent Suppression of Lovable Badge & Watermark ─── */
+#lovable-badge,
+.lovable-badge,
+[id*="lovable-badge"],
+[class*="lovable-badge"],
+[id*="lovable_badge"],
+[class*="lovable_badge"],
+[data-lovable-badge],
+a[href*="lovable.dev"],
+a[href*="lovable.app"],
+div[data-component-name="LovableBadge"],
+iframe[src*="lovable"],
+svg[aria-label*="Lovable" i],
+img[alt*="Lovable" i] {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  position: absolute !important;
+  clip: rect(0, 0, 0, 0) !important;
+}
+
+

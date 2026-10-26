@@ -50,8 +50,11 @@ function LoginPage() {
         {/* Wordmark Above */}
         <div className="flex items-center justify-center gap-2.5 select-none">
           <span className="h-3 w-3 rounded-[3px] bg-[#7052C8] shrink-0 shadow-[0_0_8px_rgba(112,82,200,0.4)]" aria-hidden="true" />
-          <span className="font-serif text-xl font-semibold text-ink tracking-tight">
-            AICTE Case Monitor
+          <span className="font-serif text-2xl font-bold text-ink tracking-wider">
+            SUTRA
+          </span>
+          <span className="text-xs uppercase font-semibold tracking-wider px-2 py-0.5 rounded bg-[#7052C8]/10 text-[#7052C8] dark:bg-[#9333EA]/20 dark:text-[#E9D5FF]">
+            AICTE
           </span>
         </div>
 

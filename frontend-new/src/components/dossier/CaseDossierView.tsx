@@ -135,7 +135,7 @@ export function CaseDossierView({ caseRef }: CaseDossierViewProps) {
   const canChangeStatus = !isAuditor && !isClosed && !isOfficerFromOtherBureau && allowedTransitions.length > 0;
   const canReassign = (role === "ADMIN" || role === "SUPERVISOR") && !isClosed;
   const canEscalate = (role === "ADMIN" || role === "SUPERVISOR") && !isClosed && (caseItem.escalation_level ?? 0) < 2;
-  const canReject = (role === "ADMIN" || role === "SUPERVISOR") && !isClosed;
+  const canReject = !isAuditor && !isClosed && !isOfficerFromOtherBureau && caseItem.status !== "Rejected";
   const canReopen = !isAuditor && !isOfficerFromOtherBureau && isResolved;
 
   // Metadata resolution

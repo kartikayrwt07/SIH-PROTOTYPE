@@ -20,7 +20,8 @@ export type CaseStatus =
   | "Awaiting Information"
   | "Under Review"
   | "Resolved"
-  | "Closed";
+  | "Closed"
+  | "Rejected";
 
 /** Real bureau codes from the seeded backend (NOT the SPEC's PAB/SDC/ADMIN_BUR). */
 export type BureauCode = "APPR" | "STU" | "FDC" | "FIN";
@@ -36,6 +37,7 @@ export type AuditEventType =
   | "RESOLVED"
   | "CLOSED"
   | "REOPENED"
+  | "REJECTED"
   | "TRIAGE_APPLIED";
 
 // ─── Core fixed contract (from SPEC §2) ──────────────────────────────────────

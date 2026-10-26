@@ -30,6 +30,9 @@ export function CaseRejectionModal({ caseRef, open, onOpenChange }: CaseRejectio
       onOpenChange(false);
       setReason("");
       queryClient.invalidateQueries({ queryKey: ["case", caseRef] });
+      queryClient.invalidateQueries({ queryKey: ["cases"] });
+      queryClient.invalidateQueries({ queryKey: ["timeline", caseRef] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
     } catch (e: any) {
       toast.error(e?.message || "Failed to reject complaint");
     } finally {
