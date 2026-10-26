@@ -8,14 +8,43 @@
 
 import type { CaseStatus } from "@/types/ui";
 
+export function normalizeStatus(raw: string | undefined | null): CaseStatus {
+  if (!raw) return "Received";
+  const s = raw.trim().toUpperCase().replace(/[\s-]+/g, "_");
+  switch (s) {
+    case "RECEIVED":
+      return "Received";
+    case "REGISTERED":
+      return "Registered";
+    case "UNDER_TRIAGE":
+      return "Under Triage";
+    case "ASSIGNED":
+      return "Assigned";
+    case "IN_PROGRESS":
+      return "In Progress";
+    case "AWAITING_INFORMATION":
+      return "Awaiting Information";
+    case "UNDER_REVIEW":
+      return "Under Review";
+    case "RESOLVED":
+      return "Resolved";
+    case "CLOSED":
+      return "Closed";
+    case "REJECTED":
+      return "Rejected";
+    default:
+      return (raw as CaseStatus) || "Received";
+  }
+}
+
 export const ALLOWED_TRANSITIONS: Record<CaseStatus, CaseStatus[]> = {
-  Received: ["Registered"],
-  Registered: ["Under Triage"],
-  "Under Triage": ["Assigned"],
-  Assigned: ["In Progress"],
-  "In Progress": ["Awaiting Information", "Under Review"],
-  "Awaiting Information": ["In Progress"],
-  "Under Review": ["In Progress", "Resolved"],
+  Received: ["Registered", "Rejected"],
+  Registered: ["Under Triage", "Assigned", "Rejected"],
+  "Under Triage": ["Assigned", "In Progress", "Rejected"],
+  Assigned: ["In Progress", "Under Review", "Rejected"],
+  "In Progress": ["Awaiting Information", "Under Review", "Resolved", "Rejected"],
+  "Awaiting Information": ["In Progress", "Rejected"],
+  "Under Review": ["In Progress", "Resolved", "Rejected"],
   Resolved: ["Closed", "In Progress"], // In Progress = Reopen
   Closed: [], // Terminal — no further transitions
   Rejected: [], // Terminal — rejected malformed or spam case
@@ -37,23 +66,27 @@ export const ALL_STATUSES: CaseStatus[] = [
 export const ALL_POSSIBLE_STATUSES: CaseStatus[] = [...ALL_STATUSES, "Rejected"];
 
 /** Returns valid next states for a given current state. */
-export function getAllowedTransitions(from: CaseStatus): CaseStatus[] {
-  return ALLOWED_TRANSITIONS[from] ?? [];
+export function getAllowedTransitions(from: string | CaseStatus): CaseStatus[] {
+  const norm = normalizeStatus(from);
+  return ALLOWED_TRANSITIONS[norm] ?? [];
 }
 
 /** Returns true if the transition from → to is legal. */
-export function canTransition(from: CaseStatus, to: CaseStatus): boolean {
-  return getAllowedTransitions(from).includes(to);
+export function canTransition(from: string | CaseStatus, to: string | CaseStatus): boolean {
+  const normTo = normalizeStatus(to);
+  return getAllowedTransitions(from).includes(normTo);
 }
 
 /** Returns true if status is terminal (no further transitions possible). */
-export function isTerminal(status: CaseStatus): boolean {
-  return (ALLOWED_TRANSITIONS[status] ?? []).length === 0;
+export function isTerminal(status: string | CaseStatus): boolean {
+  const norm = normalizeStatus(status);
+  return (ALLOWED_TRANSITIONS[norm] ?? []).length === 0;
 }
 
 /** Returns true if the case is considered "active" (not Resolved, Closed, or Rejected). */
-export function isActive(status: CaseStatus): boolean {
-  return status !== "Resolved" && status !== "Closed" && status !== "Rejected";
+export function isActive(status: string | CaseStatus): boolean {
+  const norm = normalizeStatus(status);
+  return norm !== "Resolved" && norm !== "Closed" && norm !== "Rejected";
 }
 
 /** Guard rules displayed in the State Machine screen and dossier modal. */

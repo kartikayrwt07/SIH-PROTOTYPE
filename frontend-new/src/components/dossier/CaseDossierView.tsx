@@ -210,7 +210,7 @@ export function CaseDossierView({ caseRef }: CaseDossierViewProps) {
 
       {/* Officer Cross-Bureau Warning Banner */}
       {isOfficerFromOtherBureau && (
-        <div className="flex items-start gap-3 p-4 bg-amber-500/10 border border-amber-500/25 rounded-[6px] text-xs text-amber-900 dark:text-amber-200">
+        <div className="flex items-start gap-3 p-4 bg-amber-500/10 dark:bg-amber-950/30 border border-amber-500/25 dark:border-amber-800/50 rounded-[6px] text-xs text-amber-900 dark:text-amber-200">
           <ShieldAlert className="h-4 w-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
           <div className="space-y-1">
             <p className="font-semibold text-sm">Cross-Bureau Read-Only Mode</p>
@@ -464,7 +464,7 @@ export function CaseDossierView({ caseRef }: CaseDossierViewProps) {
               <Button
                 variant="outline"
                 onClick={() => setReopenOpen(true)}
-                className="w-full text-xs h-8.5 font-normal text-purple-600 border-purple-200 bg-purple-50/50 hover:bg-purple-100/50 rounded-[6px] gap-1.5"
+                className="w-full text-xs h-8.5 font-normal text-purple-600 dark:text-purple-300 border-purple-200 dark:border-purple-900/50 bg-purple-50/50 dark:bg-purple-950/30 hover:bg-purple-100/50 dark:hover:bg-purple-900/40 rounded-[6px] gap-1.5"
               >
                 <RotateCcw className="h-3.5 w-3.5" />
                 Reopen case
@@ -476,7 +476,7 @@ export function CaseDossierView({ caseRef }: CaseDossierViewProps) {
               <Button
                 variant="outline"
                 onClick={() => setRejectOpen(true)}
-                className="w-full text-xs h-8.5 font-normal text-red-600 border-red-200 bg-red-50/50 hover:bg-red-100/50 rounded-[6px] gap-1.5"
+                className="w-full text-xs h-8.5 font-normal text-red-600 dark:text-red-400 border-red-200 dark:border-red-900/50 bg-red-50/50 dark:bg-red-950/30 hover:bg-red-100/50 dark:hover:bg-red-900/40 rounded-[6px] gap-1.5"
               >
                 <XCircle className="h-3.5 w-3.5" />
                 Reject as spam / invalid
@@ -491,7 +491,7 @@ export function CaseDossierView({ caseRef }: CaseDossierViewProps) {
             )}
 
             {isOfficerFromOtherBureau && (
-              <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-[6px] text-[11px] text-amber-800 dark:text-amber-300 leading-relaxed space-y-1">
+              <div className="p-3 bg-amber-500/10 dark:bg-amber-950/30 border border-amber-500/20 dark:border-amber-800/50 rounded-[6px] text-[11px] text-amber-800 dark:text-amber-300 leading-relaxed space-y-1">
                 <p className="font-semibold flex items-center gap-1.5">
                   <ShieldAlert className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
                   Jurisdictional Boundary

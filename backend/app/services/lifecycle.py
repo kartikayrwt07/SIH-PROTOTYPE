@@ -10,10 +10,10 @@ from backend.app.core.auth import assert_bureau_access
 
 ALLOWED_TRANSITIONS: Dict[CaseStatus, List[CaseStatus]] = {
     CaseStatus.RECEIVED: [CaseStatus.REGISTERED, CaseStatus.REJECTED],
-    CaseStatus.REGISTERED: [CaseStatus.UNDER_TRIAGE, CaseStatus.REJECTED],
-    CaseStatus.UNDER_TRIAGE: [CaseStatus.ASSIGNED, CaseStatus.REJECTED],
-    CaseStatus.ASSIGNED: [CaseStatus.IN_PROGRESS, CaseStatus.REJECTED],
-    CaseStatus.IN_PROGRESS: [CaseStatus.AWAITING_INFORMATION, CaseStatus.UNDER_REVIEW, CaseStatus.REJECTED],
+    CaseStatus.REGISTERED: [CaseStatus.UNDER_TRIAGE, CaseStatus.ASSIGNED, CaseStatus.REJECTED],
+    CaseStatus.UNDER_TRIAGE: [CaseStatus.ASSIGNED, CaseStatus.IN_PROGRESS, CaseStatus.REJECTED],
+    CaseStatus.ASSIGNED: [CaseStatus.IN_PROGRESS, CaseStatus.UNDER_REVIEW, CaseStatus.REJECTED],
+    CaseStatus.IN_PROGRESS: [CaseStatus.AWAITING_INFORMATION, CaseStatus.UNDER_REVIEW, CaseStatus.RESOLVED, CaseStatus.REJECTED],
     CaseStatus.AWAITING_INFORMATION: [CaseStatus.IN_PROGRESS, CaseStatus.REJECTED],
     CaseStatus.UNDER_REVIEW: [CaseStatus.IN_PROGRESS, CaseStatus.RESOLVED, CaseStatus.REJECTED],
     CaseStatus.RESOLVED: [CaseStatus.CLOSED, CaseStatus.IN_PROGRESS],  # Reopen path

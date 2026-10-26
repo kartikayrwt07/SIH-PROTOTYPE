@@ -22,6 +22,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
+import { AlertCircle } from "lucide-react";
 
 interface ChangeStatusModalProps {
   caseItem: ComplaintCase;
@@ -131,9 +132,10 @@ export function ChangeStatusModal({
               Next stage
             </Label>
             {allowedNext.length === 0 ? (
-              <p className="text-xs text-[var(--color-text-muted)]">
-                No further valid stage transitions available from {caseItem.status}.
-              </p>
+              <div className="p-3 bg-muted/50 dark:bg-[#120D20] border border-[var(--color-rule)] rounded-[6px] text-xs text-[var(--color-text-muted)] flex items-center gap-2">
+                <AlertCircle className="h-4 w-4 shrink-0 text-[var(--color-text-muted)]" />
+                <span>No further stage transitions available from {caseItem.status}.</span>
+              </div>
             ) : (
               <Select
                 value={toStatus}
@@ -178,7 +180,10 @@ export function ChangeStatusModal({
               className="text-xs bg-surface border-[var(--color-rule)] rounded-[6px]"
             />
             {validationError && (
-              <p className="text-xs text-[var(--sla-overdue-text)]">{validationError}</p>
+              <div className="p-2.5 rounded-[6px] bg-rose-500/10 dark:bg-rose-950/30 border border-rose-500/25 dark:border-rose-900/50 text-xs text-rose-700 dark:text-rose-300 flex items-start gap-2">
+                <AlertCircle className="h-4 w-4 shrink-0 text-rose-600 dark:text-rose-400 mt-0.5" />
+                <span>{validationError}</span>
+              </div>
             )}
           </div>
 

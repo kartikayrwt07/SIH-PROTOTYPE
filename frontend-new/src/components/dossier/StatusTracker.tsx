@@ -18,6 +18,7 @@ const STATUS_INDEX_MAP: Record<CaseStatus, number> = {
   "Under Review": 5,
   Resolved: 6,
   Closed: 7,
+  Rejected: -1,
 };
 
 const DISPLAY_STAGES = [
@@ -32,6 +33,17 @@ const DISPLAY_STAGES = [
 ];
 
 export function StatusTracker({ currentStatus, variant = "banner" }: StatusTrackerProps) {
+  if (currentStatus === "Rejected") {
+    return (
+      <div className="bg-rose-500/10 dark:bg-rose-950/25 rounded-lg border border-rose-500/25 dark:border-rose-900/40 p-4 text-xs text-rose-800 dark:text-rose-300 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <span className="font-semibold uppercase tracking-wider text-[11px] px-2 py-0.5 rounded bg-rose-500/20 text-rose-700 dark:text-rose-300">Rejected</span>
+          <span>This complaint was marked as spam or invalid. Lifecycle progression has terminated.</span>
+        </div>
+      </div>
+    );
+  }
+
   const currentStep = STATUS_INDEX_MAP[currentStatus] ?? 0;
   const isAwaitingInfo = currentStatus === "Awaiting Information";
   const isTerminalClosed = currentStatus === "Closed";
@@ -117,7 +129,7 @@ export function StatusTracker({ currentStatus, variant = "banner" }: StatusTrack
       </div>
 
       {isAwaitingInfo && (
-        <div className="px-2.5 py-1.5 text-[11px] rounded bg-amber-50 border border-amber-200 text-amber-900 font-medium">
+        <div className="px-2.5 py-1.5 text-[11px] rounded bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 text-amber-900 dark:text-amber-200 font-medium">
           ⚠️ Case in <strong>Awaiting Information</strong> (waiting for complainant response).
         </div>
       )}

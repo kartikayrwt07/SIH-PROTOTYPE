@@ -71,6 +71,7 @@ import type {
   BottleneckAnalysis,
   InstitutionPerformanceStat,
 } from "@/types/ui";
+import { normalizeStatus } from "@/lib/stateMachine";
 
 // ─── Case ─────────────────────────────────────────────────────────────────────
 
@@ -91,7 +92,7 @@ export function adaptCase(raw: RawComplaintCase): ComplaintCase {
     description_confidential: raw.description_confidential ?? undefined,
     category: raw.category,
     priority: raw.priority as CasePriority,
-    status: raw.status as CaseStatus,
+    status: normalizeStatus(raw.status),
     due_date: raw.due_date,
     escalation_level: raw.escalation_level,
     created_at: raw.created_at,
@@ -135,8 +136,8 @@ export function adaptTimeline(raw: RawTimelineEvent): TimelineEntry {
     actor_role: raw.actor_role,
     actor_name: raw.actor_name,
     event_type: eventType as AuditEventType,
-    previous_state: (raw.previous_state as CaseStatus | null) ?? null,
-    new_state: (raw.new_state as CaseStatus | null) ?? null,
+    previous_state: raw.previous_state ? normalizeStatus(raw.previous_state) : null,
+    new_state: raw.new_state ? normalizeStatus(raw.new_state) : null,
     remark,
     metadata: raw.metadata_json,
     timestamp: raw.timestamp,
