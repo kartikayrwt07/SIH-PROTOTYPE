@@ -4,7 +4,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    PROJECT_NAME: str = "AICTE Integrated Complaint Case Monitoring Dashboard"
+    PROJECT_NAME: str = "SUTRA - AICTE Integrated Complaint Case Monitoring Dashboard"
     API_V1_STR: str = "/api/v1"
     DATABASE_URL: str = "sqlite:///./aicte_complaints.db"
     CORS_ORIGINS: List[str] = [

@@ -1,13 +1,13 @@
-# AICTE Centralized Grievance Redressal & Institutional Case Surveillance System
+# SUTRA - AICTE Centralized Grievance Redressal & Institutional Case Surveillance System
 ## Comprehensive Architecture, Domain Specification & Implementation Dossier
 
-> **Document Purpose**: This document is an exhaustive, self-contained system specification and architectural blueprint of the AICTE Grievance Portal. It is structured for ingestion by Large Language Models (LLMs) and autonomous AI coding agents to provide complete context regarding domain logic, database schemas, security guarantees, API surfaces, AI engines, and frontend presentation layers.
+> **Document Purpose**: This document is an exhaustive, self-contained system specification and architectural blueprint of the SUTRA AICTE Grievance Portal. It is structured for ingestion by Large Language Models (LLMs) and autonomous AI coding agents to provide complete context regarding domain logic, database schemas, security guarantees, API surfaces, AI engines, and frontend presentation layers.
 
 ---
 
 ## 1. Executive Summary & Problem Context
 
-- **Platform Name**: AICTE Integrated Grievance Redressal & Institutional Case Surveillance Platform
+- **Platform Name**: **SUTRA** (AICTE Integrated Grievance Redressal & Institutional Case Surveillance Platform)
 - **Objective**: Modernize, automate, and centralize complaint ingestion, jurisdiction-aware routing, deterministic lifecycle management, explainable AI-powered triage, SLA compliance surveillance, systemic duplicate grouping (Master Tickets), zero-login student status tracking via Telegram, dynamic college credit scoring, and whistleblower protection across all AICTE-approved technical institutions in India.
 - **Key Beneficiaries**:
   - **Complainants**: Students, faculty members, institutional staff, parents, and whistleblowers.

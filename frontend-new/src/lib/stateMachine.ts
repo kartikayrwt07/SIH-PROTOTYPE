@@ -21,7 +21,7 @@ export const ALLOWED_TRANSITIONS: Record<CaseStatus, CaseStatus[]> = {
   Rejected: [], // Terminal — rejected malformed or spam case
 };
 
-/** All 9 lifecycle states in display order. */
+/** All 9 lifecycle progression states in display order. */
 export const ALL_STATUSES: CaseStatus[] = [
   "Received",
   "Registered",
@@ -32,8 +32,9 @@ export const ALL_STATUSES: CaseStatus[] = [
   "Under Review",
   "Resolved",
   "Closed",
-  "Rejected",
 ];
+
+export const ALL_POSSIBLE_STATUSES: CaseStatus[] = [...ALL_STATUSES, "Rejected"];
 
 /** Returns valid next states for a given current state. */
 export function getAllowedTransitions(from: CaseStatus): CaseStatus[] {

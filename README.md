@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🏛️ AICTE Centralized Complaint Case Monitoring & Institutional Surveillance Dashboard
+# 🏛️ SUTRA - AICTE Centralized Complaint Case Monitoring & Institutional Surveillance Platform
 
 ### *Next-Generation Regulatory Surveillance, Autonomous AI Triage & Grievance Redressal Command Platform*
 

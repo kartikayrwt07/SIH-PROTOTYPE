@@ -49,10 +49,10 @@ function Breadcrumbs() {
   } else if (path === "/login") {
     parts.push({ label: "Sign in" });
   } else {
-    parts.push({ label: "Portal" });
+    parts.push({ label: "SUTRA" });
   }
 
-  const currentTitle = parts[parts.length - 1]?.label ?? "Portal";
+  const currentTitle = parts[parts.length - 1]?.label ?? "SUTRA";
 
   return (
     <>
